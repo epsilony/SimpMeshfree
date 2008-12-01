@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.epsilony.simpmeshfree.geom;
+package net.epsilony.simpmeshfree.model;
 
 /**
  *
@@ -11,7 +11,8 @@ package net.epsilony.simpmeshfree.geom;
 public class Node {
 
     double x, y;
-
+    static int maxIndex;
+    int index=maxIndex++;
     public Node(double xGive, double yGive) {
         x = xGive;
         y = yGive;
@@ -25,9 +26,7 @@ public class Node {
         return y;
     }
 
-    public void setX() {
-    }
-
-    public void setY() {
+    public int getIndex() {
+        return index;
     }
 }
