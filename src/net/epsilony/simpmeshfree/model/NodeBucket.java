@@ -8,13 +8,20 @@ import java.util.LinkedList;
 import static java.lang.Math.abs;
 
 /**
- *
+ * 存放几何位于基内的结点以及可能会影响到到这个域中坐标的支持点
+ * <p> changelist 
+ * <br> 0.20 通过了CantilevelTest </br>
+ * <br> 0.11 通过了RPIMTest </br>
+ * <br> 0.10 初建 </br>
+ * </p>
+ * @version 0.20
  * @author M.Yuan J.-J.Chen
  */
 public class NodeBucket {
 double xMin, yMin, xMax, yMax;
-    public LinkedList<Node> nodes;
-    public LinkedList<Node> supportNodes;
+    public LinkedList<Node> nodes; //位于NodeBucket中的点集
+    public LinkedList<Node> supportNodes; //可能是支持域点，及影响域与本NodeBucket有交集的点。
+    
     public void addSupportNodes(Node node){
         supportNodes.add(node);
     }
@@ -56,9 +63,10 @@ double xMin, yMin, xMax, yMax;
     }
 
     /**
-     * 将Bucket分裂为两半，即原来的bucket变成原来的一半大小，并另新建一个bucket<br>
-     * 分裂过程中将bucket中的节点按位置重新分配入调整过大小的bucket与新建的bucket中
-     * @return 分裂中新生成的Bucket
+     * 将Bucket分裂为两半，即原来的bucket变成原来的一半大小，并另新建一个NodeBucket
+     * <br>分裂过程中将NodeBucket中的节点按位置重新分配入调整过大小的NodeBucket与新建的NodeBucket中</br>
+     * <br>分裂的原则是，如果x向宽度大，则沿y向中轴线分裂，返之如y向宽度大则沿x向对称轴分裂</br>
+     * @return 分裂中新生成的那个NodeBucket
      */
     public NodeBucket fission() {
         double t;

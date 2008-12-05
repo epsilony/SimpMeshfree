@@ -26,6 +26,11 @@ public class RadialPolynomialShapeFunction {
     RadialBasisFunction radialFun;
     int power;
 
+    /**
+     * 构造一个RPIM函数
+     * @param radialFun 径向基函数
+     * @param power 多项式的最高阶数
+     */
     public RadialPolynomialShapeFunction(RadialBasisFunction radialFun, int power) {
         this.radialFun = radialFun;
         this.power = power;

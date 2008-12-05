@@ -65,11 +65,23 @@ public class Node {
     public int getIndex() {
         return index;
     }
-    
+   
+    /**
+     * 判断点(x,y)与节点的距离是不是在dis之内
+     * @param x
+     * @param y
+     * @return 点(x,y)与节点的距离在dis之内则为true
+     */
     public boolean isInDistance(double x,double y,double dis){
         return (this.x - x) * (this.x -x) + (this.y - y) * (this.y - y) <= dis * dis;
     }
     
+    /**
+     * 判断点(x,y)是否在节点的影响域内
+     * @param x
+     * @param y
+     * @return 点(x,y)在节点的影响域内则返回true
+     */
     public boolean isInfluenced(double x,double y){
         return (this.x - x) * (this.x -x) + (this.y - y) * (this.y - y) <= infRadius * infRadius;
     }

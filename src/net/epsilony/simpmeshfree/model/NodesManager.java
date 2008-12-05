@@ -25,14 +25,24 @@ import static java.lang.Math.PI;
  * 由此可见Buckets域应比所分析的结构更大一点，以便完全“套住”结构
  * 一个Bucket也是一个存放节点的容器，每个Bucket有个存放结点的上限bucketCapacity,<br>
  * 新增节点会造成一些Bucket的分裂增殖以适应bucketCapacity
+ * <p> <Bold> changelist: </Bold>
+ * <br> 0.10 初建 </br>
+ * <br> 0.11 通过RPIMTest </br>
+ * <br> 0.20 通过CantilevelTest </br>
  * @author M.Yuan J.-J.Chen
+ * @version 0.20
  */
 public class NodesManager {
 
-    public LinkedList<NodeBucket> buckets = new LinkedList<NodeBucket>();
+    public LinkedList<NodeBucket> buckets = new LinkedList<NodeBucket>(); //存储所有NodeBucket的链表
     int bucketCapacity; //每一个bucket的最大容量
-    double xMin, yMin, xMax, yMax;
+    double xMin, yMin, xMax, yMax; //NodesManager 的管理范围，初始的那个Bucket与其等同。
+    
     public LinkedList<Node> nodes = new LinkedList<Node>();
+    
+    /**
+     * 用以调式记录运行结果的类
+     */
     public class Status{
         LinkedList<Node> outErrSupportNodes=new LinkedList<Node>();
         LinkedList<Double> outErrSupportNodesMinErr=new LinkedList<Double>();
@@ -44,7 +54,7 @@ public class NodesManager {
         }
     }
     
-    Status status=new Status();
+    Status status=new Status(); 
 
     public double getXMax() {
         return xMax;
@@ -124,7 +134,7 @@ public class NodesManager {
     }
 
     /**
-     * 获取以节点key为中心，dis为半径的圆形区域内的所有点，并将这些点存放在influenceNode List表内
+     * 获取以节点(x,y)为中心，dis为半径的圆形区域内的所有点，并将这些点存放在influenceNode List表内
      * @param dis
      * @param key
      * @param influenceNodes 初始化后的一个List
@@ -145,6 +155,16 @@ public class NodesManager {
         return influenceNodes.size();
     }
 
+    /**
+     * <br>获取一个坐标的支持域内的所有节点。在模型中修改节点（增、删、移）之后，必须先运行</br>
+     * <br>{@link NodesManager#generateNodesInfluence(double, double, int) generateNodesInfluence}</br>
+     * <br>使得NodesManager中的所有节点的影响域半径以及每个NodeBucket的可能支持节点都被正确的设置</br>
+     * @param x
+     * @param y
+     * @param supportNodes 用以存储支持节点的List，非null。
+     * @return 节点的平均间距 d<sub>c</sub>
+     * @see NodesManager#generateNodesInfluence(double, double, int) 
+     */
     public double getSupportNodes(double x, double y, List<Node> supportNodes) {
         supportNodes.clear();
         double maxRadiu = 0;
@@ -163,6 +183,10 @@ public class NodesManager {
         return maxRadiu * 2 / (sqrt(supportNodes.size() * 4 / PI) - 1);
     }
 
+    /**
+     * 输出NodesManager的一些信息
+     * @param fileName 输出的文件名
+     */
     public void statusReport(String fileName) {
         PrintWriter out = null;
         try {
@@ -196,6 +220,12 @@ public class NodesManager {
         }
     }
 
+    /**
+     * 计算并设置所有Node的影响域半径以及每个NodeBunket的可能支持节点
+     * @param alphai<br> &alpha;<sub>i</sub> 影响域的节点重数，影响域的直径d<sub>i</sub>=&alpha;<sub>i</sub>d<sub>c</sub></br> <br> d<sub>c</sub>为节点附近的节点平均距离</br>
+     * @param maxErr 允许的节点影响域半径的最大误差
+     * @param maxIters 计算节点影响域半径的迭代次数，迭代超过maxIters则选择误差最小的那个解，同时将结点和误差记录在{@link Status NodesManager.Status} 相关变量中。
+     */
     public void generateNodesInfluence(double alphai, double maxErr,int maxIters) {
         double dc = sqrt((yMax - yMin) * (xMax - yMin)) / (sqrt(nodes.size()) - 1);
         double radiu = dc * alphai / 2;
