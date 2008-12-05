@@ -4,9 +4,16 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Calendar;
 import static java.lang.Math.*;
 import java.util.List;
 import java.util.LinkedList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import net.epsilony.simpmeshfree.exceptions.NodeOutsideManagerDomainException;
 import static java.lang.Math.PI;
 
@@ -22,9 +29,22 @@ import static java.lang.Math.PI;
  */
 public class NodesManager {
 
-    List<NodeBucket> buckets = new LinkedList<NodeBucket>();
+    public LinkedList<NodeBucket> buckets = new LinkedList<NodeBucket>();
     int bucketCapacity; //每一个bucket的最大容量
     double xMin, yMin, xMax, yMax;
+    public LinkedList<Node> nodes = new LinkedList<Node>();
+    public class Status{
+        LinkedList<Node> outErrSupportNodes=new LinkedList<Node>();
+        LinkedList<Double> outErrSupportNodesMinErr=new LinkedList<Double>();
+        
+        public void initialize(){
+            outErrSupportNodes.clear();
+            outErrSupportNodesMinErr.clear();
+            
+        }
+    }
+    
+    Status status=new Status();
 
     public double getXMax() {
         return xMax;
@@ -41,7 +61,7 @@ public class NodesManager {
     public double getYMin() {
         return yMin;
     }
-    
+
     /**
      * @param xMin
      * @param yMin
@@ -59,10 +79,10 @@ public class NodesManager {
 
     }
 
-    void insertNode(Node n) throws NodeOutsideManagerDomainException {
+    public void insertNode(Node n) throws NodeOutsideManagerDomainException {
         NodeBucket origBucket = null;
         for (NodeBucket nb : buckets) {
-            if (nb.isLocationInside(n)) {
+            if (nb.isLocateIn(n)) {
                 origBucket = nb;
                 break;
             }
@@ -80,7 +100,7 @@ public class NodesManager {
             int i = 0;
             while (i < fissionBuckets.size()) {
                 origBucket = fissionBuckets.get(i);
-                if (!origBucket.isLocationInside(n)) {
+                if (!origBucket.isLocateIn(n)) {
                     i++;
                     continue;
                 }
@@ -93,7 +113,10 @@ public class NodesManager {
                     break;
                 }
             }
+        } else {
+            origBucket.addNode(n);
         }
+        nodes.add(n);
     }
 
     public int getBucketCapacity() {
@@ -107,19 +130,13 @@ public class NodesManager {
      * @param influenceNodes 初始化后的一个List
      * @return 搜出的节点数目
      */
-    int getInfluenceNodes(double dis, Node key, List<Node> influenceNodes) {
-        int number = 0;
-        double xLMin=key.getX()-dis;
-        double yLMin=key.getY()-dis;
-        double xLMax=key.getX()+dis;
-        double yLMax=key.getY()+dis;
-        double centerX=key.getX();
-        double centerY=key.getY();
+    public int getNodesInCircel(double radiu, double x, double y, List<Node> influenceNodes) {
+
         influenceNodes.clear();
-        for (NodeBucket bucket:buckets) {
-            if (!(bucket.getXMax()<xLMin||bucket.getXMin()>xLMax||bucket.getYMax()<yLMin||bucket.getYMin()>yLMax)) {
-                for (Node bucketNode:bucket.getNodes()) {
-                    if ((bucketNode.getX() - centerX) * (bucketNode.getX() - centerX) + (bucketNode.getY() - centerY) * (bucketNode.getY() - centerY) <= dis*dis) {
+        for (NodeBucket bucket : buckets) {
+            if (bucket.isSqureIntersected(x, y, radiu)) {
+                for (Node bucketNode : bucket.getNodes()) {
+                    if (bucketNode.isInDistance(x, y, radiu)) {
                         influenceNodes.add(bucketNode);
                     }
                 }
@@ -128,21 +145,124 @@ public class NodesManager {
         return influenceNodes.size();
     }
 
-    double supportDomain(double r, double zeroDimensionValue, double crit, Node core, List<Node> supportNode) {
-        double result;
-        double test = 0;
-        int n;
-        do {
-            n = getInfluenceNodes(r, core, supportNode);
-            result = sqrt(PI * r * r) / (sqrt(n) - 1) * zeroDimensionValue;
-            test = (result - r) / r;
-            if (test >= crit) {
-                r = r * (1 + crit);
-            } else {
-                r = r * (1 - crit);
+    public double getSupportNodes(double x, double y, List<Node> supportNodes) {
+        supportNodes.clear();
+        double maxRadiu = 0;
+        for (NodeBucket bucket : buckets) {
+            if (bucket.isLocateIn(x, y)) {
+                for (Node node : bucket.getSupportNodes()) {
+                    if (node.isInfluenced(x, y)) {
+                        supportNodes.add(node);
+                        if (maxRadiu < node.getInfRadius()) {
+                            maxRadiu = node.getInfRadius();
+                        }
+                    }
+                }
             }
-        } while (abs(test) >= crit);
-        return result;
+        }
+        return maxRadiu * 2 / (sqrt(supportNodes.size() * 4 / PI) - 1);
+    }
+
+    public void statusReport(String fileName) {
+        PrintWriter out = null;
+        try {
+            out = new PrintWriter(new BufferedWriter(new FileWriter(fileName)));
+            out.println("--------------------------------------------------------------");
+            out.println("**************************************************************");
+            out.println(Calendar.getInstance().getTime());
+            out.println("buckets.size=" + buckets.size());
+            int i = 0;
+            for (NodeBucket b : buckets) {
+                out.println("bucket" + i + ":");
+                out.printf("nodes.size = %d, xmin=%g, ymin = %g, xmax = %g, ymax = %g%n", b.nodes.size(), b.getXMin(), b.getYMin(), b.getXMax(), b.getYMax());
+                for (Node n : b.nodes) {
+                    out.printf("Node index:%d, x = %g, y = %g, type = %b%n", n.getIndex(), n.getX(), n.getY(), n.isEssential());
+                }
+                i++;
+            }
+            out.println("*******************************************************************");
+            out.println("*******************************************************************");
+            out.println("*******************************************************************");
+            out.println("out iterate max time nodes during searching influence radiu ");
+            out.printf("%20s%20s%20s%20s%20s%20s","Index","x","y","radiu","err","type");
+            for(i=0;i<status.outErrSupportNodes.size();i++){
+                Node node= status.outErrSupportNodes.get(i);
+                out.printf("%20d%20e%20e%20e%20e%20s%n",node.getIndex(),node.getX(),node.getY(),node.getInfRadius(),status.outErrSupportNodesMinErr.get(i),node.getType());                
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(NodesManager.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            out.close();
+        }
+    }
+
+    public void generateNodesInfluence(double alphai, double maxErr,int maxIters) {
+        double dc = sqrt((yMax - yMin) * (xMax - yMin)) / (sqrt(nodes.size()) - 1);
+        double radiu = dc * alphai / 2;
+        double minErrRadiu=0;
+        double result;
+        double err = 0;
+        double minErr=0;
+        int n;
+        int itersCount=0;
+        double x, y;
+
+        for (Node node : nodes) {
+
+            x = node.getX();
+            y = node.getY();
+
+
+            //计算结点Node的影响域尺寸
+            itersCount=0;
+            do {
+                n = 0;
+                minErr=0;
+                for (NodeBucket bucket : buckets) {
+                    if (bucket.isSqureIntersected(x, y, radiu)) {
+                        for (Node bucketNode : bucket.getNodes()) {
+                            if (bucketNode.isInDistance(x, y, radiu)) {
+                                n++;
+                            }
+                        }
+                    }
+                }
+
+                //radiu显然过小的情况的处理
+                if (round(alphai) >= n) {
+                    radiu = radiu * 2;
+                    continue;
+                }
+                result = 2 * radiu / (sqrt(4 * n / PI) - 1) * alphai / 2;//<=is for circle support domain,and for sqare support domain:sqrt(PI * radiu * radiu) / (sqrt(n) - 1) * alphai / 2;
+                err = (result - radiu) / radiu;
+                
+                if(minErr==0||err<minErr){
+                    minErr=err;
+                    minErrRadiu=radiu;
+                }
+                if (abs(err) >= abs(maxErr)) {
+                    if(itersCount>=maxIters){
+                        radiu=minErrRadiu;
+                        status.outErrSupportNodes.add(node);
+                        status.outErrSupportNodesMinErr.add(new Double(radiu));
+                        break;
+                    }
+                    radiu = result * 0.618 + radiu * 0.382;
+                    itersCount++;
+                    continue;
+                } else {
+                    break;
+                }
+            } while (true);
+
+            //设置结点的影响域半径并将其加入到可能影响到的NodeBucket的supportNodes链表中
+            node.setInfRadius(radiu);
+            for (NodeBucket bucket : buckets) {
+                if (bucket.isSqureIntersected(x, y, radiu)) {
+                    bucket.addSupportNodes(node);
+                }
+            }
+        }
     }
 }
 

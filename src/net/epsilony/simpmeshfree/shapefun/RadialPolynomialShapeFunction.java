@@ -87,7 +87,7 @@ public class RadialPolynomialShapeFunction {
         UpperSymmDenseMatrix gMat = new UpperSymmDenseMatrix((power * power + 3 * power + 2) / 2 + nodes.size());
         int i, j;
         double[] binomials = new double[(power * power + 3 * power + 2) / 2];
-        Vector resultVec = new DenseVector((power * power + 3 * power + 2) / 2 + nodes.size());
+//        Vector resultVec = new DenseVector((power * power + 3 * power + 2) / 2 + nodes.size());
         double nodex, nodey;
         for (i = 0; i < nodes.size(); i++) {
             nodex = nodes.get(i).getX();

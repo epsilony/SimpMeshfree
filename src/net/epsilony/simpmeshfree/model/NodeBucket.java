@@ -5,7 +5,6 @@
 package net.epsilony.simpmeshfree.model;
 
 import java.util.LinkedList;
-import java.util.List;
 import static java.lang.Math.abs;
 
 /**
@@ -13,13 +12,27 @@ import static java.lang.Math.abs;
  * @author M.Yuan J.-J.Chen
  */
 public class NodeBucket {
+double xMin, yMin, xMax, yMax;
+    public LinkedList<Node> nodes;
+    public LinkedList<Node> supportNodes;
+    public void addSupportNodes(Node node){
+        supportNodes.add(node);
+    }
 
+    public LinkedList<Node> getNodes() {
+        return nodes;
+    }
+
+    public LinkedList<Node> getSupportNodes() {
+        return supportNodes;
+    }
     public NodeBucket(double xMin, double yMin, double xMax, double yMax) {
         this.xMin = xMin;
         this.yMin = yMin;
         this.xMax = xMax;
         this.yMax = yMax;
         nodes = new LinkedList<Node>();
+        supportNodes=new LinkedList<Node>();
     }
 
     public double getXMax() {
@@ -36,10 +49,6 @@ public class NodeBucket {
 
     public double getYMin() {
         return yMin;
-    }
-
-    public List<Node> getNodes() {
-        return nodes;
     }
 
     public int nodesSize() {
@@ -63,10 +72,10 @@ public class NodeBucket {
             xMax=(xMin+xMax)/2;
             fBucket = new NodeBucket(xMax,yMin,t,yMax);
         }
-        List<Node> tnodes=nodes;
+        LinkedList<Node> tnodes=nodes;
         nodes=new LinkedList<Node>();
         for (Node node:tnodes){
-            if(isLocationInside(node)){
+            if(isLocateIn(node)){
                 addNode(node);
             }else{
                 fBucket.addNode(node);
@@ -75,13 +84,23 @@ public class NodeBucket {
         return fBucket;
     }
 
-    public boolean isLocationInside(Node node) {
+    public boolean isLocateIn(Node node) {
         return node.getX() < xMax && node.getX() >= xMin && node.getY() >= yMin && node.getY() < yMax;
     }
 
     public boolean addNode(Node arg0) {
         return nodes.add(arg0);
     }
-    double xMin, yMin, xMax, yMax;
-    List<Node> nodes;
+    
+     public boolean isSqureIntersected( double x, double y, double dis) {
+        double xLMin = x - dis;
+        double yLMin = y - dis;
+        double xLMax = x + dis;
+        double yLMax = y + dis;
+        return !(xMax < xLMin || xMin > xLMax || yMax < yLMin || yMin > yLMax);
+    }
+    
+     public boolean isLocateIn(double x,double y){
+        return x<xMax&&y<yMax&&y>yMin&&x>xMin;
+    }
 }
