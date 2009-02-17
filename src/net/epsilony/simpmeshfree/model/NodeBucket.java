@@ -4,6 +4,8 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import java.awt.Shape;
+import java.awt.geom.Rectangle2D;
 import java.util.LinkedList;
 import static java.lang.Math.abs;
 
@@ -19,8 +21,8 @@ import static java.lang.Math.abs;
  */
 public class NodeBucket {
 double xMin, yMin, xMax, yMax;
-    public LinkedList<Node> nodes; //位于NodeBucket中的点集
-    public LinkedList<Node> supportNodes; //可能是支持域点，及影响域与本NodeBucket有交集的点。
+    public LinkedList<Node> nodes; //位于NodeBucket中的结点s
+    public LinkedList<Node> supportNodes; //可能的支持域点，即影响域与本NodeBucket有交集的点。
     
     public void addSupportNodes(Node node){
         supportNodes.add(node);
@@ -63,7 +65,7 @@ double xMin, yMin, xMax, yMax;
     }
 
     /**
-     * 将Bucket分裂为两半，即原来的bucket变成原来的一半大小，并另新建一个NodeBucket
+     * 将Bucket分裂为两半，即原来的bucket变成原来的一半大小，并另新建一个NodeBucket，占据缩小的那半空间
      * <br>分裂过程中将NodeBucket中的节点按位置重新分配入调整过大小的NodeBucket与新建的NodeBucket中</br>
      * <br>分裂的原则是，如果x向宽度大，则沿y向中轴线分裂，返之如y向宽度大则沿x向对称轴分裂</br>
      * @return 分裂中新生成的那个NodeBucket
@@ -100,7 +102,14 @@ double xMin, yMin, xMax, yMax;
         return nodes.add(arg0);
     }
     
-     public boolean isSqureIntersected( double x, double y, double dis) {
+    /**是否与一个以x,y为中心的，边长为2*dis的正方形框子相交
+     * 注：如返回值为false，则不会与一个以x,y为中心的半径为dis的圆形区域相交
+     * @param x
+     * @param y
+     * @param dis
+     * @return 
+     */
+    public boolean isSqureIntersected( double x, double y, double dis) {
         double xLMin = x - dis;
         double yLMin = y - dis;
         double xLMax = x + dis;
@@ -111,4 +120,12 @@ double xMin, yMin, xMax, yMax;
      public boolean isLocateIn(double x,double y){
         return x<xMax&&y<yMax&&y>yMin&&x>xMin;
     }
+
+     /**
+      * 获取外形
+      * @return 可用于java2D Graphics2D.draw
+      */
+     public Shape getShape(){
+         return new Rectangle2D.Double(xMin, yMin, xMax-xMin, yMax-yMin);
+     }
 }

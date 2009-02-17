@@ -11,7 +11,6 @@ package net.epsilony.simpmeshfree.model;
 public class Node {
 
     public enum NodeType {
-
         NORMAL, ESSENTIAL;
     }
     NodeType type;

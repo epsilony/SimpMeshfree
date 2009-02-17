@@ -4,18 +4,23 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import java.awt.Shape;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Path2D;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Calendar;
-import static java.lang.Math.*;
+import java.util.Iterator;
 import java.util.List;
 import java.util.LinkedList;
+import java.util.ListIterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.epsilony.simpmeshfree.exceptions.NodeOutsideManagerDomainException;
-import static java.lang.Math.PI;
+import static java.lang.Math.*;
 
 /**
  * <title>Buckets算法节点管理器</title>
@@ -34,27 +39,33 @@ import static java.lang.Math.PI;
  */
 public class NodesManager {
 
-    public LinkedList<NodeBucket> buckets = new LinkedList<NodeBucket>(); //存储所有NodeBucket的链表
+    private LinkedList<NodeBucket> buckets = new LinkedList<NodeBucket>(); //存储所有NodeBucket的链表
     int bucketCapacity; //每一个bucket的最大容量
     double xMin, yMin, xMax, yMax; //NodesManager 的管理范围，初始的那个Bucket与其等同。
-    
     public LinkedList<Node> nodes = new LinkedList<Node>();
-    
+
+    /**
+     * @return the buckets
+     */
+    public LinkedList<NodeBucket> getBuckets() {
+        return buckets;
+    }
+
     /**
      * 用以调式记录运行结果的类
      */
-    public class Status{
-        LinkedList<Node> outErrSupportNodes=new LinkedList<Node>();
-        LinkedList<Double> outErrSupportNodesMinErr=new LinkedList<Double>();
-        
-        public void initialize(){
+    public class Status {
+
+        LinkedList<Node> outErrSupportNodes = new LinkedList<Node>();
+        LinkedList<Double> outErrSupportNodesMinErr = new LinkedList<Double>();
+
+        public void initialize() {
             outErrSupportNodes.clear();
             outErrSupportNodesMinErr.clear();
-            
+
         }
     }
-    
-    Status status=new Status(); 
+    Status status = new Status();
 
     public double getXMax() {
         return xMax;
@@ -91,7 +102,7 @@ public class NodesManager {
 
     public void insertNode(Node n) throws NodeOutsideManagerDomainException {
         NodeBucket origBucket = null;
-        for (NodeBucket nb : buckets) {
+        for (NodeBucket nb : getBuckets()) {
             if (nb.isLocateIn(n)) {
                 origBucket = nb;
                 break;
@@ -104,7 +115,7 @@ public class NodesManager {
 
         if (origBucket.nodesSize() >= getBucketCapacity()) {
             LinkedList<NodeBucket> fissionBuckets = new LinkedList<NodeBucket>();
-            buckets.remove(origBucket);
+            getBuckets().remove(origBucket);
             fissionBuckets.add(origBucket);
             fissionBuckets.add(origBucket.fission());
             int i = 0;
@@ -119,7 +130,7 @@ public class NodesManager {
                     continue;
                 } else {
                     origBucket.addNode(n);
-                    buckets.addAll(fissionBuckets);
+                    getBuckets().addAll(fissionBuckets);
                     break;
                 }
             }
@@ -143,7 +154,7 @@ public class NodesManager {
     public int getNodesInCircel(double radiu, double x, double y, List<Node> influenceNodes) {
 
         influenceNodes.clear();
-        for (NodeBucket bucket : buckets) {
+        for (NodeBucket bucket : getBuckets()) {
             if (bucket.isSqureIntersected(x, y, radiu)) {
                 for (Node bucketNode : bucket.getNodes()) {
                     if (bucketNode.isInDistance(x, y, radiu)) {
@@ -168,7 +179,7 @@ public class NodesManager {
     public double getSupportNodes(double x, double y, List<Node> supportNodes) {
         supportNodes.clear();
         double maxRadiu = 0;
-        for (NodeBucket bucket : buckets) {
+        for (NodeBucket bucket : getBuckets()) {
             if (bucket.isLocateIn(x, y)) {
                 for (Node node : bucket.getSupportNodes()) {
                     if (node.isInfluenced(x, y)) {
@@ -194,9 +205,9 @@ public class NodesManager {
             out.println("--------------------------------------------------------------");
             out.println("**************************************************************");
             out.println(Calendar.getInstance().getTime());
-            out.println("buckets.size=" + buckets.size());
+            out.println("buckets.size=" + getBuckets().size());
             int i = 0;
-            for (NodeBucket b : buckets) {
+            for (NodeBucket b : getBuckets()) {
                 out.println("bucket" + i + ":");
                 out.printf("nodes.size = %d, xmin=%g, ymin = %g, xmax = %g, ymax = %g%n", b.nodes.size(), b.getXMin(), b.getYMin(), b.getXMax(), b.getYMax());
                 for (Node n : b.nodes) {
@@ -208,10 +219,10 @@ public class NodesManager {
             out.println("*******************************************************************");
             out.println("*******************************************************************");
             out.println("out iterate max time nodes during searching influence radiu ");
-            out.printf("%20s%20s%20s%20s%20s%20s","Index","x","y","radiu","err","type");
-            for(i=0;i<status.outErrSupportNodes.size();i++){
-                Node node= status.outErrSupportNodes.get(i);
-                out.printf("%20d%20e%20e%20e%20e%20s%n",node.getIndex(),node.getX(),node.getY(),node.getInfRadius(),status.outErrSupportNodesMinErr.get(i),node.getType());                
+            out.printf("%20s%20s%20s%20s%20s%20s", "Index", "x", "y", "radiu", "err", "type");
+            for (i = 0; i < status.outErrSupportNodes.size(); i++) {
+                Node node = status.outErrSupportNodes.get(i);
+                out.printf("%20d%20e%20e%20e%20e%20s%n", node.getIndex(), node.getX(), node.getY(), node.getInfRadius(), status.outErrSupportNodesMinErr.get(i), node.getType());
             }
         } catch (IOException ex) {
             Logger.getLogger(NodesManager.class.getName()).log(Level.SEVERE, null, ex);
@@ -226,15 +237,15 @@ public class NodesManager {
      * @param maxErr 允许的节点影响域半径的最大误差
      * @param maxIters 计算节点影响域半径的迭代次数，迭代超过maxIters则选择误差最小的那个解，同时将结点和误差记录在{@link Status NodesManager.Status} 相关变量中。
      */
-    public void generateNodesInfluence(double alphai, double maxErr,int maxIters) {
+    public void generateNodesInfluence(double alphai, double maxErr, int maxIters) {
         double dc = sqrt((yMax - yMin) * (xMax - yMin)) / (sqrt(nodes.size()) - 1);
         double radiu = dc * alphai / 2;
-        double minErrRadiu=0;
+        double minErrRadiu = 0;
         double result;
         double err = 0;
-        double minErr=0;
+        double minErr = 0;
         int n;
-        int itersCount=0;
+        int itersCount = 0;
         double x, y;
 
         for (Node node : nodes) {
@@ -244,11 +255,11 @@ public class NodesManager {
 
 
             //计算结点Node的影响域尺寸
-            itersCount=0;
+            itersCount = 0;
             do {
                 n = 0;
-                minErr=0;
-                for (NodeBucket bucket : buckets) {
+                minErr = 0;
+                for (NodeBucket bucket : getBuckets()) {
                     if (bucket.isSqureIntersected(x, y, radiu)) {
                         for (Node bucketNode : bucket.getNodes()) {
                             if (bucketNode.isInDistance(x, y, radiu)) {
@@ -265,14 +276,14 @@ public class NodesManager {
                 }
                 result = 2 * radiu / (sqrt(4 * n / PI) - 1) * alphai / 2;//<=is for circle support domain,and for sqare support domain:sqrt(PI * radiu * radiu) / (sqrt(n) - 1) * alphai / 2;
                 err = (result - radiu) / radiu;
-                
-                if(minErr==0||err<minErr){
-                    minErr=err;
-                    minErrRadiu=radiu;
+
+                if (minErr == 0 || err < minErr) {
+                    minErr = err;
+                    minErrRadiu = radiu;
                 }
                 if (abs(err) >= abs(maxErr)) {
-                    if(itersCount>=maxIters){
-                        radiu=minErrRadiu;
+                    if (itersCount >= maxIters) {
+                        radiu = minErrRadiu;
                         status.outErrSupportNodes.add(node);
                         status.outErrSupportNodesMinErr.add(new Double(radiu));
                         break;
@@ -287,12 +298,180 @@ public class NodesManager {
 
             //设置结点的影响域半径并将其加入到可能影响到的NodeBucket的supportNodes链表中
             node.setInfRadius(radiu);
-            for (NodeBucket bucket : buckets) {
+            for (NodeBucket bucket : getBuckets()) {
                 if (bucket.isSqureIntersected(x, y, radiu)) {
                     bucket.addSupportNodes(node);
                 }
             }
         }
     }
+
+    /**
+     * 获取所有NodeBucket的几何外形,与{@link NodeBucket#getShape()} 不同的是，其将重叠的线段略去了
+     * @return 可用于java2D
+     */
+    public Shape getBucketsShape() {
+
+        LinkedList<double[]> vLines = new LinkedList<double[]>();
+        LinkedList<double[]> hLines = new LinkedList<double[]>();
+        double x1, y1, x2, y2;
+        double[] tds, tds2;
+
+        Iterator ite = getBuckets().iterator();
+        if (!ite.hasNext()) {
+            return null;
+        }
+
+        NodeBucket nb = (NodeBucket) ite.next();
+
+        x1 = nb.getXMin();
+        y1 = nb.getYMin();
+        x2 = nb.getXMax();
+        y2 = nb.getYMax();
+
+        vLines.add(new double[]{x1, y1, y2});
+        vLines.add(new double[]{x2, y1, y2});
+        hLines.add(new double[]{y1, x1, x2});
+        hLines.add(new double[]{y2, x1, x2});
+
+        ListIterator vIte, hIte;
+        boolean tb;
+
+        //getting the lines' pos
+        while (ite.hasNext()) {
+            nb = (NodeBucket) ite.next();
+            x1 = nb.getXMin();
+            y1 = nb.getYMin();
+            x2 = nb.getXMax();
+            y2 = nb.getYMax();
+            vIte = vLines.listIterator();
+            hIte = hLines.listIterator();
+
+            //add verticle lines
+            tb = false;
+            while (vIte.hasNext()) {
+                tds = (double[]) vIte.next();
+                if (x1 < tds[0]) {
+                    if (vIte.hasPrevious()) {
+                        vIte.previous();
+                        vIte.add(new double[]{x1, y1, y2});
+                        tb = true;
+                    } else {
+                        vLines.add(0, new double[]{x1, y1, y2});
+                        tb = true;
+                    }
+                    break;
+                } else {
+                    if (x1 == tds[0]) {
+                        if ((y1 - tds[1]) * (y1 - tds[2]) <= 0 || (y2 - tds[1]) * (y2 - tds[2]) <= 0) {
+                            tds[1] = min(y1, tds[1]);
+                            tds[2] = max(y2, tds[2]);
+                            tb = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (!tb) {
+                vIte.add(new double[]{x1, y1, y2});
+            }
+
+            tb = false;
+            vIte.previous();
+            while (vIte.hasNext()) {
+                tds = (double[]) vIte.next();
+                if (x2 < tds[0]) {
+                    vIte.previous();
+                    vIte.add(new double[]{x2, y1, y2});
+                    tb = true;
+                    break;
+                } else {
+                    if (x2 == tds[0]) {
+                        if ((y1 - tds[1]) * (y1 - tds[2]) <= 0 || (y2 - tds[1]) * (y2 - tds[2]) <= 0) {
+                            tds[1] = min(y1, tds[1]);
+                            tds[2] = max(y2, tds[2]);
+                            tb = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (!tb) {
+                vIte.add(new double[]{x2, y1, y2});
+            }
+
+
+            //add horizontal lines
+            tb = false;
+            while (hIte.hasNext()) {
+                tds = (double[]) hIte.next();
+                if (y1 < tds[0]) {
+                    if (hIte.hasPrevious()) {
+                        hIte.previous();
+                        hIte.add(new double[]{y1, x1, x2});
+                        tb = true;
+                    } else {
+                        hLines.add(0, new double[]{y1, x1, x2});
+                        tb = true;
+                    }
+                    break;
+                } else {
+                    if (y1 == tds[0]) {
+                        if ((x1 - tds[1]) * (x1 - tds[2]) <= 0 || (x2 - tds[1]) * (x2 - tds[2]) <= 0) {
+                            tds[1] = min(x1, tds[1]);
+                            tds[2] = max(x2, tds[2]);
+                            tb = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (!tb) {
+                vIte.add(new double[]{y1, x1, x2});
+            }
+
+            tb = false;
+            hIte.previous();
+            while (hIte.hasNext()) {
+                tds = (double[]) hIte.next();
+                if (y2 < tds[0]) {
+                    hIte.previous();
+                    hIte.add(new double[]{y2, x1, x2});
+                    tb = true;
+                    break;
+                } else {
+                    if (y2 == tds[0]) {
+                        if ((x1 - tds[1]) * (x1 - tds[2]) <= 0 || (x2 - tds[1]) * (x2 - tds[2]) <= 0) {
+                            tds[1] = min(x1, tds[1]);
+                            tds[2] = max(x2, tds[2]);
+                            tb = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (!tb) {
+                hIte.add(new double[]{y2, x1, x2});
+            }
+        }
+        //end of getting the lines pos
+
+        //create shape
+        Path2D path=new Path2D.Double();
+        for(double[] ds:vLines){
+            path.moveTo(ds[0], ds[1]);
+            path.lineTo(ds[0], ds[2]);
+        }
+        for(double [] ds:hLines){
+            path.moveTo(ds[1], ds[0]);
+            path.lineTo(ds[2], ds[0]);
+        }
+        return path.createTransformedShape(new AffineTransform());
+    }
+
+    public LinkedList<Node> getNodes() {
+        return nodes;
+    }
+    
 }
 
