@@ -8,12 +8,15 @@
  *
  * Created on 2009-2-17, 14:45:18
  */
-
 package net.epsilony.simpmeshfree.model;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.Stroke;
+import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
 
 /**
@@ -22,6 +25,18 @@ import java.awt.geom.AffineTransform;
  */
 public class ModelPanel extends javax.swing.JPanel {
 
+    private boolean viewScaleEnable = true;
+    private AffineTransform viewTransMat;
+
+
+    {
+        viewTransMat = new AffineTransform();
+    }
+    private boolean viewZoomEnable = true;
+
+    public void setViewZoomEnable(boolean viewZoomEnable) {
+        this.viewZoomEnable = viewZoomEnable;
+    }
 
     /** Creates new form ModelPanel */
     public ModelPanel() {
@@ -38,35 +53,171 @@ public class ModelPanel extends javax.swing.JPanel {
     private void initComponents() {
 
         setBackground(java.awt.Color.white);
-        setAutoscrolls(true);
-        setPreferredSize(new java.awt.Dimension(300, 300));
+        addMouseWheelListener(new java.awt.event.MouseWheelListener() {
+            public void mouseWheelMoved(java.awt.event.MouseWheelEvent evt) {
+                viewScaleByMouseWheelMove(evt);
+            }
+        });
+        addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                viewZoomByMouseClicked(evt);
+                viewWholeByMouseMidDblClicked(evt);
+            }
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                viewMoveStartByMousePressed(evt);
+            }
+            public void mouseReleased(java.awt.event.MouseEvent evt) {
+                viewMoveByMoveReleased(evt);
+            }
+        });
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            public void componentResized(java.awt.event.ComponentEvent evt) {
+                formComponentResized(evt);
+            }
+        });
+        addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            public void mouseDragged(java.awt.event.MouseEvent evt) {
+                viewMoveByMouseDragged(evt);
+            }
+            public void mouseMoved(java.awt.event.MouseEvent evt) {
+                viewZoomingByMouseMoved(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 800, Short.MAX_VALUE)
+            .addGap(0, 300, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 600, Short.MAX_VALUE)
+            .addGap(0, 300, Short.MAX_VALUE)
         );
     }// </editor-fold>//GEN-END:initComponents
 
+    private void formComponentResized(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_formComponentResized
+        // TODO add your handling code here:
+        repaint();
+    }//GEN-LAST:event_formComponentResized
+    int viewMoveStartX, viewMoveStartY;
+    int viewTransX, viewTransY;
+    private boolean viewMoveEnable = true;
+    private boolean viewMoving = false;
+    int viewMovingX, viewMovingY;
+    private void viewMoveByMouseDragged(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_viewMoveByMouseDragged
+        // TODO add your handling code here:
+        if (!viewMoveEnable || !viewMoving) {
+            return;
+        }
+        Graphics2D g2 = (Graphics2D) getGraphics();
+        g2.setXORMode(Color.white);
+        g2.drawLine(viewMoveStartX, viewMoveStartY, viewMovingX, viewMovingY);
+        viewMovingX = evt.getX();
+        viewMovingY = evt.getY();
+        g2.drawLine(viewMoveStartX, viewMoveStartY, viewMovingX, viewMovingY);
+        System.out.println("d" + evt.getX() + " " + evt.getY());
+    }//GEN-LAST:event_viewMoveByMouseDragged
+
+    private void viewMoveStartByMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_viewMoveStartByMousePressed
+        // TODO add your handling code here:
+        if (!viewMoveEnable || evt.getButton() != MouseEvent.BUTTON2) {
+            return;
+        }
+        viewMoving = true;
+        viewMoveStartX = evt.getX();
+        viewMoveStartY = evt.getY();
+        viewMovingX = viewMoveStartX;
+        viewMovingY = viewMoveStartY;
+        System.out.println("sX:" + viewMoveStartX + "sY:" + viewMoveStartY);
+    }//GEN-LAST:event_viewMoveStartByMousePressed
+
+    private void viewMoveByMoveReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_viewMoveByMoveReleased
+        // TODO add your handling code here:
+        if (!viewMoveEnable || evt.getButton() != MouseEvent.BUTTON2 || !viewMoving) {
+            return;
+        }
+        System.out.println("vTx:" + viewTransX + "vTy" + viewTransY);
+        AffineTransform tx = AffineTransform.getTranslateInstance(evt.getX() - viewMoveStartX, evt.getY() - viewMoveStartY);
+        viewTransMat.preConcatenate(tx);
+        viewMoving = false;
+        repaint();
+    }//GEN-LAST:event_viewMoveByMoveReleased
+    double viewScaleCenterX, viewScaleCenterY;
+    private void viewScaleByMouseWheelMove(java.awt.event.MouseWheelEvent evt) {//GEN-FIRST:event_viewScaleByMouseWheelMove
+        // TODO add your handling code here:
+        if (!viewScaleEnable) {
+            return;
+        }
+        int ti = evt.getWheelRotation();
+        double t = Math.pow(1.05, ti);
+        AffineTransform tx = AffineTransform.getTranslateInstance(evt.getX(), evt.getY());
+        tx.scale(t, t);
+        tx.translate(-evt.getX(), -evt.getY());
+        viewTransMat.preConcatenate(tx);
+        repaint();
+    }//GEN-LAST:event_viewScaleByMouseWheelMove
+    Boolean viewZooming = false;
+    double viewZoomingX1, viewZoomingY1, viewZoomingX2, viewZoomingY2;
+    private void viewZoomByMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_viewZoomByMouseClicked
+        // TODO add your handling code here:
+        if (!viewZoomEnable || !evt.isControlDown() || nodesManager == null) {
+            return;
+        }
+        if (viewZooming) {
+            viewZoomingX2 = evt.getX();
+            viewZoomingY2 = evt.getY();
+            double dx = Math.abs(viewZoomingX2 - viewZoomingX1);
+            double dy = Math.abs(viewZoomingY2 - viewZoomingY1);
+            AffineTransform tx = AffineTransform.getTranslateInstance(getWidth() / 2, getHeight() / 2);
+            double t = 0.95 * Math.min(getWidth() / dx, getHeight() / dy);
+            tx.scale(t, t);
+            tx.translate(-Math.min(viewZoomingX1, viewZoomingX2) - dx / 2, -Math.min(viewZoomingY1, viewZoomingY2) - dy / 2);
+            viewTransMat.preConcatenate(tx);
+            viewZooming = false;
+            repaint();
+        } else {
+            viewZooming = true;
+            viewZoomingX1 = evt.getX();
+            viewZoomingY1 = evt.getY();
+            viewZoomingX2 = viewZoomingX1;
+            viewZoomingY2 = viewZoomingY1;
+        }
+
+    }//GEN-LAST:event_viewZoomByMouseClicked
+
+    private void viewZoomingByMouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_viewZoomingByMouseMoved
+        // TODO add your handling code here:
+        if (!viewZooming || nodesManager == null) {
+            return;
+        }
+        Graphics2D g2 = (Graphics2D) getGraphics();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+        g2.setXORMode(Color.WHITE);
+        g2.drawRect((int) viewZoomingX1, (int) viewZoomingY1, (int) (viewZoomingX2 - viewZoomingX1), (int) (viewZoomingY2 - viewZoomingY1));
+        viewZoomingX2 = evt.getX();
+        viewZoomingY2 = evt.getY();
+        g2.drawRect((int) viewZoomingX1, (int) viewZoomingY1, (int) (viewZoomingX2 - viewZoomingX1), (int) (viewZoomingY2 - viewZoomingY1));
+
+    }//GEN-LAST:event_viewZoomingByMouseMoved
+
+    private void viewWholeByMouseMidDblClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_viewWholeByMouseMidDblClicked
+        // TODO add your handling code here:
+        if(!viewZoomEnable||nodesManager==null||evt.getClickCount()!=2||evt.getButton()!=MouseEvent.BUTTON2){
+            return;
+        }
+        viewWhole();
+    }//GEN-LAST:event_viewWholeByMouseMidDblClicked
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables
-
-    NodesManager nodesManager=null;
+    NodesManager nodesManager = null;
     boolean showBuckets;
-    double nodesRadiu=5;
-    double coorX=5;
-    double coorY=getHeight()-5;
+    double nodesRadiu = 5;
 
     public void setNodesManager(NodesManager nodesManager) {
         this.nodesManager = nodesManager;
     }
-    
 
     public void setNodesRadiu(double nodesRadiu) {
         this.nodesRadiu = nodesRadiu;
@@ -80,20 +231,48 @@ public class ModelPanel extends javax.swing.JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        Graphics2D g2=(Graphics2D) g;
+        Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        viewTransform(g2);
-        if(showBuckets&&null!=nodesManager){
+        g2.setTransform(viewTransMat);
+
+        if (showBuckets && null != nodesManager) {
             g2.draw(nodesManager.getBucketsShape());
         }
+        if (null != nodesManager) {
+            g2.draw(nodesManager.getNodesShape(1));
+        }
         System.out.println("paintComponent");
-    }
-    
-    private void viewTransform(Graphics2D g2){
-        AffineTransform tx=new AffineTransform();
-        tx.translate(0, 400);
-        tx.quadrantRotate(3);
-        g2.setTransform(tx);
+        g2.setStroke(new BasicStroke(5));
+        g2.drawLine(0, 0, 100, 0);
+        g2.setStroke(new BasicStroke(10));
+        g2.drawLine(0, 0, 0, 100);
     }
 
+    public void viewWhole() {
+        if (nodesManager == null) {
+            return;
+        }
+        viewTransMat = new AffineTransform();
+        double x1 = nodesManager.getXMin();
+        double x2 = nodesManager.getXMax();
+        double y1 = nodesManager.getYMin();
+        double y2 = nodesManager.getYMax();
+        viewTransMat.translate(getWidth() / 2, getHeight() / 2);
+        double t = 0.95 * Math.min(getWidth() / (x2 - x1), getHeight() / (y2 - y1));
+        viewTransMat.scale(t, -t);
+        viewTransMat.translate(-x1 - (x2 - x1) / 2, -y1 - (y2 - y1) / 2);
+
+        repaint();
+    }
+
+    /**
+     * @param viewMoveEnable the viewMoveEnable to set
+     */
+    public void setViewMoveEnable(boolean viewMove) {
+        this.viewMoveEnable = viewMove;
+    }
+
+    public void setViewScaleEnable(boolean viewScaleEnable) {
+        this.viewScaleEnable = viewScaleEnable;
+    }
 }

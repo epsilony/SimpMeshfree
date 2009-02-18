@@ -7,6 +7,7 @@ package net.epsilony.simpmeshfree.model;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
+import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -44,6 +45,10 @@ public class NodesManager {
     double xMin, yMin, xMax, yMax; //NodesManager 的管理范围，初始的那个Bucket与其等同。
     public LinkedList<Node> nodes = new LinkedList<Node>();
 
+    boolean nodesChanged=false;
+    boolean bucketsChanged=false;
+    Shape nodesShape=null;
+    Shape bucketsShape=null;
     /**
      * @return the buckets
      */
@@ -113,7 +118,9 @@ public class NodesManager {
             throw new NodeOutsideManagerDomainException(n, this);
         }
 
+        nodesChanged=true;
         if (origBucket.nodesSize() >= getBucketCapacity()) {
+            bucketsChanged=true;
             LinkedList<NodeBucket> fissionBuckets = new LinkedList<NodeBucket>();
             getBuckets().remove(origBucket);
             fissionBuckets.add(origBucket);
@@ -312,6 +319,9 @@ public class NodesManager {
      */
     public Shape getBucketsShape() {
 
+        if(!bucketsChanged&&bucketsShape!=null){
+            return bucketsShape;
+        }
         LinkedList<double[]> vLines = new LinkedList<double[]>();
         LinkedList<double[]> hLines = new LinkedList<double[]>();
         double x1, y1, x2, y2;
@@ -466,11 +476,26 @@ public class NodesManager {
             path.moveTo(ds[1], ds[0]);
             path.lineTo(ds[2], ds[0]);
         }
-        return path.createTransformedShape(new AffineTransform());
+        bucketsChanged=false;
+        return bucketsShape=path.createTransformedShape(new AffineTransform());
     }
 
     public LinkedList<Node> getNodes() {
         return nodes;
+    }
+
+    public Shape getNodesShape(double r){
+        if(!nodesChanged&&nodesShape!=null){
+            return nodesShape;
+        }
+        Path2D path=new Path2D.Double();
+        Ellipse2D ell=new Ellipse2D.Double(-r,-r,2*r,2*r);
+        Path2D nodePath=new Path2D.Double(ell);
+        for(Node n:getNodes()){
+           path.append(nodePath.getPathIterator(AffineTransform.getTranslateInstance(n.getX(), n.getY())), false);
+        }
+        nodesChanged=false;
+        return nodesShape=path.createTransformedShape(new AffineTransform());
     }
     
 }
