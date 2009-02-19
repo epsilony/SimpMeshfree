@@ -44,11 +44,11 @@ public class NodesManager {
     int bucketCapacity; //每一个bucket的最大容量
     double xMin, yMin, xMax, yMax; //NodesManager 的管理范围，初始的那个Bucket与其等同。
     public LinkedList<Node> nodes = new LinkedList<Node>();
+    boolean nodesChanged = false;
+    boolean bucketsChanged = false;
+    Shape nodesShape = null;
+    Shape bucketsShape = null;
 
-    boolean nodesChanged=false;
-    boolean bucketsChanged=false;
-    Shape nodesShape=null;
-    Shape bucketsShape=null;
     /**
      * @return the buckets
      */
@@ -118,9 +118,9 @@ public class NodesManager {
             throw new NodeOutsideManagerDomainException(n, this);
         }
 
-        nodesChanged=true;
+        nodesChanged = true;
         if (origBucket.nodesSize() >= getBucketCapacity()) {
-            bucketsChanged=true;
+            bucketsChanged = true;
             LinkedList<NodeBucket> fissionBuckets = new LinkedList<NodeBucket>();
             getBuckets().remove(origBucket);
             fissionBuckets.add(origBucket);
@@ -314,18 +314,18 @@ public class NodesManager {
     }
 
     /**
-     * 获取所有NodeBucket的几何外形,与{@link NodeBucket#getShape()} 不同的是，其将重叠的线段略去了
+     * 获取所有NodeBucket的几何外形,与{@link NodeBucket#getShape()} 不同的是,试图将重叠段去掉但是失败了
      * @return 可用于java2D
      */
     public Shape getBucketsShape() {
 
-        if(!bucketsChanged&&bucketsShape!=null){
+        if (!bucketsChanged && bucketsShape != null) {
             return bucketsShape;
         }
         LinkedList<double[]> vLines = new LinkedList<double[]>();
         LinkedList<double[]> hLines = new LinkedList<double[]>();
         double x1, y1, x2, y2;
-        double[] tds, tds2;
+        double[] tds;
 
         Iterator ite = getBuckets().iterator();
         if (!ite.hasNext()) {
@@ -382,12 +382,13 @@ public class NodesManager {
                     }
                 }
             }
+
             if (!tb) {
                 vIte.add(new double[]{x1, y1, y2});
             }
 
-            tb = false;
             vIte.previous();
+            tb = false;
             while (vIte.hasNext()) {
                 tds = (double[]) vIte.next();
                 if (x2 < tds[0]) {
@@ -437,7 +438,7 @@ public class NodesManager {
                 }
             }
             if (!tb) {
-                vIte.add(new double[]{y1, x1, x2});
+                hIte.add(new double[]{y1, x1, x2});
             }
 
             tb = false;
@@ -467,36 +468,35 @@ public class NodesManager {
         //end of getting the lines pos
 
         //create shape
-        Path2D path=new Path2D.Double();
-        for(double[] ds:vLines){
+        Path2D path = new Path2D.Double();
+        for (double[] ds : vLines) {
             path.moveTo(ds[0], ds[1]);
             path.lineTo(ds[0], ds[2]);
         }
-        for(double [] ds:hLines){
+        for (double[] ds : hLines) {
             path.moveTo(ds[1], ds[0]);
             path.lineTo(ds[2], ds[0]);
         }
-        bucketsChanged=false;
-        return bucketsShape=path.createTransformedShape(new AffineTransform());
+        bucketsChanged = false;
+        return bucketsShape = path.createTransformedShape(new AffineTransform());
     }
 
     public LinkedList<Node> getNodes() {
         return nodes;
     }
 
-    public Shape getNodesShape(double r){
-        if(!nodesChanged&&nodesShape!=null){
+    public Shape getNodesShape() {
+        if (!nodesChanged && nodesShape != null) {
             return nodesShape;
         }
-        Path2D path=new Path2D.Double();
-        Ellipse2D ell=new Ellipse2D.Double(-r,-r,2*r,2*r);
-        Path2D nodePath=new Path2D.Double(ell);
-        for(Node n:getNodes()){
-           path.append(nodePath.getPathIterator(AffineTransform.getTranslateInstance(n.getX(), n.getY())), false);
+        Path2D path = new Path2D.Double();
+        Path2D nodePath = new Path2D.Double(new Line2D.Double(0, 0, 0, 0));
+
+        for (Node n : getNodes()) {
+            path.append(nodePath.getPathIterator(AffineTransform.getTranslateInstance(n.getX(), n.getY())), false);
         }
-        nodesChanged=false;
-        return nodesShape=path.createTransformedShape(new AffineTransform());
+        nodesChanged = false;
+        return nodesShape = path.createTransformedShape(new AffineTransform());
     }
-    
 }
 

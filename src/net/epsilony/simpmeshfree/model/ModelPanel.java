@@ -235,17 +235,20 @@ public class ModelPanel extends javax.swing.JPanel {
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setTransform(viewTransMat);
 
+        g2.setStroke(new BasicStroke(0));
+        g2.setColor(Color.BLACK);
         if (showBuckets && null != nodesManager) {
             g2.draw(nodesManager.getBucketsShape());
         }
         if (null != nodesManager) {
-            g2.draw(nodesManager.getNodesShape(1));
+            g2.draw(nodesManager.getNodesShape());
+            System.out.println("buckets"+nodesManager.getBuckets().size());
         }
         System.out.println("paintComponent");
         g2.setStroke(new BasicStroke(5));
         g2.drawLine(0, 0, 100, 0);
         g2.setStroke(new BasicStroke(10));
-        g2.drawLine(0, 0, 0, 100);
+        g2.drawLine(0, 0, 0, 100);      
     }
 
     public void viewWhole() {
