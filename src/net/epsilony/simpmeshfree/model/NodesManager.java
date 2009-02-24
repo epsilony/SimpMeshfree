@@ -6,7 +6,6 @@ package net.epsilony.simpmeshfree.model;
 
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.io.BufferedWriter;
@@ -218,7 +217,7 @@ public class NodesManager {
                 out.println("bucket" + i + ":");
                 out.printf("nodes.size = %d, xmin=%g, ymin = %g, xmax = %g, ymax = %g%n", b.nodes.size(), b.getXMin(), b.getYMin(), b.getXMax(), b.getYMax());
                 for (Node n : b.nodes) {
-                    out.printf("Node index:%d, x = %g, y = %g, type = %b%n", n.getIndex(), n.getX(), n.getY(), n.isEssential());
+                    out.printf("Node index:%d, x = %g, y = %g, type = %s%n", n.getIndex(), n.getX(), n.getY(), n.getClass().getName());
                 }
                 i++;
             }
