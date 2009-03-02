@@ -42,7 +42,7 @@ public class TriangleJni {
      */
     public native void triangleFun();
 
-
+    //读入triangleFun有关的库
     static {
         //for debuging the native method
         //System.load("/home/epsilon/documents/4_java/javaProjects/SimpMeshfree/TriangleJni/TriangleJni.so");
@@ -55,18 +55,17 @@ public class TriangleJni {
         if (arch.equals("i386")) {
             if (name.equals("Linux")) {
                 System.load(System.getProperty("user.dir") + "/TriangleJni.so");
-            }else
-            {
+            } else {
                 throw new UnsupportedOperationException();
-                //System.load(System.getProperty("user.dir")+"\\TriangleJni.dll");
+            //System.load(System.getProperty("user.dir")+"\\TriangleJni.dll");
+            }
+        } else if (arch.equals("amd64")) {
+            if (name.equals("Linux")) {
+                System.load(System.getProperty("user.dir") + "/TriangleJniAmd64.so");
+            }else{
+                throw new UnsupportedOperationException();
             }
         }
-//        if (arch.equals("amd64"))
-//        {
-//            if(name.equals("LINUX")){
-//                System.load(System.getProperty("user.dir") + "/TriangleJni64.so");
-//            }
-//        }
     //normal mode
     //System.loadLibrary("TriangleJni");
     }
