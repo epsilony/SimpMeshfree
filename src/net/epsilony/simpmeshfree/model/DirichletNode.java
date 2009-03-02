@@ -5,20 +5,27 @@
 
 package net.epsilony.simpmeshfree.model;
 
+import net.epsilony.simpmeshfree.model.ModelElement.ModelElementType;
+
 /**
  *
  * @author epsilon
  */
-public class NodeDirichlet extends NodeBoundary{
-    public NodeDirichlet(double x,double y){
-        initNode(x,y);
-        this.type=PrimitiveType.NodeDirichlet;
+public class DirichletNode extends BoundaryNode{
+
+    public DirichletNode(double x, double y) {
+        super(x, y);
     }
 
-    public NodeDirichlet(Node x){
-        copyNode(x);
-        this.type=PrimitiveType.NodeDirichlet;
+    public DirichletNode(Point p) {
+        super(p);
     }
+
+    @Override
+    public ModelElementType getType() {
+        return ModelElementType.DirichletNode;
+    }
+
     double ux,uy;
     public void setUxy(double ux,double uy){
         this.ux=ux;

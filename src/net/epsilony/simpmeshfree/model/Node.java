@@ -4,16 +4,33 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import java.util.LinkedList;
+import net.epsilony.simpmeshfree.model.ModelElement.ModelElementType;
+import net.epsilony.simpmeshfree.utils.ModelElementIndexManager;
+
 /**
  *
  * @author epsilon
  */
-public class Node extends Point {
+public class Node extends Point{
 
-    static int maxIndex;
-    int index;
-    static public int generateIndex(){
-        return maxIndex++;
+    static ModelElementIndexManager nodeIM=new ModelElementIndexManager();
+    LinkedList<Node> neighbors=new LinkedList<Node>();
+
+
+    @Override
+    public ModelElementType getType() {
+        return ModelElementType.Node;
+    }
+
+    @Override
+    public ModelElementIndexManager getIndexManager() {
+        return nodeIM;
+    }
+
+
+    public boolean addNeighbor(Node e) {
+        return neighbors.add(e);
     }
 
     double infRadius; // influnce radius
@@ -27,20 +44,14 @@ public class Node extends Point {
     }
 
     public Node(double x, double y) {
-        initNode(x,y);
-        setType(PrimitiveType.NodeNormal);
+        this.x=x;
+        this.y=y;
+        this.index=nodeIM.getNewIndex();
     }
 
-    protected Node(){
-
-    }
-
-    protected  void setIndex(int index) {
-        this.index = index;
-    }
-
-    public int getIndex() {
-        return index;
+    public  Node(Point p){
+        setXY(p);
+        this.index=nodeIM.getNewIndex();
     }
 
     /**
@@ -63,14 +74,8 @@ public class Node extends Point {
         return (this.x - x) * (this.x - x) + (this.y - y) * (this.y - y) <= infRadius * infRadius;
     }
 
-    protected void copyNode(Node n) {
-        setXY(n);
-        setIndex(n.getIndex());
-    }
-
-    protected void initNode(double x, double y) {
-        this.x = x;
-        this.y = y;
-        this.index = generateIndex();
-    }
+//    protected void copyNode(Node n) {
+//        setXY(n);
+//        setIndex(n.getIndex());
+//    }
 }
