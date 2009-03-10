@@ -4,6 +4,7 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import java.awt.geom.Path2D;
 import java.util.LinkedList;
 import net.epsilony.simpmeshfree.model.ModelElement.ModelElementType;
 import net.epsilony.simpmeshfree.utils.ModelElementIndexManager;
@@ -16,10 +17,13 @@ public class Node extends Point{
 
     static ModelElementIndexManager nodeIM=new ModelElementIndexManager();
     LinkedList<Node> neighbors=new LinkedList<Node>();
-
+    LinkedList<Triangle> attachedTriangles=new LinkedList<Triangle>();
+    Segment attachedSegment=null;
+    LinkedList<Node> affectedNodes=new LinkedList<Node>();
+    public int nodeFlag;
 
     @Override
-    public ModelElementType getType() {
+    public ModelElementType type() {
         return ModelElementType.Node;
     }
 
@@ -72,6 +76,17 @@ public class Node extends Point{
      */
     public boolean isInfluenced(double x, double y) {
         return (this.x - x) * (this.x - x) + (this.y - y) * (this.y - y) <= infRadius * infRadius;
+    }
+
+    public void getNeighborNet(Path2D path){
+        nodeFlag=1;
+        for(Node n:neighbors){
+            if(n.nodeFlag!=0){
+                path.moveTo(x, y);
+                path.lineTo(n.x, n.y);
+                n.getNeighborNet(path);
+            }
+        }
     }
 
 //    protected void copyNode(Node n) {

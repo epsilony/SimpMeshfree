@@ -17,6 +17,7 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Stroke;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
 import java.awt.geom.AffineTransform;
 
 /**
@@ -41,6 +42,25 @@ public class ModelPanel extends javax.swing.JPanel {
     /** Creates new form ModelPanel */
     public ModelPanel() {
         initComponents();
+    }
+
+    public void viewMove(double dx, double dy) {
+        AffineTransform tx = AffineTransform.getTranslateInstance(dx, dy);//);
+        viewTransMat.preConcatenate(tx);
+    }
+
+    public void viewScale(double centerX, double centerY, double t) {
+        AffineTransform tx = AffineTransform.getTranslateInstance(centerX, centerY);
+        tx.scale(t, t);
+        tx.translate(-centerX, -centerY);
+        viewTransMat.preConcatenate(tx);
+    }
+
+    public void viewWhole(double x1, double x2, double y1, double y2, double width, double height) {
+        viewTransMat.translate((x2 + x1) / 2, (y2 + y1) / 2);
+        double t = 0.98 * Math.min(width / (x2 - x1), height / (y2 - y1));
+        viewTransMat.scale(t, -t);
+        viewTransMat.translate(-(x2 + x1) / 2, -(y2 + y1) / 2);
     }
 
     /** This method is called from within the constructor to
@@ -138,8 +158,7 @@ public class ModelPanel extends javax.swing.JPanel {
             return;
         }
         System.out.println("vTx:" + viewTransX + "vTy" + viewTransY);
-        AffineTransform tx = AffineTransform.getTranslateInstance(evt.getX() - viewMoveStartX, evt.getY() - viewMoveStartY);
-        viewTransMat.preConcatenate(tx);
+        viewMove(evt.getX() - viewMoveStartX, evt.getY() - viewMoveStartY);
         viewMoving = false;
         repaint();
     }//GEN-LAST:event_viewMoveByMoveReleased
@@ -151,10 +170,7 @@ public class ModelPanel extends javax.swing.JPanel {
         }
         int ti = evt.getWheelRotation();
         double t = Math.pow(1.05, ti);
-        AffineTransform tx = AffineTransform.getTranslateInstance(evt.getX(), evt.getY());
-        tx.scale(t, t);
-        tx.translate(-evt.getX(), -evt.getY());
-        viewTransMat.preConcatenate(tx);
+        viewScale(evt.getX(), evt.getY(), t);
         repaint();
     }//GEN-LAST:event_viewScaleByMouseWheelMove
     Boolean viewZooming = false;
@@ -203,7 +219,7 @@ public class ModelPanel extends javax.swing.JPanel {
 
     private void viewWholeByMouseMidDblClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_viewWholeByMouseMidDblClicked
         // TODO add your handling code here:
-        if(!viewZoomEnable||nodesManager==null||evt.getClickCount()!=2||evt.getButton()!=MouseEvent.BUTTON2){
+        if (!viewZoomEnable || nodesManager == null || evt.getClickCount() != 2 || evt.getButton() != MouseEvent.BUTTON2) {
             return;
         }
         viewWhole();
@@ -242,13 +258,13 @@ public class ModelPanel extends javax.swing.JPanel {
         }
         if (null != nodesManager) {
             g2.draw(nodesManager.getNodesShape());
-            System.out.println("buckets"+nodesManager.getBuckets().size());
+            System.out.println("buckets" + nodesManager.getBuckets().size());
         }
         System.out.println("paintComponent");
         g2.setStroke(new BasicStroke(5));
         g2.drawLine(0, 0, 100, 0);
         g2.setStroke(new BasicStroke(10));
-        g2.drawLine(0, 0, 0, 100);      
+        g2.drawLine(0, 0, 0, 100);
     }
 
     public void viewWhole() {
@@ -260,10 +276,7 @@ public class ModelPanel extends javax.swing.JPanel {
         double x2 = nodesManager.getXMax();
         double y1 = nodesManager.getYMin();
         double y2 = nodesManager.getYMax();
-        viewTransMat.translate(getWidth() / 2, getHeight() / 2);
-        double t = 0.95 * Math.min(getWidth() / (x2 - x1), getHeight() / (y2 - y1));
-        viewTransMat.scale(t, -t);
-        viewTransMat.translate(-x1 - (x2 - x1) / 2, -y1 - (y2 - y1) / 2);
+        viewWhole(x2, x1, y2, y1, getWidth(), getHeight());
 
         repaint();
     }

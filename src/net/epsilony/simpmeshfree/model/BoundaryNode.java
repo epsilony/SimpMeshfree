@@ -31,7 +31,7 @@ public class BoundaryNode extends Node {
     }
 
     @Override
-    public ModelElementType getType() {
+    public ModelElementType type() {
         return ModelElementType.BoundaryNode;
     }
 

@@ -22,7 +22,7 @@ public class DirichletNode extends BoundaryNode{
     }
 
     @Override
-    public ModelElementType getType() {
+    public ModelElementType type() {
         return ModelElementType.DirichletNode;
     }
 

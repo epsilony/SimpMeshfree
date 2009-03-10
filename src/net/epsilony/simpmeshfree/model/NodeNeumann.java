@@ -23,7 +23,7 @@ public class NodeNeumann extends BoundaryNode {
     double tx, ty;
 
     @Override
-    public ModelElementType getType() {
+    public ModelElementType type() {
         return ModelElementType.NeumannNode;
     }
 

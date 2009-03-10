@@ -4,6 +4,7 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import java.awt.geom.Point2D;
 import net.epsilony.simpmeshfree.utils.ModelElementIndexManager;
 
 /**
@@ -21,6 +22,14 @@ public class Point extends ModelElement {
 
     public double getY() {
         return y;
+    }
+
+    protected Point(double x,double y,Boolean temp){
+        if(!temp){
+            index=pointIm.getNewIndex();
+        }
+        this.x=x;
+        this.y=y;
     }
 
     public Point(double x, double y) {
@@ -53,12 +62,17 @@ public class Point extends ModelElement {
     }
 
     @Override
-    public ModelElementType getType() {
+    public ModelElementType type() {
         return ModelElementType.Point;
     }
 
     @Override
     public ModelElementIndexManager getIndexManager() {
         return pointIm;
+    }
+
+    public Point2D setPoint2D(Point2D p2){
+        p2.setLocation(x, y);
+        return p2;
     }
 }

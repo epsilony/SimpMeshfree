@@ -13,11 +13,11 @@ import static java.lang.Math.*;
  */
 public class Triangle extends ModelElement {
 
-    double cx, cy, cr, crsq;
+    double cx, cy, cr, crsq;//Cirum circle's center position cx,cy the radiu cr and crsq=cr*cr;
     static ModelElementIndexManager triangleIM = new ModelElementIndexManager();
 
     @Override
-    public ModelElementType getType() {
+    public ModelElementType type() {
         return ModelElementType.Triangle;
     }
     Node n1, n2, n3;
@@ -27,6 +27,7 @@ public class Triangle extends ModelElement {
         n1 = nodes[0];
         n2 = nodes[1];
         n3 = nodes[3];
+        calculateCirumRadiuAndCenter();
     }
 
     public Triangle(Node n1, Node n2, Node n3) {
@@ -34,6 +35,7 @@ public class Triangle extends ModelElement {
         this.n1 = n1;
         this.n2 = n2;
         this.n3 = n3;
+        calculateCirumRadiuAndCenter();
     }
     Triangle[] neighbors = new Triangle[3];
 
@@ -69,11 +71,11 @@ public class Triangle extends ModelElement {
     }
 
     public boolean isInCirumCircle(Point p){
-        return (p.x-cx)*(p.x-cx)+(p.y-cy)*(p.y-cy)-crsq<=0;
+        return (p.x-cx)*(p.x-cx)+(p.y-cy)*(p.y-cy)<=crsq;
     }
 
     public boolean isInCirumCircle(double x,double y){
-            return (x-cx)*(x-cx)+(y-cy)*(y-cy)<=0;
+            return (x-cx)*(x-cx)+(y-cy)*(y-cy)<=crsq;
     }
     public static void main(String[] args) {
         Node n1=new Node(sqrt(3),0);

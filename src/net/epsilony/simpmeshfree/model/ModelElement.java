@@ -16,10 +16,10 @@ public abstract class ModelElement {
 
     public enum ModelElementType {
 
-        Point, LineSegment, Node, NeumannNode, DirichletNode, RegularizeNode, Triangle, BoundaryNode;
+        Point, LineSegment, Node, NeumannNode, DirichletNode, RegularizeNode, Triangle, BoundaryNode, QuadBezierSegment, CubicBezierSegment, Vertex, ApproximatPoint;
     }
 
-    abstract public ModelElementType getType();
+    abstract public ModelElementType type();
     ModelElement attaching=null;
 
     abstract public ModelElementIndexManager getIndexManager();
