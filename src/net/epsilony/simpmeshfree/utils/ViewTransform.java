@@ -17,6 +17,19 @@ import net.epsilony.simpmeshfree.model.Point;
 public class ViewTransform extends AffineTransform {
 
     double width, height, x1, x2, y1, y2;
+    double topMargin,leftMargin,downMargin,rightMargin;
+    {
+        topMargin=30;
+        leftMargin=rightMargin=downMargin=10;
+    }
+
+    public void setMargin(double top,double down,double left,double right) {
+        topMargin=top;
+        downMargin=down;
+        leftMargin=left;
+        rightMargin=right;
+    }
+
 
     public enum ViewMarkerType {
 
@@ -73,8 +86,8 @@ public class ViewTransform extends AffineTransform {
         this.setToIdentity();
         double dx = Math.abs(zx2 - zx1);
         double dy = Math.abs(zy2 - zy1);
-        translate(getWidth() / 2, getHeight() / 2);
-        double t = 0.98 * Math.min(getWidth() / dx, getHeight() / dy);
+        translate((getWidth() +leftMargin-rightMargin)/ 2, (getHeight() +topMargin-downMargin)/ 2);
+        double t =Math.min((getWidth()-leftMargin-rightMargin) / dx, (getHeight()-topMargin-downMargin) / dy);
         scale(t, -t);
         translate(-(zx1 + zx2) / 2, -(zy1 + zy2) / 2);
     }

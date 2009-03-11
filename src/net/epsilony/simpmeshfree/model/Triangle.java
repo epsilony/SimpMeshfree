@@ -20,21 +20,21 @@ public class Triangle extends ModelElement {
     public ModelElementType type() {
         return ModelElementType.Triangle;
     }
-    Node n1, n2, n3;
+    Node [] nodes=new Node[3];
 
     public Triangle(Node[] nodes) {
         this.index = triangleIM.getNewIndex();
-        n1 = nodes[0];
-        n2 = nodes[1];
-        n3 = nodes[3];
+        this.nodes[0]=nodes[0];
+        this.nodes[1]=nodes[1];
+        this.nodes[2]=nodes[2];
         calculateCirumRadiuAndCenter();
     }
 
     public Triangle(Node n1, Node n2, Node n3) {
         this.index = triangleIM.getNewIndex();
-        this.n1 = n1;
-        this.n2 = n2;
-        this.n3 = n3;
+        nodes[0]=n1;
+        nodes[1]=n2;
+        nodes[2]=n3;
         calculateCirumRadiuAndCenter();
     }
     Triangle[] neighbors = new Triangle[3];
@@ -57,12 +57,12 @@ public class Triangle extends ModelElement {
     }
 
     private void calculateCirumRadiuAndCenter() {
-        double x1 = n1.x;
-        double y1 = n1.y;
-        double x2 = n2.x;
-        double y2 = n2.y;
-        double x3 = n3.x;
-        double y3 = n3.y;
+        double x1 = nodes[0].x;
+        double y1 = nodes[0].y;
+        double x2 = nodes[1].x;
+        double y2 = nodes[1].y;
+        double x3 = nodes[2].x;
+        double y3 = nodes[2].y;
         double t = -y1 * x3 - y2 * x1 + y2 * x3 + y1 * x2 + y3 * x1 - y3 * x2;
         cx = 1 / 2 * (y3 * x1 * x1 - y2 * x1 * x1 - y1 * x3 * x3 + y1 * y2 * y2 - y3 * y2 * y2 + y3 * y3 * y2 - y3 * x2 * x2 - y1 * y3 * y3 + x3 * x3 * y2 + y1 * x2 * x2 - y1 * y1 * y2 + y1 * y1 * y3) / t;
         cy = -1 / 2 * (-y2 * y2 * x3 + y3 * y3 * x2 - y3 * y3 * x1 - x3 * x2 * x2 + x3 * x3 * x2 + y2 * y2 * x1 + y1 * y1 * x3 - y1 * y1 * x2 + x1 * x1 * x3 - x1 * x1 * x2 + x1 * x2 * x2 - x1 * x3 * x3) / t;

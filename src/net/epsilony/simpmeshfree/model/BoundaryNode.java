@@ -20,15 +20,12 @@ public class BoundaryNode extends Node {
         super(x, y);
     }
     
-    ModelElement related;
+    Segment segment;
 
-    public ModelElement getRelated() {
-        return related;
+    public Segment getSegment() {
+        return segment;
     }
-
-    public void setRelated(ModelElement related) {
-        this.related = related;
-    }
+    
 
     @Override
     public ModelElementType type() {

@@ -8,7 +8,6 @@ import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Rectangle2D;
-import java.util.Arrays;
 import java.util.LinkedList;
 
 /**
@@ -32,7 +31,6 @@ public class GeometryModel {
     public void setRoutes(LinkedList<SegmentRoute> routes) {
         this.routes = routes;
     }
-
     LinkedList<SegmentRoute> routes = new LinkedList<SegmentRoute>();
     LinkedList<Point> points = new LinkedList<Point>();
     AffineTransform itrx = new AffineTransform();
@@ -55,11 +53,9 @@ public class GeometryModel {
         while (!pi.isDone()) {
             switch (pi.currentSegment(tds)) {
                 case PathIterator.SEG_MOVETO:
-                    if (hasMoveTo) {
-                        if (!hasClose) {
-                            rt.add(new LineSegment(lastEnd, routeHead));
-                        }
-                        rt.compile();                  
+                    if (hasMoveTo && !hasClose) {
+                        rt.add(new LineSegment(lastEnd, routeHead));
+                        rt.compile();
                         routes.add(rt);
                     }
                     lastEnd = new Point(tds[0], tds[1]);
@@ -69,17 +65,17 @@ public class GeometryModel {
                     hasClose = false;
                     break;
                 case PathIterator.SEG_CLOSE:
-                    if(lastEnd.x!=routeHead.x||lastEnd.y!=routeHead.y){
+                    if (lastEnd.x != routeHead.x || lastEnd.y != routeHead.y) {
                         rt.add(new LineSegment(lastEnd, routeHead));
 //                        System.out.println("close");
-                    }else{
+                    } else {
                         rt.getLast().setRightVertex(rt.getFirst().getLeftVertex());
 //                        System.out.println(rt.getLast().getRightVertex().x+" "+rt.getLast().getRightVertex().getY());
 //                        System.out.println("close2");
                     }
 
                     hasClose = true;
-//                    System.out.println(rt);
+                    System.out.println(rt);
                     rt.compile();
                     routes.add(rt);
                     break;
@@ -111,10 +107,10 @@ public class GeometryModel {
 
     }
 
-    public LinkedList<ApproximatePoint> approximatePoint(double size,double flatness){
-        LinkedList<ApproximatePoint> aprxPts=new LinkedList<ApproximatePoint>();
+    public LinkedList<ApproximatePoint> approximatePoint(double size, double flatness) {
+        LinkedList<ApproximatePoint> aprxPts = new LinkedList<ApproximatePoint>();
 
-        for(SegmentRoute sr:routes){
+        for (SegmentRoute sr : routes) {
             aprxPts.addAll(sr.approximatePoints(size, flatness));
         }
 //        System.out.println("aprxPts.size() = " + aprxPts.size());

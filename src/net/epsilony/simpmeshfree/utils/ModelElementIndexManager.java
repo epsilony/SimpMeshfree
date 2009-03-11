@@ -15,7 +15,7 @@ public class ModelElementIndexManager {
     int start=0;
 
     public int getNewIndex() {
-        return max++;
+        return ++max;
     }
 
 }

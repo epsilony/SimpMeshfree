@@ -5,7 +5,9 @@
 package net.epsilony.simpmeshfree.model;
 
 import java.awt.geom.Path2D;
+import java.util.Comparator;
 import java.util.LinkedList;
+import java.util.TreeSet;
 import net.epsilony.simpmeshfree.model.ModelElement.ModelElementType;
 import net.epsilony.simpmeshfree.utils.ModelElementIndexManager;
 
@@ -13,14 +15,20 @@ import net.epsilony.simpmeshfree.utils.ModelElementIndexManager;
  *
  * @author epsilon
  */
-public class Node extends Point{
+public class Node extends Point {
 
-    static ModelElementIndexManager nodeIM=new ModelElementIndexManager();
-    LinkedList<Node> neighbors=new LinkedList<Node>();
-    LinkedList<Triangle> attachedTriangles=new LinkedList<Triangle>();
-    Segment attachedSegment=null;
-    LinkedList<Node> affectedNodes=new LinkedList<Node>();
-    public int nodeFlag;
+    public static final Comparator<Node> nodeComparator = new Comparator<Node>() {
+
+        @Override
+        public int compare(Node o1, Node o2) {
+            return o1.index - o2.index;
+        }
+    };
+    static ModelElementIndexManager nodeIM = new ModelElementIndexManager();
+    TreeSet<Node> neighbors = new TreeSet<Node>(nodeComparator);
+    LinkedList<Triangle> triangles = new LinkedList<Triangle>();
+    LinkedList<Node> affectedNodes = new LinkedList<Node>();
+    public int flag;
 
     @Override
     public ModelElementType type() {
@@ -32,11 +40,9 @@ public class Node extends Point{
         return nodeIM;
     }
 
-
     public boolean addNeighbor(Node e) {
         return neighbors.add(e);
     }
-
     double infRadius; // influnce radius
 
     public double getInfRadius() {
@@ -48,14 +54,14 @@ public class Node extends Point{
     }
 
     public Node(double x, double y) {
-        this.x=x;
-        this.y=y;
-        this.index=nodeIM.getNewIndex();
+        this.x = x;
+        this.y = y;
+        this.index = nodeIM.getNewIndex();
     }
 
-    public  Node(Point p){
+    public Node(Point p) {
         setXY(p);
-        this.index=nodeIM.getNewIndex();
+        this.index = nodeIM.getNewIndex();
     }
 
     /**
@@ -78,16 +84,33 @@ public class Node extends Point{
         return (this.x - x) * (this.x - x) + (this.y - y) * (this.y - y) <= infRadius * infRadius;
     }
 
-    public void getNeighborNet(Path2D path){
-        nodeFlag=1;
-        for(Node n:neighbors){
-            if(n.nodeFlag!=0){
-                path.moveTo(x, y);
-                path.lineTo(n.x, n.y);
-                n.getNeighborNet(path);
+    public Path2D getNeighborNetPath(Path2D path) {
+        flag = 1;
+        for (Node n : neighbors) {
+            path.moveTo(x, y);
+            path.lineTo(n.x, n.y);
+            if (n.flag == 0) {
+                n.flag = 2;
+                n.getNeighborNetPathTool(path);
             }
         }
+        return path;
     }
+
+    void getNeighborNetPathTool(Path2D path) {
+        for (Node n : neighbors) {
+            if (n.flag > flag || n.flag == 0) {
+                path.moveTo(x, y);
+                path.lineTo(n.x, n.y);
+                if (n.flag == 0) {
+                    n.flag = flag + 1;
+                    n.getNeighborNetPathTool(path);
+                }
+            }
+
+        }
+    }
+
 
 //    protected void copyNode(Node n) {
 //        setXY(n);

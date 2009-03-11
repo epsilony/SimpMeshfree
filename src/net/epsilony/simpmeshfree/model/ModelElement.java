@@ -4,7 +4,6 @@
  */
 package net.epsilony.simpmeshfree.model;
 
-import com.sun.org.apache.bcel.internal.generic.INSTANCEOF;
 import java.util.LinkedList;
 import net.epsilony.simpmeshfree.utils.ModelElementIndexManager;
 
@@ -16,7 +15,7 @@ public abstract class ModelElement {
 
     public enum ModelElementType {
 
-        Point, LineSegment, Node, NeumannNode, DirichletNode, RegularizeNode, Triangle, BoundaryNode, QuadBezierSegment, CubicBezierSegment, Vertex, ApproximatPoint;
+        Point, LineSegment, Node, NeumannNode, DirichletNode, RegularizeNode, Triangle, BoundaryNode, QuadBezierSegment, CubicBezierSegment, Vertex, ApproximatPoint, SegmentRoute;
     }
 
     abstract public ModelElementType type();
