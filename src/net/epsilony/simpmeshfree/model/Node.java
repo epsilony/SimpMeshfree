@@ -5,6 +5,7 @@
 package net.epsilony.simpmeshfree.model;
 
 import java.awt.geom.Path2D;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.TreeSet;
@@ -84,31 +85,53 @@ public class Node extends Point {
         return (this.x - x) * (this.x - x) + (this.y - y) * (this.y - y) <= infRadius * infRadius;
     }
 
-    public Path2D getNeighborNetPath(Path2D path) {
+    public Path2D neighborNetPath(Path2D path) {
         flag = 1;
         for (Node n : neighbors) {
             path.moveTo(x, y);
             path.lineTo(n.x, n.y);
             if (n.flag == 0) {
                 n.flag = 2;
-                n.getNeighborNetPathTool(path);
+                n.neighborNetPathTool(path);
             }
         }
         return path;
     }
 
-    void getNeighborNetPathTool(Path2D path) {
+    void neighborNetPathTool(Path2D path) {
         for (Node n : neighbors) {
             if (n.flag > flag || n.flag == 0) {
                 path.moveTo(x, y);
                 path.lineTo(n.x, n.y);
                 if (n.flag == 0) {
                     n.flag = flag + 1;
-                    n.getNeighborNetPathTool(path);
+                    n.neighborNetPathTool(path);
                 }
             }
 
         }
+    }
+
+    public ArrayList<Node> supportNode(int layer,ArrayList<Node> nodes) {
+       nodes.clear();
+       nodes.add(this);
+       int start,end;
+       
+       flag=index;
+       start=0;
+       for(int i=0;i<layer;i++){
+           end=nodes.size();
+           for(int j=start;j<end;j++){
+               for(Node n:nodes.get(j).neighbors){
+                   if(n.flag!=index){
+                       n.flag=index;
+                       nodes.add(n);
+                   }
+               }
+           }
+           start=end;
+       }
+       return nodes;
     }
 
 

@@ -6,14 +6,21 @@ package net.epsilony.simpmeshfree.model;
 
 import java.awt.geom.Point2D;
 import net.epsilony.simpmeshfree.utils.ModelElementIndexManager;
+import net.epsilony.simpmeshfree.utils.domainsearch.LayeredDomainTree;
 
 /**
  *
  * @author epsilon
  */
 public class Point extends ModelElement {
+    public static Point tempPoint(double x,double y){
+        Point p= new Point();
+        p.x=x;
+        p.y=y;
+        return p;
+    }
 
-    double x, y;
+    protected double x, y;
     static ModelElementIndexManager pointIm = new ModelElementIndexManager();
 
     public double getX() {
@@ -75,4 +82,11 @@ public class Point extends ModelElement {
         p2.setLocation(x, y);
         return p2;
     }
+
+    @Override
+    public String toString() {
+        return String.format("Point:%d-(%.2f, %.2f)", index,x,y);
+    }
+
+
 }
