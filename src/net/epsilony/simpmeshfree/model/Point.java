@@ -5,22 +5,70 @@
 package net.epsilony.simpmeshfree.model;
 
 import java.awt.geom.Point2D;
+import java.util.Comparator;
 import net.epsilony.simpmeshfree.utils.ModelElementIndexManager;
-import net.epsilony.simpmeshfree.utils.domainsearch.LayeredDomainTree;
 
 /**
  *
  * @author epsilon
  */
 public class Point extends ModelElement {
-    public static Point tempPoint(double x,double y){
-        Point p= new Point();
-        p.x=x;
-        p.y=y;
+
+    public static Comparator<Point> compX;
+    public static Comparator<Point> compY;
+
+
+    static {
+        compX = new Comparator<Point>() {
+
+            @Override
+            public int compare(Point o1, Point o2) {
+                double t = o1.x - o2.x;
+                if (t > 0) {
+                    return 1;
+                } else {
+                    if (t < 0) {
+                        return -1;
+                    } else {
+                        return 0;
+                    }
+                }
+            }
+        };
+
+        compY = new Comparator<Point>() {
+
+            @Override
+            public int compare(Point o1, Point o2) {
+                double t = o1.y - o2.y;
+                if (t > 0) {
+                    return 1;
+                } else {
+                    if (t < 0) {
+                        return -1;
+                    } else {
+                        return 0;
+                    }
+                }
+            }
+        };
+    }
+
+    public static Point tempPoint(double x, double y) {
+        Point p = new Point();
+        p.x = x;
+        p.y = y;
         return p;
     }
 
-    protected double x, y;
+    public static Point tempMaxIndexPoint(double x, double y) {
+        Point p = new Point();
+        p.x = x;
+        p.y = y;
+        p.index = pointIm.getMax() + 1;
+        return p;
+    }
+    protected double x,  y;
     static ModelElementIndexManager pointIm = new ModelElementIndexManager();
 
     public double getX() {
@@ -31,28 +79,27 @@ public class Point extends ModelElement {
         return y;
     }
 
-    protected Point(double x,double y,Boolean temp){
-        if(!temp){
-            index=pointIm.getNewIndex();
+    protected Point(double x, double y, Boolean temp) {
+        if (!temp) {
+            index = pointIm.getNewIndex();
         }
-        this.x=x;
-        this.y=y;
-    }
-
-    public Point(double x, double y) {
-        index=pointIm.getNewIndex();
         this.x = x;
         this.y = y;
     }
 
-    public Point(Point p){
-        this.x=p.x;
-        this.y=p.y;
-        index=pointIm.getNewIndex();
+    public Point(double x, double y) {
+        index = pointIm.getNewIndex();
+        this.x = x;
+        this.y = y;
     }
 
-    protected Point(){
-        
+    public Point(Point p) {
+        this.x = p.x;
+        this.y = p.y;
+        index = pointIm.getNewIndex();
+    }
+
+    protected Point() {
     }
 
     protected void setX(double x) {
@@ -63,9 +110,9 @@ public class Point extends ModelElement {
         this.y = y;
     }
 
-    protected void setXY(Point p){
-        this.x=p.x;
-        this.y=p.y;
+    protected void setXY(Point p) {
+        this.x = p.x;
+        this.y = p.y;
     }
 
     @Override
@@ -78,15 +125,13 @@ public class Point extends ModelElement {
         return pointIm;
     }
 
-    public Point2D setPoint2D(Point2D p2){
+    public Point2D setPoint2D(Point2D p2) {
         p2.setLocation(x, y);
         return p2;
     }
 
     @Override
     public String toString() {
-        return String.format("Point:%d-(%.2f, %.2f)", index,x,y);
+        return String.format("Point:%d-(%.2f, %.2f)", index, x, y);
     }
-
-
 }

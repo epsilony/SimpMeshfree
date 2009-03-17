@@ -11,6 +11,8 @@ import java.awt.geom.PathIterator;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
+import net.epsilony.util.collection.LayeredDomainTree;
 
 /**
  *
@@ -21,6 +23,7 @@ public class GeometryModel {
     public LinkedList<Point> getPoints() {
         return points;
     }
+
 
     public void setPoints(LinkedList<Point> points) {
         this.points = points;
@@ -41,6 +44,7 @@ public class GeometryModel {
     ArrayList<Node> nodes = new ArrayList<Node>();
     final AffineTransform itrx = new AffineTransform();
     private int compileTime = 0;
+    LayeredDomainTree<Node> nodesSearchTree;
 
     public Point newPoint(double x, double y) {
         Point p = new Point(x, y);
@@ -133,8 +137,28 @@ public class GeometryModel {
         triangleJni.setHoles(tds, holes.size());
         triangleJni.triangleFun();
         triangleJni.getNodesTriangles(nodes, triangles);
+        nodesSearchTree=new LayeredDomainTree<Node>(nodes,Point.compX,Point.compY,true);
         compileTime++;
     }
+
+    public List<Node> domainSearch(double x1, double y1, double x2, double y2, List<Node> outPts) {
+        double t;
+        if(x1>x2){
+            t=x1;
+            x1=x2;
+            x2=t;
+        }
+        if(y1>y2){
+            t=y1;
+            y1=y2;
+            y2=t;
+        }
+        Node from=Node.tempNode(x1, y1);
+        Node to=Node.tempNode(x2, y2);
+
+        return nodesSearchTree.domainSearch(outPts,from,to);
+    }
+    
     private int nodesNetShapeTime = 0;
     private Path2D nodesNetPath = new Path2D.Double();
 

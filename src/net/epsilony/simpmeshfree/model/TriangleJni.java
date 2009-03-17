@@ -153,7 +153,7 @@ public class TriangleJni {
         if (arch.equals("i386")) {
             if (name.equals("Linux")) {
 //                System.load(System.getProperty("user.dir") + "/TriangleJni.so");
-                System.load("/usr/lib32/TriangleJni.so");
+                System.load("/usr/lib32/TriangleJni32.so");
             } else {
                 throw new UnsupportedOperationException();
             //System.load(System.getProperty("user.dir")+"\\TriangleJni.dll");

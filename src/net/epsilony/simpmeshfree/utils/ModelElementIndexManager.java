@@ -18,4 +18,8 @@ public class ModelElementIndexManager {
         return ++max;
     }
 
+    public int getMax(){
+        return max;
+    }
+
 }

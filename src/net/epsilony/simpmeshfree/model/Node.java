@@ -17,6 +17,12 @@ import net.epsilony.simpmeshfree.utils.ModelElementIndexManager;
  * @author epsilon
  */
 public class Node extends Point {
+    public static Node tempNode(double x,double y){
+        Node n=new Node();
+        n.x=x;
+        n.y=y;
+        return n;
+    }
 
     public static final Comparator<Node> nodeComparator = new Comparator<Node>() {
 
@@ -63,6 +69,10 @@ public class Node extends Point {
     public Node(Point p) {
         setXY(p);
         this.index = nodeIM.getNewIndex();
+    }
+
+    protected Node(){
+
     }
 
     /**
