@@ -2,14 +2,14 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.epsilony.simpmeshfree.model;
+package net.epsilony.simpmeshfree.model.geometry;
 
 import java.awt.geom.Path2D;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.TreeSet;
-import net.epsilony.simpmeshfree.model.ModelElement.ModelElementType;
+import net.epsilony.simpmeshfree.model.geometry.ModelElement.ModelElementType;
 import net.epsilony.simpmeshfree.utils.ModelElementIndexManager;
 
 /**
@@ -35,7 +35,9 @@ public class Node extends Point {
     TreeSet<Node> neighbors = new TreeSet<Node>(nodeComparator);
     LinkedList<Triangle> triangles = new LinkedList<Triangle>();
     LinkedList<Node> affectedNodes = new LinkedList<Node>();
+    LinkedList<Node> supportDomainNodes=affectedNodes;
     public int flag;
+    int matrixIndex;
 
     @Override
     public ModelElementType type() {
@@ -122,26 +124,54 @@ public class Node extends Point {
         }
     }
 
-    public ArrayList<Node> supportNode(int layer,ArrayList<Node> nodes) {
-       nodes.clear();
-       nodes.add(this);
-       int start,end;
-       
-       flag=index;
-       start=0;
-       for(int i=0;i<layer;i++){
-           end=nodes.size();
-           for(int j=start;j<end;j++){
-               for(Node n:nodes.get(j).neighbors){
-                   if(n.flag!=index){
-                       n.flag=index;
-                       nodes.add(n);
-                   }
-               }
-           }
-           start=end;
-       }
-       return nodes;
+    public ArrayList<Node> bfsTraverse(int layer,ArrayList<Node> list){
+        list.clear();
+        if(layer<0){
+            return list;
+        }
+        Node node;
+        flag=index;
+        int f=flag,start=0,end=1;
+        list.add(this);
+        for(int i=0;i<layer;i++){
+            for(int j=start;j<end;j++){
+                node=list.get(j);
+                for(Node n:node.neighbors){
+                    if(n.flag!=f){
+                        n.flag=f;
+                        list.add(n);
+                    }
+                }
+            }
+            start=end;
+            end=list.size();
+            if(start==end){
+                break;
+            }
+        }
+        return list;
+    }
+
+    public ArrayList<Node> bfsTraverse(ArrayList<Node> list){
+        list.clear();
+        Node node;
+        flag=index;
+        int f=flag,start=0,end=1;
+        list.add(this);
+        while(start<end){
+            for(int j=start;j<end;j++){
+                node=list.get(j);
+                for(Node n:node.neighbors){
+                    if(n.flag!=f){
+                        n.flag=f;
+                        list.add(n);
+                    }
+                }
+            }
+            start=end;
+            end=list.size();
+        }
+        return list;
     }
 
 

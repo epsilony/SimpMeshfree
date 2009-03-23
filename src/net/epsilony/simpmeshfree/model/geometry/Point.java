@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.epsilony.simpmeshfree.model;
+package net.epsilony.simpmeshfree.model.geometry;
 
 import java.awt.geom.Point2D;
 import java.util.Comparator;
@@ -102,18 +102,25 @@ public class Point extends ModelElement {
     protected Point() {
     }
 
-    protected void setX(double x) {
+    void setX(double x) {
         this.x = x;
     }
 
-    protected void setY(double y) {
+    void setY(double y) {
         this.y = y;
     }
 
-    protected void setXY(Point p) {
+    void setXY(Point p) {
         this.x = p.x;
         this.y = p.y;
     }
+    
+    void setXY(double x,double y){
+        this.x=x;
+        this.y=y;
+    }
+
+
 
     @Override
     public ModelElementType type() {

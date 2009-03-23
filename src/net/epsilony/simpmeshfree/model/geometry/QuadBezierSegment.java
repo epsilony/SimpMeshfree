@@ -3,11 +3,11 @@
  * and open the template in the editor.
  */
 
-package net.epsilony.simpmeshfree.model;
+package net.epsilony.simpmeshfree.model.geometry;
 
 import java.awt.geom.Path2D;
 import java.util.LinkedList;
-import net.epsilony.simpmeshfree.model.ModelElement.ModelElementType;
+import net.epsilony.simpmeshfree.model.geometry.ModelElement.ModelElementType;
 
 /**
  *@deprecated 
@@ -39,7 +39,7 @@ public class QuadBezierSegment extends Segment{
 
   
     @Override
-    public double[] getPoint(double t, double[] pt) {
+    public double[] parameterPoint(double t, double[] pt) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

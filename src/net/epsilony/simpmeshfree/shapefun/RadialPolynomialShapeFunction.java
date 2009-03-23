@@ -7,7 +7,7 @@ package net.epsilony.simpmeshfree.shapefun;
 import java.util.List;
 import net.epsilony.math.polynomial.BivariateBinomials;
 import net.epsilony.math.radialbasis.RadialBasisFunction;
-import net.epsilony.simpmeshfree.model.Node;
+import net.epsilony.simpmeshfree.model.geometry.Node;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.UpperSymmDenseMatrix;
 import no.uib.cipr.matrix.Vector;

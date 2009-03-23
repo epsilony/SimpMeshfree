@@ -2,12 +2,12 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.epsilony.simpmeshfree.model;
+package net.epsilony.simpmeshfree.model.geometry;
 
 import java.awt.geom.Path2D;
 import java.util.LinkedList;
 import net.epsilony.math.util.EYMath;
-import net.epsilony.simpmeshfree.model.ModelElement.ModelElementType;
+import net.epsilony.simpmeshfree.model.geometry.ModelElement.ModelElementType;
 import static net.epsilony.math.util.EYMath.*;
 
 /**
@@ -49,7 +49,7 @@ public class CubicBezierSegment extends Segment {
     }
 
     @Override
-    public double[] getPoint(double t, double[] pt) {
+    public double[] parameterPoint(double t, double[] pt) {
         return cubicBezierPoint(t, pts[0].x, pts[0].y, pts[1].x, pts[1].y, pts[2].x, pts[2].y, pts[3].x, pts[3].y, pt);
     }
 
@@ -91,7 +91,7 @@ public class CubicBezierSegment extends Segment {
             double t=(startParm+endParm)/2;
 
             cubicBezierApproximatePoints(sizeSqr, flatnessSqr, startParm, t, ctrlPts, aprxPts);
-            getPoint(t, results);
+            parameterPoint(t, results);
             aprxPts.add(new ApproximatePoint(results[0], results[1], this, t));
             cubicBezierApproximatePoints(sizeSqr, flatnessSqr, t, endParm, ctrlPtsR, aprxPts);
         }

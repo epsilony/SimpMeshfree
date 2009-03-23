@@ -2,12 +2,12 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.epsilony.simpmeshfree.model;
+package net.epsilony.simpmeshfree.model.geometry;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.LinkedList;
+import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -53,7 +53,10 @@ public class TriangleJni {
         this.s = s;
     }
 
-    public void setPointsSegments(LinkedList<ApproximatePoint> aprxPts, LinkedList<Point> pts) {
+    private ArrayList<ApproximatePoint> approximatePoints=new ArrayList<ApproximatePoint>();
+    public void setPointsSegments(List<ApproximatePoint> aprxPts, List<Point> pts) {
+        approximatePoints.ensureCapacity(aprxPts.size());
+        approximatePoints.addAll(aprxPts);
         pointsXYSizeIn = aprxPts.size() + pts.size();
         pointsXYIn = new double[2 * pointsXYSizeIn];
         segmentsSizeIn = aprxPts.size();
@@ -63,7 +66,7 @@ public class TriangleJni {
         segmentsMarkerIn = new int[segmentsSizeIn];
         hasSegmentsMarkerIn = true;
         int i = 0;
-        TreeMap<ApproximatePoint, Integer> apPiMap = new TreeMap(new Comparator<ApproximatePoint>() {
+        TreeMap<ApproximatePoint, Integer> approximatePointToPointIndex = new TreeMap(new Comparator<ApproximatePoint>() {
 
             @Override
             public int compare(ApproximatePoint o1, ApproximatePoint o2) {
@@ -73,15 +76,15 @@ public class TriangleJni {
         for (ApproximatePoint ap : aprxPts) {
             pointsXYIn[2 * i] = ap.getX();
             pointsXYIn[2 * i + 1] = ap.getY();
-            pointsMarkerIn[i] = ap.attachedSegment.index;
-            apPiMap.put(ap, i);
+            pointsMarkerIn[i] = ap.segment.index;
+            approximatePointToPointIndex.put(ap, i);
             i++;
         }
         i = 0;
         for (ApproximatePoint ap : aprxPts) {
-            segmentsIn[2 * i] = apPiMap.get(ap) + 1;
-            segmentsIn[2 * i + 1] = apPiMap.get(ap.r) + 1;
-            segmentsMarkerIn[i] = ap.attachedSegment.index;
+            segmentsIn[2 * i] = approximatePointToPointIndex.get(ap) + 1;
+            segmentsIn[2 * i + 1] = approximatePointToPointIndex.get(ap.r) + 1;
+            segmentsMarkerIn[i] = ap.segment.index;
             i++;
         }
 
@@ -91,8 +94,11 @@ public class TriangleJni {
         nodes.clear();
         nodes.ensureCapacity(pointsXYSizeOut);
 //        System.out.println("pointsXYSizeOut = " + pointsXYSizeOut);
+        for(int i = 0;i<approximatePoints.size();i++){
+            nodes.add(new BoundaryNode(approximatePoints.get(i)));
+        }
 
-        for (int i = 0; i < pointsXYSizeOut; i++) {
+        for (int i = approximatePoints.size(); i < pointsXYSizeOut; i++) {
             nodes.add(new Node(pointsXYOut[i * 2], pointsXYOut[i * 2 + 1]));
         }
 //        System.out.println("segmentsSizeOut = " + segmentsSizeOut);

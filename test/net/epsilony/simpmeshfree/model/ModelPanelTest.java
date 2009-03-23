@@ -5,6 +5,7 @@
 
 package net.epsilony.simpmeshfree.model;
 
+import net.epsilony.simpmeshfree.model.geometry.ModelPanel;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;

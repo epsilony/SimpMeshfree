@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.epsilony.simpmeshfree.model;
+package net.epsilony.simpmeshfree.model.geometry;
 
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
@@ -37,6 +37,7 @@ import static java.lang.Math.*;
  * @author M.Yuan J.-J.Chen
  * @version 0.20
  */
+@Deprecated 
 public class NodesManager {
 
     private LinkedList<NodeBucket> buckets = new LinkedList<NodeBucket>(); //存储所有NodeBucket的链表

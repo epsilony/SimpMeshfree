@@ -4,8 +4,8 @@
  */
 
 package net.epsilony.simpmeshfree.exceptions;
-import net.epsilony.simpmeshfree.model.Node;
-import net.epsilony.simpmeshfree.model.NodesManager;
+import net.epsilony.simpmeshfree.model.geometry.Node;
+import net.epsilony.simpmeshfree.model.geometry.NodesManager;
 
 /**
  *

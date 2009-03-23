@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.epsilony.simpmeshfree.model;
+package net.epsilony.simpmeshfree.model.geometry;
 
 import java.awt.geom.Path2D;
 import java.util.LinkedList;
@@ -22,8 +22,7 @@ public class LineSegment extends Segment {
         if(temp){
             index=-1;
         }
-    }
-
+    }  
     @Override
     public ModelElementType type() {
         return ModelElementType.LineSegment;
@@ -36,8 +35,8 @@ public class LineSegment extends Segment {
     private static double [] results=new double[2];
     private static double [] results2=new double[2];
     public double lengthSqr(double startParm,double endParm){
-        getPoint(startParm,results);
-        getPoint(endParm,results2);
+        parameterPoint(startParm,results);
+        parameterPoint(endParm,results2);
         return (results[0]-results2[0])*(results[0]-results2[0])+(results[1]-results2[1])*(results[1]-results2[1]);
     }
 
@@ -69,7 +68,7 @@ public class LineSegment extends Segment {
     }
 
     @Override
-    public double[] getPoint(double t, double[] pt) {
+    public double[] parameterPoint(double t, double[] pt) {
         pt[0]=pts[0].x*(1-t)+pts[1].x*t;
         pt[1]=pts[0].y*(1-t)+pts[1].y*t;
         return pt;
@@ -108,7 +107,7 @@ public class LineSegment extends Segment {
         if(sizeSqr<lengthSqr(startParm,endParm)){
             double t=(startParm+endParm)/2;
             lineSegmentApproximatPoints(sizeSqr,startParm,t,aprxPts);
-            getPoint(t,results);
+            parameterPoint(t,results);
             aprxPts.add(new ApproximatePoint(results[0], results[1], this, t));
             lineSegmentApproximatPoints(sizeSqr,t, endParm, aprxPts);
         }

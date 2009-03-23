@@ -4,15 +4,15 @@
  */
 package net.epsilony.simpmeshfree.utils;
 
-import java.awt.Graphics2D;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import javax.swing.JPanel;
-import net.epsilony.simpmeshfree.model.Point;
+import static java.lang.Math.*;
+import net.epsilony.simpmeshfree.model.geometry.Point;
 
 /**
  *
@@ -21,7 +21,7 @@ import net.epsilony.simpmeshfree.model.Point;
 public class ViewTransform extends AffineTransform {
 
     double width, height, x1, x2, y1, y2;
-    AffineTransform oriTrans = new AffineTransform();
+    private AffineTransform oriTrans = new AffineTransform();
     double topMargin, leftMargin, downMargin, rightMargin;
 
 
@@ -100,34 +100,66 @@ public class ViewTransform extends AffineTransform {
         scale(t, -t);
         translate(-(zx1 + zx2) / 2, -(zy1 + zy2) / 2);
     }
-    private static Point2D scrPt,  distPt;
+    private static Point2D modelPt,  screenPt;
 
 
     static {
-        scrPt = new Point2D.Double();
-        distPt = new Point2D.Double();
+        modelPt = new Point2D.Double();
+        screenPt = new Point2D.Double();
     }
 
-    public Shape viewMarker(double x, double y, double size, ViewMarkerType type, Shape sp) {
-        scrPt.setLocation(x, y);
-        transform(scrPt, distPt);
+    private Rectangle2D rectMarker=new Rectangle2D.Double();
+    private Path2D pathMarker=new Path2D.Double();
+    private Ellipse2D ellMarker=new Ellipse2D.Double();
+    public Shape viewMarker(double x, double y, double size, ViewMarkerType type) {
+        modelPt.setLocation(x, y);
+        transform(modelPt, screenPt);
+        Shape result;
+        size=Math.abs(size);
         switch (type) {
             case Rectangle:
-                ((Rectangle2D) sp).setRect(distPt.getX() - size / 2, distPt.getY() - size / 2, size, size);
+                rectMarker.setRect(screenPt.getX() - size / 2, screenPt.getY() - size / 2, size, size);
+                result=rectMarker;
                 break;
             case X:
-                Path2D p = new Path2D.Double();
-                p.moveTo(-size / 2, -size / 2);
-                p.lineTo(size / 2, size / 2);
-                p.moveTo(size / 2, -size / 2);
-                p.lineTo(-size / 2, size / 2);
-                sp = p.createTransformedShape(this);
+                pathMarker.reset();
+                pathMarker.moveTo(screenPt.getX()-size/2, screenPt.getY()-size/2);
+                pathMarker.lineTo(screenPt.getX()+size/2, screenPt.getY()+size/2);
+                pathMarker.moveTo(screenPt.getX()-size/2, screenPt.getY()+size/2);
+                pathMarker.lineTo(screenPt.getX()+size/2, screenPt.getY()-size/2);
+                result=pathMarker.createTransformedShape(oriTrans);
                 break;
+            case Round:
+                ellMarker.setFrame(screenPt.getX()-size/2, screenPt.getY()-size/2, size, size);
+                result=ellMarker;
+                break;
+            case DownTriangle:
+                pathMarker.reset();
+                pathMarker.moveTo(screenPt.getX()-size*sqrt(3)/4, screenPt.getY()-size/4);
+                pathMarker.lineTo(screenPt.getX()+size*sqrt(3)/4, screenPt.getY()-size/4);
+                pathMarker.lineTo(screenPt.getX(), screenPt.getY()+size/2);
+                pathMarker.closePath();
+                result=pathMarker.createTransformedShape(oriTrans);
+                break;
+            case UpTriangle:
+                pathMarker.reset();
+                pathMarker.moveTo(screenPt.getX()-size*sqrt(3)/4, screenPt.getY()+size/4);
+                pathMarker.lineTo(screenPt.getX()+size*sqrt(3)/4, screenPt.getY()+size/4);
+                pathMarker.lineTo(screenPt.getX(), screenPt.getY()-size/2);
+                pathMarker.closePath();
+                result=pathMarker.createTransformedShape(oriTrans);
+                break;
+            default:
+                throw new UnsupportedOperationException();
         }
-        return sp;
+        return result;
     }
 
-    public Shape viewMarker(Point p, double size, ViewMarkerType type, Shape sp) {
-        return viewMarker(p.getX(), p.getY(), size, type, sp);
+    public Shape viewMarker(Point p, double size, ViewMarkerType type) {
+        return viewMarker(p.getX(), p.getY(), size, type);
+    }
+
+    public double inverseTransLength(double length){
+        return length/getScaleX();
     }
 }

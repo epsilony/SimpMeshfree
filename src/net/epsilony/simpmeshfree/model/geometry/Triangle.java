@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.epsilony.simpmeshfree.model;
+package net.epsilony.simpmeshfree.model.geometry;
 
 import net.epsilony.simpmeshfree.utils.ModelElementIndexManager;
 import static java.lang.Math.*;
