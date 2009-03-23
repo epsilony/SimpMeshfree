@@ -16,16 +16,16 @@ import net.epsilony.simpmeshfree.model.geometry.Node;
 public class MechanicsModel {
     GeometryModel gm;
     
-    public class RoundSupportDomain implements SupportDomain{
-
-        @Override
-        public List<Node> supportNode(Node n, double size) {
-            double[][] a=new double[3][3];
-            a[3][3]=3;
-            gm.nodeDomainSearch(n.getX()-size, n.getY()-size, n.getX()+size, n.getY()+size, null);
-            return null;
-        }
-
-    }
+//    public class RoundSupportDomain implements SupportDomain{
+//
+//        @Override
+//        public List<Node> supportNode(Node n) {
+//            double[][] a=new double[3][3];
+//            a[3][3]=3;
+//            gm.nodeDomainSearch(n.getX()-size, n.getY()-size, n.getX()+size, n.getY()+size, null);
+//            return null;
+//        }
+//
+//    }
     
 }

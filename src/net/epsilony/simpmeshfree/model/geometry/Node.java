@@ -38,6 +38,7 @@ public class Node extends Point {
     LinkedList<Node> supportDomainNodes=affectedNodes;
     public int flag;
     int matrixIndex;
+    int bandWidth;
 
     @Override
     public ModelElementType type() {
@@ -154,25 +155,82 @@ public class Node extends Point {
 
     public ArrayList<Node> bfsTraverse(ArrayList<Node> list){
         list.clear();
-        Node node;
         flag=index;
-        int f=flag,start=0,end=1;
+        int f=flag;
         list.add(this);
-        while(start<end){
-            for(int j=start;j<end;j++){
-                node=list.get(j);
-                for(Node n:node.neighbors){
-                    if(n.flag!=f){
-                        n.flag=f;
-                        list.add(n);
-                    }
+        for(int i=0;i<list.size();i++){
+            for(Node n:list.get(i).neighbors){
+                if(n.flag!=f){
+                    list.add(n);
+                    n.flag=f;
                 }
             }
-            start=end;
-            end=list.size();
         }
         return list;
     }
+
+    public ArrayList<Node> dfsTraverse(ArrayList<Node> list){
+        list.clear();
+
+        return list;
+    }
+
+    public int getFlag() {
+        return flag;
+    }
+
+    public void setFlag(int flag) {
+        this.flag = flag;
+    }
+
+    /**
+     * generate the bandWidth of matrixIndex
+     * <br>the difference between {@link Node#getBandWidth() getBandWidth()} is that bandWidth() calculate the bandWidth and setBandWidth()
+     * and getBandWidth mearly returns the bandWidth field value</br>
+     * <br>the difference between {@link Node#bandWith(int) bandWidth(int)} is that bandWidth(int) calulcate the asumption situation of index
+     * and won't call setBandWidth()</br>
+     * @return matrixIndex
+     */
+    public int bandWidth(){
+        int size=0;
+        for(Node n:neighbors){
+            if(Math.abs(n.matrixIndex-matrixIndex)>size){
+                size=Math.abs(n.matrixIndex-matrixIndex);
+            }
+        }
+        bandWidth=size;
+        return size;
+    }
+
+    /**
+     * @see Node#bandWidth()
+     * @param index the assumption index
+     * @return the node band with by the assumpted index
+     *
+     */
+    public int bandWith(int index){
+        int size=0;
+        for(Node n:neighbors){
+            if(Math.abs(n.matrixIndex-index)>size){
+                size=Math.abs(n.matrixIndex-index);
+            }
+        }
+        return size;
+    }
+
+    public int getBandWidth() {
+        return bandWidth;
+    }
+
+    public void setBandWidth(int bandWidth) {
+        this.bandWidth = bandWidth;
+    }
+
+    public TreeSet<Node> getNeighbors() {
+        return neighbors;
+    }
+
+
 
 
 //    protected void copyNode(Node n) {

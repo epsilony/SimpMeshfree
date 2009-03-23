@@ -13,5 +13,5 @@ import net.epsilony.simpmeshfree.model.geometry.Node;
  * @author epsilon
  */
 public interface SupportDomain {
-    public List<Node> supportNode(Node n,double size);
+    public List<Node> supportNode(Node n);
 }
