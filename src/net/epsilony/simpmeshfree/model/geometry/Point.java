@@ -102,20 +102,20 @@ public class Point extends ModelElement {
     protected Point() {
     }
 
-    void setX(double x) {
+    public void setX(double x) {
         this.x = x;
     }
 
-    void setY(double y) {
+    public void setY(double y) {
         this.y = y;
     }
 
-    void setXY(Point p) {
+    public void setXY(Point p) {
         this.x = p.x;
         this.y = p.y;
     }
     
-    void setXY(double x,double y){
+    public void setXY(double x,double y){
         this.x=x;
         this.y=y;
     }

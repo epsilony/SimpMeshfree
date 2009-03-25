@@ -4,7 +4,6 @@
  */
 package net.epsilony.simpmeshfree.model.geometry;
 
-import net.epsilony.simpmeshfree.model.geometry.TriangleJni;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
@@ -28,7 +27,6 @@ public class GeometryModel {
         return points;
     }
 
-
     public void setPoints(LinkedList<Point> points) {
         this.points = points;
     }
@@ -50,9 +48,19 @@ public class GeometryModel {
     private int compileTime = 0;
     LayeredDomainTree<Node> nodesSearchTree;
     LayeredDomainTree<ApproximatePoint> approximatePointsSearchTree;
-    boolean wider=true;
+    boolean wider = true;
     double segmentApproximateSize;
     double segmentFlatness;
+    Point leftDown = Point.tempPoint(0, 0);
+    Point rightUp = Point.tempPoint(0, 0);
+
+    public Point getLeftDown() {
+        return leftDown;
+    }
+
+    public Point getRightUp() {
+        return rightUp;
+    }
 
     public Point newPoint(double x, double y) {
         Point p = new Point(x, y);
@@ -61,7 +69,7 @@ public class GeometryModel {
     }
     final double[] addShapeTds = new double[6];
 
-    public void addHole(double x,double y){
+    public void addHole(double x, double y) {
         holes.add(Point.tempPoint(x, y));
     }
 
@@ -131,150 +139,224 @@ public class GeometryModel {
     }
     TriangleJni triangleJni = new TriangleJni();
 
+    public double getSegmentApproximateSize() {
+        return segmentApproximateSize;
+    }
+
+    public double getSegmentFlatness() {
+        return segmentFlatness;
+    }
+
     public void compile(double size, double flatness, String switches) {
-        segmentApproximateSize=size;
-        segmentFlatness=flatness;
+        segmentApproximateSize = size;
+        segmentFlatness = flatness;
         approximatePoint(size, flatness);
+        leftDown.setXY(aprxPts.getFirst());
+        rightUp.setXY(aprxPts.getFirst());
+        for (ApproximatePoint ap : aprxPts) {
+            if (ap.x < leftDown.x) {
+                leftDown.x = ap.x;
+            } else {
+                if (ap.x > rightUp.x) {
+                    rightUp.x = ap.x;
+                }
+            }
+            if (ap.y < leftDown.y) {
+                leftDown.y = ap.y;
+            } else {
+                if (ap.y > rightUp.y) {
+                    rightUp.y = ap.y;
+                }
+            }
+        }
         triangleJni.setSwitchs(switches);
         triangleJni.setPointsSegments(aprxPts, points);
         double[] tds = new double[holes.size() * 2];
         int i = 0;
         for (Point p : holes) {
             tds[i * 2] = p.x;
-            tds[i * 2+1] = p.y;
+            tds[i * 2 + 1] = p.y;
             i++;
         }
         triangleJni.setHoles(tds, holes.size());
         triangleJni.triangleFun();
         triangleJni.getNodesTriangles(nodes, triangles);
-        nodesSearchTree=new LayeredDomainTree<Node>(nodes,Point.compX,Point.compY,wider);
-        approximatePointsSearchTree=new LayeredDomainTree<ApproximatePoint>(aprxPts, Point.compX, Point.compY, wider);
+        nodesSearchTree = new LayeredDomainTree<Node>(nodes, Point.compX, Point.compY, wider);
+        approximatePointsSearchTree = new LayeredDomainTree<ApproximatePoint>(aprxPts, Point.compX, Point.compY, wider);
         compileTime++;
     }
+    private Node searchNodeFrom = Node.tempNode(0, 0),  searchNodeTo = Node.tempNode(0, 0);
+    private Point searchPointFrom = Point.tempPoint(0, 0),  searchPointTo = Point.tempPoint(0, 0);
+    private ApproximatePoint searchApproximatePointFrom = ApproximatePoint.tempApproximatePoint(0, 0),  searchApproximatePointTo = ApproximatePoint.tempApproximatePoint(0, 0);
 
-    private Node searchNodeFrom=Node.tempNode(0, 0),
-            searchNodeTo=Node.tempNode(0, 0);
-    private Point searchPointFrom=Point.tempPoint(0, 0),
-            searchPointTo=Point.tempPoint(0,0);
-    private ApproximatePoint searchApproximatePointFrom=ApproximatePoint.tempApproximatePoint(0, 0),
-            searchApproximatePointTo=ApproximatePoint.tempApproximatePoint(0, 0);
     public List<Node> nodeDomainSearch(double x1, double y1, double x2, double y2, List<Node> outPts) {
         double t;
-        if(x1>x2){
-            t=x1;
-            x1=x2;
-            x2=t;
+        if (x1 > x2) {
+            t = x1;
+            x1 = x2;
+            x2 = t;
         }
-        if(y1>y2){
-            t=y1;
-            y1=y2;
-            y2=t;
+        if (y1 > y2) {
+            t = y1;
+            y1 = y2;
+            y2 = t;
         }
-        searchNodeFrom.setXY(x1,y1);
-        searchNodeTo.setXY(x2,y2);
+        searchNodeFrom.setXY(x1, y1);
+        searchNodeTo.setXY(x2, y2);
         outPts.clear();
-        return nodesSearchTree.domainSearch(outPts,searchNodeFrom,searchNodeTo);
+        return nodesSearchTree.domainSearch(outPts, searchNodeFrom, searchNodeTo);
     }
 
-    public <E extends Point> List<E> pointDomainSearch(E center,double size,List<E> outPts){
-        size=size>0?size:-size;
-        double x1=center.x-size,
-                x2=center.x+size,
-                y1=center.y-size,
-                y2=center.y+size;
+    /**
+     * 
+     * @param <E>
+     * @param center
+     * @param size half length of the square edge
+     * @param outPts
+     * @return
+     */
+    public <E extends Point> List<E> pointDomainSearch(E center, double size, List<E> outPts) {
+        size = size > 0 ? size : -size;
+        double x1 = center.x - size,
+                x2 = center.x + size,
+                y1 = center.y - size,
+                y2 = center.y + size;
         outPts.clear();
-        switch(center.type()){
+        switch (center.type()) {
             case Node:
-                searchNodeFrom.setXY(x1,y1);
+                searchNodeFrom.setXY(x1, y1);
                 searchNodeTo.setXY(x2, y2);
-                nodesSearchTree.domainSearch((List<Node>)outPts, searchNodeFrom, searchNodeTo);
+                nodesSearchTree.domainSearch((List<Node>) outPts, searchNodeFrom, searchNodeTo);
                 break;
             case ApproximatPoint:
                 searchApproximatePointFrom.setXY(x1, y1);
                 searchApproximatePointTo.setXY(x2, y2);
-                approximatePointsSearchTree.domainSearch((List<ApproximatePoint>)outPts, searchApproximatePointFrom, searchApproximatePointTo);
+                approximatePointsSearchTree.domainSearch((List<ApproximatePoint>) outPts, searchApproximatePointFrom, searchApproximatePointTo);
             default:
                 throw new UnsupportedOperationException();
         }
         return outPts;
     }
 
-    public <E extends Point> List<E> pointDomainSearch(E corner1,E corner2,List<E> outPts){
-        if(corner1.x>corner2.x){
-            double t=corner2.x;
-            corner2.x=corner1.x;
-            corner1.x=t;
+    public <E extends Point> List<E> pointDomainSearch(E corner1, E corner2, List<E> outPts) {
+        if (corner1.x > corner2.x) {
+            double t = corner2.x;
+            corner2.x = corner1.x;
+            corner1.x = t;
         }
-        if(corner2.y>corner2.y){
-            double t=corner2.y;
-            corner2.y=corner1.y;
-            corner1.y=t;
+        if (corner2.y > corner2.y) {
+            double t = corner2.y;
+            corner2.y = corner1.y;
+            corner1.y = t;
         }
-        switch(corner1.type()){
+        switch (corner1.type()) {
             case Node:
-                nodesSearchTree.domainSearch((List<Node>)outPts, (Node)corner1, (Node)corner2);
+                nodesSearchTree.domainSearch((List<Node>) outPts, (Node) corner1, (Node) corner2);
                 break;
             case ApproximatPoint:
-                approximatePointsSearchTree.domainSearch((List<ApproximatePoint>)outPts,(ApproximatePoint)corner1,(ApproximatePoint)corner2);
+                approximatePointsSearchTree.domainSearch((List<ApproximatePoint>) outPts, (ApproximatePoint) corner1, (ApproximatePoint) corner2);
                 break;
             default:
                 throw new UnsupportedOperationException();
         }
         return outPts;
     }
+    private LinkedList<ApproximatePoint> segmentSearchApproximatePointList = new LinkedList<ApproximatePoint>();
+    private TreeSet<Segment> segmentSearchSet = new TreeSet<Segment>(ModelElement.comparator);
 
-    private LinkedList<ApproximatePoint> segmentSearchApproximatePointList=new LinkedList<ApproximatePoint>();
-    private TreeSet<Segment> segmentSearchTreeSet=new TreeSet<Segment>(ModelElement.comparator);
-    public List<Segment> segmentSearch(double x1,double y1,double x2,double y2,List<Segment> outSegs){
+    public List<Segment> segmentSearch(double x1, double y1, double x2, double y2, List<Segment> outSegs) {
         outSegs.clear();
-        if(x1>x2){
-            double t=x1;
-            x1=x2;
-            x2=t;
+        if (x1 > x2) {
+            double t = x1;
+            x1 = x2;
+            x2 = t;
         }
-        if(y1>y2){
-            double t=y1;
-            y1=y2;
-            y2=t;
+        if (y1 > y2) {
+            double t = y1;
+            y1 = y2;
+            y2 = t;
         }
-        searchApproximatePointFrom.setXY(x1-segmentApproximateSize,y1-segmentApproximateSize);
-        searchApproximatePointTo.setXY(x2+segmentApproximateSize,y2+segmentApproximateSize);
-        approximatePointsSearchTree.domainSearch(segmentSearchApproximatePointList,searchApproximatePointFrom,searchApproximatePointTo);
-        segmentSearchTreeSet.clear();
-        for(ApproximatePoint p:segmentSearchApproximatePointList){
-            if(p.x<=x2&&p.x>=x1||p.y<=y2&&p.y>=y1){
-                segmentSearchTreeSet.add(p.segment);
+        searchApproximatePointFrom.setXY(x1 - segmentApproximateSize, y1 - segmentApproximateSize);
+        searchApproximatePointTo.setXY(x2 + segmentApproximateSize, y2 + segmentApproximateSize);
+        approximatePointsSearchTree.domainSearch(segmentSearchApproximatePointList, searchApproximatePointFrom, searchApproximatePointTo);
+        segmentSearchSet.clear();
+        for (ApproximatePoint p : segmentSearchApproximatePointList) {
+            if (p.x <= x2 && p.x >= x1 || p.y <= y2 && p.y >= y1) {
+                segmentSearchSet.add(p.segment);
                 continue;
             }
-            if(EYMath.isRectangleIntersect(x1, y1, x2, y2, p.x, p.y, p.l.x, p.l.y)){
-                segmentSearchTreeSet.add(p.segment);
+            if (EYMath.isLineSegmentIntersect(x1, y1, x1, y2, p.x, p.y, p.l.x, p.l.y) ||
+                    EYMath.isLineSegmentIntersect(x2, y1, x2, y2, p.x, p.y, p.l.x, p.l.y) ||
+                    EYMath.isLineSegmentIntersect(x1, y1, x2, y1, p.x, p.y, p.l.x, p.l.y) ||
+                    EYMath.isLineSegmentIntersect(x1, y2, x2, y2, p.x, p.y, p.l.x, p.l.y)) {
+                segmentSearchSet.add(p.segment);
                 continue;
             }
-            if(EYMath.isRectangleIntersect(x1, y1, x2, y2, p.x, p.y, p.r.x, p.r.y)){
-                segmentSearchTreeSet.add(p.segment);
+            if (EYMath.isLineSegmentIntersect(x1, y1, x1, y2, p.x, p.y, p.r.x, p.r.y) ||
+                    EYMath.isLineSegmentIntersect(x2, y1, x2, y2, p.x, p.y, p.r.x, p.r.y) ||
+                    EYMath.isLineSegmentIntersect(x1, y1, x2, y1, p.x, p.y, p.r.x, p.r.y) ||
+                    EYMath.isLineSegmentIntersect(x1, y2, x2, y2, p.x, p.y, p.r.x, p.r.y)) {
+                segmentSearchSet.add(p.segment);
             }
         }
-        outSegs.addAll(segmentSearchTreeSet);
+        outSegs.addAll(segmentSearchSet);
+        return outSegs;
+    }
+    private TreeSet<SegmentRoute> segmentRouteSearchSet = new TreeSet<SegmentRoute>(ModelElement.comparator);
+
+    public List<SegmentRoute> segmentRouteSearch(double x1, double y1, double x2, double y2, List<SegmentRoute> outSegs) {
+        outSegs.clear();
+        if (x1 > x2) {
+            double t = x1;
+            x1 = x2;
+            x2 = t;
+        }
+        if (y1 > y2) {
+            double t = y1;
+            y1 = y2;
+            y2 = t;
+        }
+        searchApproximatePointFrom.setXY(x1 - segmentApproximateSize, y1 - segmentApproximateSize);
+        searchApproximatePointTo.setXY(x2 + segmentApproximateSize, y2 + segmentApproximateSize);
+        approximatePointsSearchTree.domainSearch(segmentSearchApproximatePointList, searchApproximatePointFrom, searchApproximatePointTo);
+        segmentRouteSearchSet.clear();
+        for (ApproximatePoint p : segmentSearchApproximatePointList) {
+            if (p.x <= x2 && p.x >= x1 || p.y <= y2 && p.y >= y1) {
+                segmentRouteSearchSet.add(p.segment.route);
+                continue;
+            }
+            if (EYMath.isLineSegmentIntersect(x1, y1, x1, y2, p.x, p.y, p.l.x, p.l.y) ||
+                    EYMath.isLineSegmentIntersect(x2, y1, x2, y2, p.x, p.y, p.l.x, p.l.y) ||
+                    EYMath.isLineSegmentIntersect(x1, y1, x2, y1, p.x, p.y, p.l.x, p.l.y) ||
+                    EYMath.isLineSegmentIntersect(x1, y2, x2, y2, p.x, p.y, p.l.x, p.l.y)) {
+                segmentRouteSearchSet.add(p.segment.route);
+                continue;
+            }
+            if (EYMath.isLineSegmentIntersect(x1, y1, x1, y2, p.x, p.y, p.r.x, p.r.y) ||
+                    EYMath.isLineSegmentIntersect(x2, y1, x2, y2, p.x, p.y, p.r.x, p.r.y) ||
+                    EYMath.isLineSegmentIntersect(x1, y1, x2, y1, p.x, p.y, p.r.x, p.r.y) ||
+                    EYMath.isLineSegmentIntersect(x1, y2, x2, y2, p.x, p.y, p.r.x, p.r.y)) {
+                segmentRouteSearchSet.add(p.segment.route);
+            }
+        }
+        outSegs.addAll(segmentRouteSearchSet);
         return outSegs;
     }
 
-    public static<E extends Point> boolean canSeeEach(E e1,E e2,Collection<ApproximatePoint> aps){
-        for(ApproximatePoint ap:aps){
-            if(EYMath.isLineSegmentIntersect(e1.x, e1.y, e2.x, e2.y, ap.x, ap.y, ap.l.x, ap.l.y)
-                    ||EYMath.isLineSegmentIntersect(e1.x, e1.y, e2.x, e2.y, ap.x, ap.y, ap.r.x, ap.r.y)){
+    public static <E extends Point> boolean canSeeEach(E e1, E e2, Collection<ApproximatePoint> aps) {
+        for (ApproximatePoint ap : aps) {
+            if (EYMath.isLineSegmentIntersect(e1.x, e1.y, e2.x, e2.y, ap.x, ap.y, ap.l.x, ap.l.y) || EYMath.isLineSegmentIntersect(e1.x, e1.y, e2.x, e2.y, ap.x, ap.y, ap.r.x, ap.r.y)) {
                 return false;
             }
         }
         return true;
     }
-
- 
     private int nodesNetShapeTime = 0;
     private Path2D nodesNetPath = new Path2D.Double();
 
     public Shape nodesNetShape(AffineTransform tr) {
         if (nodesNetShapeTime != compileTime) {
-            
+
             setNodesFlag(0);
             nodesNetPath.reset();
             Node n = nodes.get(0);
@@ -282,7 +364,6 @@ public class GeometryModel {
             nodesNetShapeTime = compileTime;
         }
         return nodesNetPath.createTransformedShape(tr);
-
     }
 
     public void setNodesFlag(int flag) {
@@ -305,6 +386,44 @@ public class GeometryModel {
 //        System.out.println("aprxPts.size() = " + aprxPts.size());
         return aprxPts;
     }
+    private ApproximatePoint tempApproximatePointSearchAp1 = ApproximatePoint.tempApproximatePoint(0, 0);
+    private ApproximatePoint tempApproximatePointSearchAp2 = ApproximatePoint.tempApproximatePoint(0, 0);
+
+    public List<ApproximatePoint> approximatePointSearch(List<ApproximatePoint> list, ApproximatePoint from, ApproximatePoint to) {
+        if (from.x > to.x) {
+            tempApproximatePointSearchAp1.x = to.x;
+            tempApproximatePointSearchAp2.x = from.x;
+        } else {
+            tempApproximatePointSearchAp1.x = from.x;
+            tempApproximatePointSearchAp2.x = to.x;
+        }
+        if (from.y > to.y) {
+            tempApproximatePointSearchAp1.y = to.y;
+            tempApproximatePointSearchAp2.y = from.y;
+        } else {
+            tempApproximatePointSearchAp1.y = from.y;
+            tempApproximatePointSearchAp2.y = to.y;
+        }
+        return approximatePointsSearchTree.domainSearch(list, tempApproximatePointSearchAp1, tempApproximatePointSearchAp2);
+    }
+
+    public List<ApproximatePoint> approximatePointSearch(List<ApproximatePoint> list, double x1, double y1, double x2, double y2) {
+        if (x1 < x2) {
+            tempApproximatePointSearchAp1.x = x1;
+            tempApproximatePointSearchAp2.x = x2;
+        } else {
+            tempApproximatePointSearchAp1.x = x2;
+            tempApproximatePointSearchAp2.x = x1;
+        }
+        if (y1 < y2) {
+            tempApproximatePointSearchAp1.y = y1;
+            tempApproximatePointSearchAp2.y = y2;
+        } else {
+            tempApproximatePointSearchAp1.y = y2;
+            tempApproximatePointSearchAp2.y = y1;
+        }
+        return approximatePointsSearchTree.domainSearch(list, tempApproximatePointSearchAp1, tempApproximatePointSearchAp2);
+    }
 
     public LinkedList<ApproximatePoint> getApproximatePts() {
         return aprxPts;
@@ -317,7 +436,6 @@ public class GeometryModel {
     public ArrayList<Triangle> getTriangles() {
         return triangles;
     }
-
 
     public static void main(String[] args) {
         GeometryModel gm = new GeometryModel();

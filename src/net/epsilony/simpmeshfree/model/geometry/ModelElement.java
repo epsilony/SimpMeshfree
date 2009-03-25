@@ -16,7 +16,7 @@ public abstract class ModelElement {
 
     public enum ModelElementType {
 
-        Point, LineSegment, Node,RegularizeNode, Triangle, BoundaryNode, QuadBezierSegment, CubicBezierSegment, Vertex, ApproximatPoint, SegmentRoute;
+        Point, LineSegment, Node,RegularizeNode, Triangle, BoundaryNode, QuadBezierSegment, CubicBezierSegment, Vertex, ApproximatPoint, Segment,SegmentRoute;
     }
 
     public static final Comparator<ModelElement> comparator=new Comparator<ModelElement>() {

@@ -4,6 +4,10 @@
  */
 package net.epsilony.simpmeshfree.model.mechanics;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.awt.image.WritableRaster;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -20,11 +24,13 @@ public class GeneticBandWidthReducer {
     int mutationSwap;
     int[][] nodeNeighbors;
     int[] flags;
+    private int[] forBfsChromosome;
     Chromosome[] population;
     int populationSize;
     int populationCapacity;
     int length;
     double mutationRate;
+
 //    Node[] nodes;
     public static final Comparator<Chromosome> chromoComp = new Comparator<Chromosome>() {
 
@@ -36,6 +42,15 @@ public class GeneticBandWidthReducer {
 
     public Chromosome[] getPopulation() {
         return population;
+    }
+
+    static private int[] getRGBPixelsData(Color color) {
+        return getRGBPixelsData(color.getRed(), color.getGreen(), color.getBlue());
+    }
+
+    static private int[] getRGBPixelsData(int red, int green, int blue) {
+        int[] rgbs = new int[]{red, green, blue, red, green, blue, red, green, blue, red, green, blue, red, green, blue, red, green, blue, red, green, blue, red, green, blue, red, green, blue};
+        return rgbs;
     }
 
     public class Chromosome {
@@ -64,6 +79,7 @@ public class GeneticBandWidthReducer {
             matrixIndes = new int[length];
             bandWidths = new int[length];
             nodeMids = new int[length];
+
         }
 
         public int bandWidth() {
@@ -199,20 +215,22 @@ public class GeneticBandWidthReducer {
             return bfsChromosome(new Random().nextInt(flags.length));
         }
 
-        Chromosome bfsChromosome(int start) {
+        Chromosome bfsChromosome(int begin) {
 
-            matrixIndes[0] = start;
+            matrixIndes[begin] = 0;
 
             //breath first search
-            int f = ++flags[0];
+            int f = ++flags[begin];
             int[] neighbors;
             int end = 1;
+            forBfsChromosome[0] = begin;
             for (int i = 0; i < matrixIndes.length && end < matrixIndes.length; i++) {
-                neighbors = nodeNeighbors[matrixIndes[i]];
+                neighbors = nodeNeighbors[forBfsChromosome[i]];
                 for (int j = 0; j < neighbors.length; j++) {
                     if (flags[neighbors[j]] != f) {
                         flags[neighbors[j]] = f;
-                        matrixIndes[end] = neighbors[j];
+                        matrixIndes[neighbors[j]] = end;
+                        forBfsChromosome[end] = neighbors[j];
                         end++;
                     }
                 }
@@ -225,6 +243,9 @@ public class GeneticBandWidthReducer {
         int i = 0, j;
 
         this.length = nodes.size();
+        nodeNeighbors = new int[length][];
+        flags = new int[length];
+        forBfsChromosome = new int[length];
         for (Node n : nodes) {
             n.flag = i;
             i++;
@@ -233,8 +254,9 @@ public class GeneticBandWidthReducer {
         int[] indes;
         for (Node n : nodes) {
             TreeSet<Node> neiSet = n.getNeighbors();
-            indes = new int[neiSet.size()];
-            nodeNeighbors[i] = indes;
+
+            nodeNeighbors[i] = new int[neiSet.size()];
+            indes = nodeNeighbors[i];
             j = 0;
             for (Node nn : neiSet) {
                 indes[j] = nn.flag;
@@ -340,5 +362,57 @@ public class GeneticBandWidthReducer {
         }
         Arrays.sort(population, chromoComp);
         mergeTheSame();
+    }
+
+    public int getLength() {
+        return length;
+    }
+
+    public BufferedImage chromosomeImage(int index) {
+        return chromosomeImage(index, Color.white, Color.green, 0, null);
+    }
+    BufferedImage image;
+
+    public BufferedImage chromosomeImage(int index, Color color, Color diagColor, int markNode, Color markColor) {
+        if (image == null) {
+            image = new BufferedImage(length * 4 + 1, length * 4 + 1, BufferedImage.TYPE_INT_RGB);
+        }
+        WritableRaster raster = image.getRaster();
+        Chromosome chrm = population[index];
+        Graphics2D g2 = (Graphics2D) image.getGraphics();
+
+        g2.setBackground(Color.black);
+        g2.setColor(Color.black);
+        g2.clearRect(0, 0, image.getWidth(), image.getHeight());
+
+        int i, j, row, col;
+        int[] neighbors;
+        int[] rgbs = getRGBPixelsData(color);
+        int[] diagRgbs = getRGBPixelsData(diagColor);
+
+
+        for (i = 0; i < length; i++) {
+            row = length - 1 - chrm.matrixIndes[i];
+            neighbors = nodeNeighbors[i];
+            raster.setPixels(chrm.matrixIndes[i] * 4 + 1, row * 4 + 1, 3, 3, diagRgbs);
+            for (j = 0; j < neighbors.length; j++) {
+                col = chrm.matrixIndes[neighbors[j]];
+                raster.setPixels(col * 4 + 1, row * 4 + 1, 3, 3, rgbs);
+            }
+        }
+
+
+        if (markNode >= 0 && markNode < length && markColor != null) {
+            int[] markRgbs = getRGBPixelsData(markColor);
+            row = length - 1 - chrm.matrixIndes[markNode];
+            neighbors = nodeNeighbors[markNode];
+            raster.setPixels(chrm.matrixIndes[markNode] * 4 + 1, row * 4 + 1, 3, 3, markRgbs);
+            for (j = 0; j < neighbors.length; j++) {
+                col = chrm.matrixIndes[neighbors[j]];
+                raster.setPixels(col * 4 + 1, row * 4 + 1, 3, 3, markRgbs);
+            }
+        }
+
+        return image;
     }
 }
