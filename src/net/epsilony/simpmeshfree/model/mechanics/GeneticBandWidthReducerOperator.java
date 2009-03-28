@@ -26,14 +26,11 @@ public class GeneticBandWidthReducerOperator implements JPanelPainter,MouseListe
 
 
     @Override
-    public void paint(Graphics2D g2) {
+    public void paintPanel(Graphics2D g2) {
         
     }
 
-    @Override
-    public void setViewTransform(ViewTransform vt) {
-        this.vt=vt;
-    }
+   
 
     @Override
     public void mouseClicked(MouseEvent e) {

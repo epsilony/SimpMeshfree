@@ -60,11 +60,6 @@ public class GeometryModelOperator implements MouseListener, MouseMotionListener
         return path.createTransformedShape(null);
     }
 
-    @Override
-    public void setViewTransform(ViewTransform vt) {
-        this.vt = vt;
-    }
-
     public void setGeometryModel(GeometryModel gm) {
         this.gm = gm;
     }
@@ -238,7 +233,7 @@ public class GeometryModelOperator implements MouseListener, MouseMotionListener
     }
 
     @Override
-    public void paint(Graphics2D g2) {
+    public void paintPanel(Graphics2D g2) {
         nullRubbers();
         if (selected.size() > 0) {
             g2.setColor(colors[selectedColorI]);
