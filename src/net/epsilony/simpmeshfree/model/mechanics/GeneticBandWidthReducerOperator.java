@@ -9,7 +9,7 @@ import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import net.epsilony.simpmeshfree.utils.JPanelPainter;
-import net.epsilony.simpmeshfree.utils.ViewTransform;
+import net.epsilony.simpmeshfree.utils.ModelPanelManager;
 
 /**
  *
@@ -17,7 +17,7 @@ import net.epsilony.simpmeshfree.utils.ViewTransform;
  */
 public class GeneticBandWidthReducerOperator implements JPanelPainter,MouseListener{
     private GeneticBandWidthReducer geneticBandWidthReducer;
-    private ViewTransform vt;
+    private ModelPanelManager vt;
 
 
     public GeneticBandWidthReducerOperator(GeneticBandWidthReducer geneticBandWidthReducer) {

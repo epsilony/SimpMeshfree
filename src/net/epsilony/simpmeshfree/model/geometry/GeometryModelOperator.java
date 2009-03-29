@@ -21,7 +21,7 @@ import java.util.logging.Logger;
 import javax.swing.JPanel;
 import net.epsilony.simpmeshfree.model.geometry.ModelElement.ModelElementType;
 import net.epsilony.simpmeshfree.utils.JPanelPainter;
-import net.epsilony.simpmeshfree.utils.ViewTransform;
+import net.epsilony.simpmeshfree.utils.ModelPanelManager;
 
 /**
  *
@@ -31,7 +31,7 @@ public class GeometryModelOperator implements MouseListener, MouseMotionListener
 
     GeometryModel gm;
     ModelElement.ModelElementType selectType;
-    ViewTransform vt;
+    ModelPanelManager vt;
     int singleSelectSize = 5;
     int selectingMarkSize = 10;
 
@@ -40,15 +40,15 @@ public class GeometryModelOperator implements MouseListener, MouseMotionListener
         for (Object t : selected) {
             switch (((ModelElement) t).type()) {
                 case ApproximatPoint:
-                    path.append(vt.viewMarker((Point) t, selectingMarkSize, ViewTransform.ViewMarkerType.Rectangle), false);
-                    path.append(vt.viewMarker((Point) t, selectingMarkSize * 0.62, ViewTransform.ViewMarkerType.Rectangle), false);
+                    path.append(vt.viewMarker((Point) t, selectingMarkSize, ModelPanelManager.ViewMarkerType.Rectangle), false);
+                    path.append(vt.viewMarker((Point) t, selectingMarkSize * 0.62, ModelPanelManager.ViewMarkerType.Rectangle), false);
                     break;
                 case Node:
-                    path.append(vt.viewMarker((Point) t, selectingMarkSize, ViewTransform.ViewMarkerType.Round), false);
+                    path.append(vt.viewMarker((Point) t, selectingMarkSize, ModelPanelManager.ViewMarkerType.Round), false);
                     break;
                 case BoundaryNode:
-                    path.append(vt.viewMarker((Point) t, selectingMarkSize, ViewTransform.ViewMarkerType.Round), false);
-                    path.append(vt.viewMarker((Point) t, selectingMarkSize * 0.62, ViewTransform.ViewMarkerType.Round), false);
+                    path.append(vt.viewMarker((Point) t, selectingMarkSize, ModelPanelManager.ViewMarkerType.Round), false);
+                    path.append(vt.viewMarker((Point) t, selectingMarkSize * 0.62, ModelPanelManager.ViewMarkerType.Round), false);
                     break;
                 case LineSegment:
                 case CubicBezierSegment:
