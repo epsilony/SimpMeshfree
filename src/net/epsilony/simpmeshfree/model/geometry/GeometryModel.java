@@ -4,24 +4,32 @@
  */
 package net.epsilony.simpmeshfree.model.geometry;
 
+import java.awt.AlphaComposite;
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
+import java.util.concurrent.locks.ReentrantLock;
 import net.epsilony.math.util.EYMath;
+import net.epsilony.simpmeshfree.utils.SelectListener;
+import net.epsilony.simpmeshfree.utils.ModelImageWriter;
+import net.epsilony.simpmeshfree.utils.ModelPanelManager;
 import net.epsilony.util.collection.LayeredDomainTree;
 
 /**
  *
  * @author epsilon
  */
-public class GeometryModel {
+public class GeometryModel implements ModelImageWriter, SelectListener {
 
     public LinkedList<Point> getPoints() {
         return points;
@@ -73,7 +81,9 @@ public class GeometryModel {
         holes.add(Point.tempPoint(x, y));
     }
 
+    Shape modelShape;
     public void addShape(Shape shape) {
+        this.modelShape=shape;
         PathIterator pi = shape.getPathIterator(itrx);
         boolean hasMoveTo = false;
         boolean hasClose = false;
@@ -181,6 +191,7 @@ public class GeometryModel {
         triangleJni.setHoles(tds, holes.size());
         triangleJni.triangleFun();
         triangleJni.getNodesTriangles(nodes, triangles);
+        System.out.println("nodes.size() = " + nodes.size());
         nodesSearchTree = new LayeredDomainTree<Node>(nodes, Point.compX, Point.compY, wider);
         approximatePointsSearchTree = new LayeredDomainTree<ApproximatePoint>(aprxPts, Point.compX, Point.compY, wider);
         compileTime++;
@@ -440,5 +451,90 @@ public class GeometryModel {
     public static void main(String[] args) {
         GeometryModel gm = new GeometryModel();
         gm.addShape(new Rectangle2D.Double(0, 0, 48, 12));
+    }
+
+   
+
+    @Override
+    public void writeModelBuffer(BufferedImage modelImage, ModelPanelManager manager) {
+        Graphics2D g2 = modelImage.createGraphics();
+//        g2.setBackground(Color.WHITE);
+//         g2.clearRect(0, 0, modelImage.getWidth(), modelImage.getHeight());
+        //g2.setComposite(AlphaComposite.Clear);
+
+        g2.setComposite(AlphaComposite.Clear);
+        g2.fillRect(0,0,modelImage.getWidth(),modelImage.getHeight());
+     
+        AffineTransform tx = manager.getViewTransform();
+        g2.setComposite(AlphaComposite.Src);
+        Path2D path = new Path2D.Double();
+//        if (showModelShape) {
+//            for (SegmentRoute route : routes) {
+//
+//                for (Segment segment : route.getSegments()) {
+//                    path.moveTo(segment.getLeftVertex().getX(), segment.getRightVertex().getY());
+//                    segment.addToPath(path);
+//                }
+//            }
+//        }
+        path.append(modelShape, false);
+        g2.setColor(showModelShapeColor);
+        g2.draw(path.createTransformedShape(tx));
+        path.reset();
+
+
+        if (showNode) {
+            System.out.println("showNode"+nodes.size());
+            path.append(manager.viewMarker(nodes, showNodeSize, showNodeMarkerType), false);
+        }
+        g2.setColor(showNodeColor);
+        g2.draw(path.createTransformedShape(null));
+        path.reset();
+        
+        if (showNodeNeighborNet) {
+            if (nodes.size() > 0) {
+                Node n = nodes.get(0);
+                n.neighborNetPath(path);
+            }
+        }
+        g2.setColor(showNodeNeigborNetColor);
+        g2.draw(path.createTransformedShape(tx));
+        path.reset();
+
+        if(showApproximatePoint){
+            path.append(manager.viewMarker(aprxPts, showApproximatePointSize, showApproximatePointType),false);
+        }
+        g2.setColor(showApproximateColor);
+        g2.draw(path.createTransformedShape(null));
+        path.reset();
+    }
+    boolean showModelShape = true;
+    boolean showNode = true;
+    boolean showNodeNeighborNet = false;
+    boolean showApproximatePoint = true;
+    boolean showApproximatePointRoute = false;
+    double showNodeSize = 5;
+    double showApproximatePointSize=3;
+    Color showModelShapeColor = Color.BLACK;
+    Color showNodeColor = Color.BLUE;
+    Color showNodeNeigborNetColor=Color.GRAY;
+    Color showApproximateColor=Color.BLACK;
+    ModelPanelManager.ViewMarkerType showNodeMarkerType = ModelPanelManager.ViewMarkerType.Rectangle;
+        ModelPanelManager.ViewMarkerType  showApproximatePointType=ModelPanelManager.ViewMarkerType.Rectangle;
+    ReentrantLock showLock = new ReentrantLock();
+
+    @Override
+    public boolean isRubberAutoClearRepaint() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void selecting(int x1, int y1, int x2, int y2, ModelPanelManager vt, BufferedImage rubberImage) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public boolean selected(int x1, int y1, int x2, int y2, ModelPanelManager vt) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

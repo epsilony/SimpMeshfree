@@ -111,7 +111,7 @@ public class Node extends Point {
         return path;
     }
 
-    void neighborNetPathTool(Path2D path) {
+    private void neighborNetPathTool(Path2D path) {
         for (Node n : neighbors) {
             if (n.flag > flag || n.flag == 0) {
                 path.moveTo(x, y);

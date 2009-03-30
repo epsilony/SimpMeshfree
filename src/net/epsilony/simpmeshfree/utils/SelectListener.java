@@ -11,8 +11,9 @@ import java.awt.image.BufferedImage;
  *
  * @author epsilon
  */
-public interface DomainSelectListener {
+public interface SelectListener {
+    public boolean isRubberAutoClearRepaint();
     public void selecting(int x1,int y1,int x2,int y2,ModelPanelManager vt,BufferedImage rubberImage);
-    public void selected(int x1,int y1,int x2,int y2,ModelPanelManager vt);
+    public boolean selected(int x1,int y1,int x2,int y2,ModelPanelManager vt);
 //    public void interrupted();
 }
