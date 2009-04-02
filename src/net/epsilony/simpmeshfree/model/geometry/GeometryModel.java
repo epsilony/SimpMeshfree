@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.TreeSet;
 import java.util.concurrent.locks.ReentrantLock;
 import net.epsilony.math.util.EYMath;
-import net.epsilony.simpmeshfree.utils.SelectListener;
+import net.epsilony.simpmeshfree.utils.DomainSelectListener;
 import net.epsilony.simpmeshfree.utils.ModelImageWriter;
 import net.epsilony.simpmeshfree.utils.ModelPanelManager;
 import net.epsilony.util.collection.LayeredDomainTree;
@@ -29,7 +29,7 @@ import net.epsilony.util.collection.LayeredDomainTree;
  *
  * @author epsilon
  */
-public class GeometryModel implements ModelImageWriter, SelectListener {
+public class GeometryModel implements ModelImageWriter, DomainSelectListener {
 
     public LinkedList<Point> getPoints() {
         return points;
@@ -524,7 +524,7 @@ public class GeometryModel implements ModelImageWriter, SelectListener {
     ReentrantLock showLock = new ReentrantLock();
 
     @Override
-    public boolean isRubberAutoClearRepaint() {
+    public boolean isRubberAutoClear() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -535,6 +535,11 @@ public class GeometryModel implements ModelImageWriter, SelectListener {
 
     @Override
     public boolean selected(int x1, int y1, int x2, int y2, ModelPanelManager vt) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void clearRubber(BufferedImage rubberImage, ModelPanelManager aThis) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 }

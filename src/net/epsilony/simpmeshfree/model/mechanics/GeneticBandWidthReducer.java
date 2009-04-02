@@ -72,13 +72,13 @@ public class GeneticBandWidthReducer {
         int[] matrixIndes;
         int[] bandWidths;
         int bandWidth;
-        int[] nodeMids;
+//        int[] nodeMids;
         TreeSet<Integer> criticalNodes = new TreeSet<Integer>();
 
         public Chromosome() {
             matrixIndes = new int[length];
             bandWidths = new int[length];
-            nodeMids = new int[length];
+//            nodeMids = new int[length];
 
         }
 
@@ -120,10 +120,17 @@ public class GeneticBandWidthReducer {
                 }
             }
             bandWidths[i] = size;
-            nodeMids[i] = (min + max) / 2;
+//            nodeMids[i] = (min + max) / 2;
             return size;
         }
 
+        /**
+         * 假设将将结点i与其相邻的结点asumption交换下标后计算i的下相邻结点与i的下标最大值
+         * 注，如果asumption不是i的相邻结点，结果是不正确的且不会抛出异常。
+         * @param i
+         * @param asumption
+         * @return
+         */
         public int bandWidthOfNode(int i, int asumption) {
             int size = 0;
             int[] neighbors = nodeNeighbors[i];
@@ -131,6 +138,9 @@ public class GeneticBandWidthReducer {
                 if (Math.abs(matrixIndes[neighbors[j]] - matrixIndes[asumption]) > size) {
                     size = Math.abs(matrixIndes[neighbors[j]] - matrixIndes[asumption]);
                 }
+            }
+            if (Math.abs(i - asumption) > size) {
+                size = Math.abs(matrixIndes[i] - matrixIndes[asumption]);
             }
             return size;
         }
@@ -164,23 +174,52 @@ public class GeneticBandWidthReducer {
         public int hillClimbing() {
             boolean canImprove;
             int[] neighbors;
-            int cv2, cu2, cu;
+            int cv, cv2, cu2, cu;
             int j, k, u, v, t;
+            //iterval left right between v and mid neighbor of v
+            int nivl, nivr;
+            int vNeighborMax;
+            int vNeighborMin;
             bandWidth();
             do {
                 canImprove = false;
+                if (criticalNodes.size() == 0) {
+                    bandWidth();
+                }
                 for (Integer i : criticalNodes) {
                     v = i;
                     neighbors = nodeNeighbors[v];
+                    vNeighborMax = neighbors[0];
+                    vNeighborMin = neighbors[0];
+                    for (j = 0; j < neighbors.length; j++) {
+                        if (neighbors[j] > vNeighborMax) {
+                            vNeighborMax = neighbors[j];
+                        } else {
+                            if (neighbors[j] < vNeighborMin) {
+                                vNeighborMin = neighbors[j];
+                            }
+                        }
+                    }
+                    if (v - vNeighborMin > vNeighborMax - v) {
+                        nivl = (vNeighborMin + vNeighborMax) / 2 + 1;
+                        nivr = v;
+                    } else {
+                        nivr = (vNeighborMin + vNeighborMax) / 2;
+                        nivl = v;
+                    }
+                    if (nivr - nivl == 0) {
+                        continue;
+                    }
                     for (j = 0; j < neighbors.length; j++) {
                         u = neighbors[j];
-                        if (Math.abs(nodeMids[v] - matrixIndes[u]) >= Math.abs(nodeMids[v] - matrixIndes[v])) {
+                        if (u > nivr || v < nivl) {
                             continue;
                         }
-                        cu = bandWidths[u];
-                        cu2 = bandWidthOfNode(u, v);
-                        cv2 = bandWidthOfNode(v, u);
-                        if (cu2 <= cu && cv2 <= bandWidth && (cu2 + cv2) <= (cu + bandWidth)) {
+                        cv = 1;
+                        cu = bandWidths[u] / bandWidth;
+                        cu2 = criticalValueOfNode(u, v);
+                        cv2 = criticalValueOfNode(v, u);
+                        if (cu2 <= cu && cv2 <= cv && (cu2 + cv2) < (cu + cv)) {
                             t = matrixIndes[v];
                             matrixIndes[v] = matrixIndes[u];
                             matrixIndes[u] = t;
@@ -192,19 +231,20 @@ public class GeneticBandWidthReducer {
                                 criticalNodes.remove(u);
                             }
                             for (k = 0; k < neighbors.length; k++) {
-                                if (bandWidthOfNode(neighbors[k]) == bandWidth) {
-                                    criticalNodes.add(neighbors[k]);
-                                }
+                                bandWidthOfNode(neighbors[k]);
+
                             }
-                            neighbors = nodeNeighbors[v];
+                            neighbors = nodeNeighbors[u];
                             for (k = 0; k < neighbors.length; k++) {
-                                if (bandWidthOfNode(neighbors[k]) == bandWidth) {
-                                    criticalNodes.add(neighbors[k]);
-                                }
+                                bandWidthOfNode(neighbors[k]);
+
                             }
                             canImprove = true;
                             break;
                         }
+                    }
+                    if (canImprove) {
+                        break;
                     }
                 }
             } while (canImprove);
@@ -295,13 +335,15 @@ public class GeneticBandWidthReducer {
         son = population[populationSize];
         daughter = population[populationSize + 1];
         populationSize += 2;
-        int f = flags[0] + 1;
+        
         int i, j;
+        //儿子前半段拷备老爸，后半段按老妈的顺序插入老爸前半段没有的
+        int f = flags[0] + 1;
         for (i = 0; i < length / 2; i++) {
             son.matrixIndes[i] = father.matrixIndes[i];
             flags[father.matrixIndes[i]] = f;
         }
-        for (i = 0, j = length / 2; i < length && j < length; i++) {
+        for (i = 0, j = length / 2; j < length; i++) {
             if (flags[mother.matrixIndes[i]] != f) {
                 son.matrixIndes[j] = mother.matrixIndes[i];
                 flags[mother.matrixIndes[i]] = f;
@@ -309,15 +351,17 @@ public class GeneticBandWidthReducer {
             }
         }
 
+        //女儿与儿子相反
         f = flags[0] + 1;
-        for (i = 0; i < length / 2; i++) {
-            daughter.matrixIndes[length - i - 1] = mother.matrixIndes[length - i - 1];
-            flags[mother.matrixIndes[i]] = f;
+        for (i = length/2; i < length ; i++) {
+            daughter.matrixIndes[i]=mother.matrixIndes[i];
+            flags[mother.matrixIndes[i]]=f;
         }
-        for (i = 0, j = 0; i < length && j < length / 2; i++) {
-            if (flags[father.matrixIndes[i]] != f) {
-                daughter.matrixIndes[j] = father.matrixIndes[i];
-                flags[father.matrixIndes[i]] = f;
+        for (i = 0, j = 0; j < length / 2; i++) {
+            if(flags[father.matrixIndes[i]]!=f){
+                daughter.matrixIndes[j]=father.matrixIndes[i];
+                flags[father.matrixIndes[i]]=f;
+                j++;
             }
         }
     }
