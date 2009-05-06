@@ -75,27 +75,18 @@ public class LineSegment extends Segment {
     }
 
     @Override
-    public Point getLeftVertex() {
+    public Point getFirstVertex() {
         return pts[0];
     }
 
     @Override
-    public Point getRightVertex() {
+    public Point getLastVertex() {
         return pts[1];
     }
 
-    @Override
-    public void setLeftVertex(Point v) {
-        pts[0]=v;
-    }
 
     @Override
-    public void setRightVertex(Point v) {
-        pts[1]=v;
-    }
-
-    @Override
-    public LinkedList<ApproximatePoint> approximatePoints(double size,double flatness,LinkedList<ApproximatePoint> aprxPts) {
+    public LinkedList<ApproximatePoint> GenerateApproximatePoints(double size,double flatness,LinkedList<ApproximatePoint> aprxPts) {
         double sizeSqr=size*size;
         aprxPts.add(new ApproximatePoint(pts[0].x,pts[0].y,this,0));
         lineSegmentApproximatPoints(sizeSqr, 0, 1, aprxPts);
@@ -111,5 +102,15 @@ public class LineSegment extends Segment {
             aprxPts.add(new ApproximatePoint(results[0], results[1], this, t));
             lineSegmentApproximatPoints(sizeSqr,t, endParm, aprxPts);
         }
+    }
+
+    @Override
+    public void setFirstVertex(Point v) {
+        pts[0]=v;
+    }
+
+    @Override
+    public void setLastVertex(Point v) {
+        pts[1]=v;
     }
 }

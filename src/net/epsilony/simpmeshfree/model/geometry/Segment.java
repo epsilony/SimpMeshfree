@@ -18,7 +18,7 @@ abstract public class Segment extends ModelElement {
 
     static ModelElementIndexManager segmentIM = new ModelElementIndexManager();
 //    LinkedList<BoundaryNode> nodes = new LinkedList<BoundaryNode>();
-    SegmentRoute route;
+    Route route;
     BoundaryCondition boundaryCondition;
 
     public BoundaryCondition getBoundaryCondition() {
@@ -44,13 +44,13 @@ abstract public class Segment extends ModelElement {
 
     abstract public boolean intersectLine(Point v1, Point v2);
 
-    abstract public LinkedList<ApproximatePoint> approximatePoints(double size, double flatness, LinkedList<ApproximatePoint> aprxPts);
+    abstract public LinkedList<ApproximatePoint> GenerateApproximatePoints(double size, double flatness, LinkedList<ApproximatePoint> aprxPts);
 
-    public SegmentRoute getRoute() {
+    public Route getRoute() {
         return route;
     }
 
-    public void setRoute(SegmentRoute route) {
+    public void setRoute(Route route) {
         this.route = route;
     }
 
@@ -60,13 +60,13 @@ abstract public class Segment extends ModelElement {
         }
     }
 
-    abstract public Point getLeftVertex();
+    abstract public Point getFirstVertex();
 
-    abstract public Point getRightVertex();
+    abstract public Point getLastVertex();
 
-    abstract public void setLeftVertex(Point v);
+    abstract public void setFirstVertex(Point v);
 
-    abstract public void setRightVertex(Point v);
+    abstract public void setLastVertex(Point v);
 
     abstract public double[] parameterPoint(double t, double[] pt);
 

@@ -22,4 +22,8 @@ public class ModelElementIndexManager {
         return max;
     }
 
+    public void reset(){
+        max=0;
+    }
+
 }

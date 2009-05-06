@@ -21,7 +21,7 @@ import no.uib.cipr.matrix.Vector;
  * @version 0.11 haven't been tested
  * @author M.Yuan J.-J.Chen
  */
-public class RadialPolynomialShapeFunction {
+public class RadialPolynomialShapeFunction implements ShapeFunction {
 
     RadialBasisFunction radialFun;
     int power;
@@ -44,6 +44,7 @@ public class RadialPolynomialShapeFunction {
      * @param y
      * @return 形函数向量其值为：{&phi;<sub>1</sub>,&phi;<sub>2</sub>,...,&phi;<sub>k</sub>}
      */
+    @Override
     public Vector shapeValues(List<Node> nodes, double x, double y) {
         UpperSymmDenseMatrix gMat = new UpperSymmDenseMatrix((power * power + 3 * power + 2) / 2 + nodes.size());
         int i, j;
@@ -85,6 +86,7 @@ public class RadialPolynomialShapeFunction {
      * <br>{&part;&phi;<sub>1</sub>/&part;x,&part;&phi;<sub>2</sub>/&part;x,...,&part;&phi;<sub>2</sub>/&part;x;</br>
      * <br> &part;&phi;<sub>1</sub>/&part;y,&part;&phi;<sub>2</sub>/&part;y,...,&part;&phi;<sub>2</sub>/&part;y}</br>
      */
+    @Override
     public Vector[] shapePartialValues(List<Node> nodes, double x, double y) {
         Vector resultVecPx = new DenseVector((power * power + 3 * power + 2) / 2 + nodes.size());
         Vector resultVecPy = new DenseVector((power * power + 3 * power + 2) / 2 + nodes.size());
@@ -141,6 +143,7 @@ public class RadialPolynomialShapeFunction {
      * <br> &part;&sup2;&phi;<sub>1</sub>/&part;x&part;y,&part;&sup2;&phi;<sub>2</sub>/&part;x&part;y,...,&part;&sup2;&phi;<sub>k</sub>/&part;x&part;y;</br>
      * <br> &part;&sup2;&phi;<sub>1</sub>/&part;y&sup2;,&part;&sup2;&phi;<sub>2</sub>/&part;y&sup2;,...,&part;&sup2;&phi;<sub>k</sub>/&part;y&sup2;}</br>
      */
+    @Override
     public Vector[] shapeQuadPartialValues(List<Node> nodes, double x, double y) {       
         UpperSymmDenseMatrix gMat = new UpperSymmDenseMatrix((power * power + 3 * power + 2) / 2 + nodes.size());
         int i, j;

@@ -34,7 +34,7 @@ public class ApproximatePoint extends Point{
         return ModelElementType.ApproximatPoint;
     }
 
-    ApproximatePoint l,r;
+    ApproximatePoint back,front;
     Segment segment;
     double segmentParm;
 
@@ -47,24 +47,24 @@ public class ApproximatePoint extends Point{
     }
 
     public ApproximatePoint getL() {
-        return l;
+        return back;
     }
 
     public void setL(ApproximatePoint l) {
-        this.l = l;
+        this.back = l;
     }
 
     public ApproximatePoint getR() {
-        return r;
+        return front;
     }
 
     public void setR(ApproximatePoint r) {
-        this.r = r;
+        this.front = r;
     }
 
     @Override
     public String toString() {
-        return String.format("%s%d:(%f.1, %f.1)-%s%d l:%d r:%d", type(),index,x,y,segment.type(),segment.index,l.index,r.index);
+        return String.format("%s%d:(%f.1, %f.1)-%s%d l:%d r:%d", type(),index,x,y,segment.type(),segment.index,back.index,front.index);
     }
 
 

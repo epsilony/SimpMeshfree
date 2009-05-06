@@ -44,27 +44,27 @@ public class QuadBezierSegment extends Segment{
     }
 
     @Override
-    public Point getLeftVertex() {
+    public Point getFirstVertex() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public Point getRightVertex() {
+    public Point getLastVertex() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public void setLeftVertex(Point v) {
+    public void setFirstVertex(Point v) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public void setRightVertex(Point v) {
+    public void setLastVertex(Point v) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public LinkedList<ApproximatePoint> approximatePoints(double size, double flatness,LinkedList<ApproximatePoint> aprxPts) {
+    public LinkedList<ApproximatePoint> GenerateApproximatePoints(double size, double flatness,LinkedList<ApproximatePoint> aprxPts) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

@@ -7,6 +7,7 @@ package net.epsilony.simpmeshfree.model.geometry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -53,6 +54,14 @@ public class TriangleJni {
         this.s = s;
     }
 
+    public void complie(GeometryModel gm,String switchs){
+        setPointsSegments(gm.getApproximatePoints(),new LinkedList<Point>());
+        setSwitchs(switchs);
+        LinkedList<Point> holePoints=gm.getHolesXYs();
+        double[] holesXYs=new double[2*holePoints.size()];
+        setHoles(holesXYs, holePoints.size());
+        triangleFun();
+    }
     private ArrayList<ApproximatePoint> approximatePoints=new ArrayList<ApproximatePoint>();
     public void setPointsSegments(List<ApproximatePoint> aprxPts, List<Point> pts) {
         approximatePoints.ensureCapacity(aprxPts.size());
@@ -83,13 +92,80 @@ public class TriangleJni {
         i = 0;
         for (ApproximatePoint ap : aprxPts) {
             segmentsIn[2 * i] = approximatePointToPointIndex.get(ap) + 1;
-            segmentsIn[2 * i + 1] = approximatePointToPointIndex.get(ap.r) + 1;
+            segmentsIn[2 * i + 1] = approximatePointToPointIndex.get(ap.front) + 1;
             segmentsMarkerIn[i] = ap.segment.index;
             i++;
         }
 
     }
 
+    public LinkedList<double[]> getTriangleXYsList(){
+        LinkedList<double[]> triXYs=new LinkedList<double[]>();
+        double [] triXY;
+        for (int i = 0; i < trianglesSizeOut; i++) {
+            triXY=new double[6];
+            triXY[0] = pointsXYOut[(trianglesOut[i * 3] - 1)*2];
+            triXY[1] = pointsXYOut[(trianglesOut[i * 3] - 1)*2+1];
+            triXY[2] = pointsXYOut[(trianglesOut[i * 3+1] - 1)*2];
+            triXY[3] = pointsXYOut[(trianglesOut[i * 3+1] - 1)*2+1];
+            triXY[4] = pointsXYOut[(trianglesOut[i * 3+2] - 1)*2];
+            triXY[5] = pointsXYOut[(trianglesOut[i * 3+2] - 1)*2+1];
+            triXYs.add(triXY);
+        }
+        return triXYs;
+    }
+
+    public ArrayList<Node> getNodes(boolean needNeighbors){
+        
+        ArrayList<Node> nodes=new ArrayList<Node>(pointsXYSizeOut);
+//        System.out.println("pointsXYSizeOut = " + pointsXYSizeOut);
+        for(int i = 0;i<approximatePoints.size();i++){
+            nodes.add(new BoundaryNode(approximatePoints.get(i)));
+        }
+
+        for (int i = approximatePoints.size(); i < pointsXYSizeOut; i++) {
+            nodes.add(new Node(pointsXYOut[i * 2], pointsXYOut[i * 2 + 1]));
+        }
+//        System.out.println("segmentsSizeOut = " + segmentsSizeOut);
+//        System.out.println("segmentsOut.length = " + segmentsOut.length);
+       if(needNeighbors==false){
+           return nodes;
+       }
+        TreeSet<Node>[] neighbors= new TreeSet[pointsXYSizeOut];
+        Comparator<Node> nodeCmp = new Comparator<Node>() {
+
+            @Override
+            public int compare(Node o1, Node o2) {
+                return o1.index - o2.index;
+            }
+        };
+        for (int i = 0; i < pointsXYSizeOut; i++) {
+            neighbors[i] = new TreeSet(nodeCmp);
+        }
+
+        //Triangles and Nodes neighbor and triangleset
+        Node n1, n2, n3;
+
+        Triangle tr;
+        for (int i = 0; i < trianglesSizeOut; i++) {
+            n1 = nodes.get(trianglesOut[i * 3] - 1);
+            n2 = nodes.get(trianglesOut[i * 3 + 1] - 1);
+            n3 = nodes.get(trianglesOut[i * 3 + 2] - 1);
+            n1.neighbors.add(n2);
+            n2.neighbors.add(n1);
+            n2.neighbors.add(n3);
+            n3.neighbors.add(n2);
+            n3.neighbors.add(n1);
+            n1.neighbors.add(n3);
+            tr = new Triangle(n1, n2, n3);
+
+            n1.triangles.add(tr);
+            n2.triangles.add(tr);
+            n3.triangles.add(tr);
+        }
+//        System.out.println("nodes.size()" + nodes.size());
+        return nodes;
+    }
     public ArrayList<Node> getNodesTriangles(ArrayList<Node> nodes, ArrayList<Triangle> trs) {
         nodes.clear();
         nodes.ensureCapacity(pointsXYSizeOut);

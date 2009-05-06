@@ -13,14 +13,11 @@ import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
-import java.util.concurrent.locks.ReentrantLock;
 import net.epsilony.math.util.EYMath;
-import net.epsilony.simpmeshfree.utils.DomainSelectListener;
 import net.epsilony.simpmeshfree.utils.ModelImageWriter;
 import net.epsilony.simpmeshfree.utils.ModelPanelManager;
 import net.epsilony.util.collection.LayeredDomainTree;
@@ -29,32 +26,18 @@ import net.epsilony.util.collection.LayeredDomainTree;
  *
  * @author epsilon
  */
-public class GeometryModel implements ModelImageWriter, DomainSelectListener {
+public class GeometryModel implements ModelImageWriter{
 
-    public LinkedList<Point> getPoints() {
-        return points;
-    }
-
-    public void setPoints(LinkedList<Point> points) {
-        this.points = points;
-    }
-
-    public LinkedList<SegmentRoute> getRoutes() {
+    public LinkedList<Route> getRoutes() {
         return routes;
     }
 
-    public void setRoutes(LinkedList<SegmentRoute> routes) {
-        this.routes = routes;
-    }
-    LinkedList<SegmentRoute> routes = new LinkedList<SegmentRoute>();
-    LinkedList<Point> points = new LinkedList<Point>();
-    LinkedList<ApproximatePoint> aprxPts = new LinkedList<ApproximatePoint>();
-    LinkedList<Point> holes = new LinkedList<Point>();
-    ArrayList<Triangle> triangles = new ArrayList<Triangle>();
-    ArrayList<Node> nodes = new ArrayList<Node>();
-    final AffineTransform itrx = new AffineTransform();
-    private int compileTime = 0;
-    LayeredDomainTree<Node> nodesSearchTree;
+    LinkedList<Route> routes = new LinkedList<Route>();
+
+    LinkedList<ApproximatePoint> approximatePoints = new LinkedList<ApproximatePoint>();
+
+    private int compileCounter = 0;
+
     LayeredDomainTree<ApproximatePoint> approximatePointsSearchTree;
     boolean wider = true;
     double segmentApproximateSize;
@@ -70,37 +53,29 @@ public class GeometryModel implements ModelImageWriter, DomainSelectListener {
         return rightUp;
     }
 
-    public Point newPoint(double x, double y) {
-        Point p = new Point(x, y);
-        points.add(p);
-        return p;
-    }
-    final double[] addShapeTds = new double[6];
 
-    public void addHole(double x, double y) {
-        holes.add(Point.tempPoint(x, y));
-    }
+    double[] addShapeTemps = new double[6];
 
-    Shape modelShape;
+
     public void addShape(Shape shape) {
-        this.modelShape=shape;
-        PathIterator pi = shape.getPathIterator(itrx);
+//        this.modelShape = shape;
+        PathIterator pi = shape.getPathIterator(null);
         boolean hasMoveTo = false;
         boolean hasClose = false;
         Point lastEnd = null;
         Point routeHead = null;
-        SegmentRoute rt = null;
+        Route rt = null;
         Point tp, tp1, tp2;
         while (!pi.isDone()) {
-            switch (pi.currentSegment(addShapeTds)) {
+            switch (pi.currentSegment(addShapeTemps)) {
                 case PathIterator.SEG_MOVETO:
                     if (hasMoveTo && !hasClose) {
                         rt.add(new LineSegment(lastEnd, routeHead));
 //                        rt.compile();
                         routes.add(rt);
                     }
-                    lastEnd = new Point(addShapeTds[0], addShapeTds[1]);
-                    rt = new SegmentRoute();
+                    lastEnd = new Point(addShapeTemps[0], addShapeTemps[1]);
+                    rt = new Route();
                     routeHead = lastEnd;
                     hasMoveTo = true;
                     hasClose = false;
@@ -110,8 +85,8 @@ public class GeometryModel implements ModelImageWriter, DomainSelectListener {
                         rt.add(new LineSegment(lastEnd, routeHead));
 //                        System.out.println("close");
                     } else {
-                        rt.getLast().setRightVertex(rt.getFirst().getLeftVertex());
-//                        System.out.println(rt.getLast().getRightVertex().x+" "+rt.getLast().getRightVertex().getY());
+                        rt.getLast().setLastVertex(rt.getFirst().getFirstVertex());
+//                        System.out.println(rt.getLast().getLastVertex().x+" "+rt.getLast().getLastVertex().getY());
 //                        System.out.println("close2");
                     }
 
@@ -121,23 +96,23 @@ public class GeometryModel implements ModelImageWriter, DomainSelectListener {
                     routes.add(rt);
                     break;
                 case PathIterator.SEG_LINETO:
-                    tp = new Point(addShapeTds[0], addShapeTds[1]);
+                    tp = new Point(addShapeTemps[0], addShapeTemps[1]);
 
                     rt.add(new LineSegment(lastEnd, tp));
                     lastEnd = tp;
 //                    System.out.println("line");
                     break;
                 case PathIterator.SEG_QUADTO:
-                    tp = new Point(addShapeTds[0], addShapeTds[1]);
-                    tp1 = new Point(addShapeTds[2], addShapeTds[3]);
+                    tp = new Point(addShapeTemps[0], addShapeTemps[1]);
+                    tp1 = new Point(addShapeTemps[2], addShapeTemps[3]);
 //                    System.out.println("quad");
                     rt.add(CubicBezierSegment.fromQuadBezierPoints(lastEnd, tp, tp1));
                     lastEnd = tp1;
                     break;
                 case PathIterator.SEG_CUBICTO:
-                    tp = new Point(addShapeTds[0], addShapeTds[1]);
-                    tp1 = new Point(addShapeTds[2], addShapeTds[3]);
-                    tp2 = new Point(addShapeTds[4], addShapeTds[5]);
+                    tp = new Point(addShapeTemps[0], addShapeTemps[1]);
+                    tp1 = new Point(addShapeTemps[2], addShapeTemps[3]);
+                    tp2 = new Point(addShapeTemps[4], addShapeTemps[5]);
                     rt.add(new CubicBezierSegment(lastEnd, tp, tp1, tp2));
                     lastEnd = tp2;
                     break;
@@ -147,7 +122,7 @@ public class GeometryModel implements ModelImageWriter, DomainSelectListener {
 //        System.out.println("routes.size() = " + routes.size());
 
     }
-    TriangleJni triangleJni = new TriangleJni();
+
 
     public double getSegmentApproximateSize() {
         return segmentApproximateSize;
@@ -157,13 +132,13 @@ public class GeometryModel implements ModelImageWriter, DomainSelectListener {
         return segmentFlatness;
     }
 
-    public void compile(double size, double flatness, String switches) {
+    public void compile(double size, double flatness) {
         segmentApproximateSize = size;
         segmentFlatness = flatness;
-        approximatePoint(size, flatness);
-        leftDown.setXY(aprxPts.getFirst());
-        rightUp.setXY(aprxPts.getFirst());
-        for (ApproximatePoint ap : aprxPts) {
+        GenerateApproximatePoints(size, flatness);
+        leftDown.setXY(approximatePoints.getFirst());
+        rightUp.setXY(approximatePoints.getFirst());
+        for (ApproximatePoint ap : approximatePoints) {
             if (ap.x < leftDown.x) {
                 leftDown.x = ap.x;
             } else {
@@ -179,44 +154,43 @@ public class GeometryModel implements ModelImageWriter, DomainSelectListener {
                 }
             }
         }
-        triangleJni.setSwitchs(switches);
-        triangleJni.setPointsSegments(aprxPts, points);
-        double[] tds = new double[holes.size() * 2];
-        int i = 0;
-        for (Point p : holes) {
-            tds[i * 2] = p.x;
-            tds[i * 2 + 1] = p.y;
-            i++;
-        }
-        triangleJni.setHoles(tds, holes.size());
-        triangleJni.triangleFun();
-        triangleJni.getNodesTriangles(nodes, triangles);
-        System.out.println("nodes.size() = " + nodes.size());
-        nodesSearchTree = new LayeredDomainTree<Node>(nodes, Point.compX, Point.compY, wider);
-        approximatePointsSearchTree = new LayeredDomainTree<ApproximatePoint>(aprxPts, Point.compX, Point.compY, wider);
-        compileTime++;
+//        triangleJni.setSwitchs(switches);
+//        triangleJni.setPointsSegments(GenerateApproximatePoints, points);
+//        double[] tds = new double[holes.size() * 2];
+//        int i = 0;
+//        for (Point p : holes) {
+//            tds[i * 2] = p.x;
+//            tds[i * 2 + 1] = p.y;
+//            i++;
+//        }
+//        triangleJni.setHoles(tds, holes.size());
+//        triangleJni.triangleFun();
+//        triangleJni.getNodesTriangles(nodes, triangles);
+//        System.out.println("nodes.size() = " + nodes.size());
+//        nodesSearchTree = new LayeredDomainTree<Node>(nodes, Point.compX, Point.compY, wider);
+        approximatePointsSearchTree = new LayeredDomainTree<ApproximatePoint>(approximatePoints, Point.compX, Point.compY, wider);
+        compileCounter++;
     }
-    private Node searchNodeFrom = Node.tempNode(0, 0),  searchNodeTo = Node.tempNode(0, 0);
-    private Point searchPointFrom = Point.tempPoint(0, 0),  searchPointTo = Point.tempPoint(0, 0);
-    private ApproximatePoint searchApproximatePointFrom = ApproximatePoint.tempApproximatePoint(0, 0),  searchApproximatePointTo = ApproximatePoint.tempApproximatePoint(0, 0);
+    //用于加速搜索的临时变量
+    private final ApproximatePoint searchApproximatePointFrom = ApproximatePoint.tempApproximatePoint(0, 0),  searchApproximatePointTo = ApproximatePoint.tempApproximatePoint(0, 0);
 
-    public List<Node> nodeDomainSearch(double x1, double y1, double x2, double y2, List<Node> outPts) {
-        double t;
-        if (x1 > x2) {
-            t = x1;
-            x1 = x2;
-            x2 = t;
-        }
-        if (y1 > y2) {
-            t = y1;
-            y1 = y2;
-            y2 = t;
-        }
-        searchNodeFrom.setXY(x1, y1);
-        searchNodeTo.setXY(x2, y2);
-        outPts.clear();
-        return nodesSearchTree.domainSearch(outPts, searchNodeFrom, searchNodeTo);
-    }
+//    public List<Node> nodeDomainSearch(double x1, double y1, double x2, double y2, List<Node> outPts) {
+//        double t;
+//        if (x1 > x2) {
+//            t = x1;
+//            x1 = x2;
+//            x2 = t;
+//        }
+//        if (y1 > y2) {
+//            t = y1;
+//            y1 = y2;
+//            y2 = t;
+//        }
+//        searchNodeFrom.setXY(x1, y1);
+//        searchNodeTo.setXY(x2, y2);
+//        outPts.clear();
+//        return nodesSearchTree.domainSearch(outPts, searchNodeFrom, searchNodeTo);
+//    }
 
     /**
      * 
@@ -234,21 +208,26 @@ public class GeometryModel implements ModelImageWriter, DomainSelectListener {
                 y2 = center.y + size;
         outPts.clear();
         switch (center.type()) {
-            case Node:
-                searchNodeFrom.setXY(x1, y1);
-                searchNodeTo.setXY(x2, y2);
-                nodesSearchTree.domainSearch((List<Node>) outPts, searchNodeFrom, searchNodeTo);
-                break;
             case ApproximatPoint:
                 searchApproximatePointFrom.setXY(x1, y1);
                 searchApproximatePointTo.setXY(x2, y2);
                 approximatePointsSearchTree.domainSearch((List<ApproximatePoint>) outPts, searchApproximatePointFrom, searchApproximatePointTo);
+                break;
             default:
                 throw new UnsupportedOperationException();
         }
         return outPts;
     }
 
+    /**
+     * search the Point link geometry elements in the domain that has corner1 and corner2
+     * corner1 and corner2 maybe changed  during the search!!!
+     * @param <E>
+     * @param corner1
+     * @param corner2
+     * @param outPts
+     * @return
+     */
     public <E extends Point> List<E> pointDomainSearch(E corner1, E corner2, List<E> outPts) {
         if (corner1.x > corner2.x) {
             double t = corner2.x;
@@ -261,9 +240,6 @@ public class GeometryModel implements ModelImageWriter, DomainSelectListener {
             corner1.y = t;
         }
         switch (corner1.type()) {
-            case Node:
-                nodesSearchTree.domainSearch((List<Node>) outPts, (Node) corner1, (Node) corner2);
-                break;
             case ApproximatPoint:
                 approximatePointsSearchTree.domainSearch((List<ApproximatePoint>) outPts, (ApproximatePoint) corner1, (ApproximatePoint) corner2);
                 break;
@@ -272,9 +248,18 @@ public class GeometryModel implements ModelImageWriter, DomainSelectListener {
         }
         return outPts;
     }
-    private LinkedList<ApproximatePoint> segmentSearchApproximatePointList = new LinkedList<ApproximatePoint>();
-    private TreeSet<Segment> segmentSearchSet = new TreeSet<Segment>(ModelElement.comparator);
+    private final LinkedList<ApproximatePoint> segmentSearchApproximatePointList = new LinkedList<ApproximatePoint>();
+    private final TreeSet<Segment> segmentSearchSet = new TreeSet<Segment>(ModelElement.comparator);
 
+    /**
+     * 搜索与直线(x1,y1)-(x2,y2)有可能相交的LineSegment
+     * @param x1
+     * @param y1
+     * @param x2
+     * @param y2
+     * @param outSegs
+     * @return
+     */
     public List<Segment> segmentSearch(double x1, double y1, double x2, double y2, List<Segment> outSegs) {
         outSegs.clear();
         if (x1 > x2) {
@@ -296,26 +281,26 @@ public class GeometryModel implements ModelImageWriter, DomainSelectListener {
                 segmentSearchSet.add(p.segment);
                 continue;
             }
-            if (EYMath.isLineSegmentIntersect(x1, y1, x1, y2, p.x, p.y, p.l.x, p.l.y) ||
-                    EYMath.isLineSegmentIntersect(x2, y1, x2, y2, p.x, p.y, p.l.x, p.l.y) ||
-                    EYMath.isLineSegmentIntersect(x1, y1, x2, y1, p.x, p.y, p.l.x, p.l.y) ||
-                    EYMath.isLineSegmentIntersect(x1, y2, x2, y2, p.x, p.y, p.l.x, p.l.y)) {
+            if (EYMath.isLineSegmentIntersect(x1, y1, x1, y2, p.x, p.y, p.back.x, p.back.y) ||
+                    EYMath.isLineSegmentIntersect(x2, y1, x2, y2, p.x, p.y, p.back.x, p.back.y) ||
+                    EYMath.isLineSegmentIntersect(x1, y1, x2, y1, p.x, p.y, p.back.x, p.back.y) ||
+                    EYMath.isLineSegmentIntersect(x1, y2, x2, y2, p.x, p.y, p.back.x, p.back.y)) {
                 segmentSearchSet.add(p.segment);
                 continue;
             }
-            if (EYMath.isLineSegmentIntersect(x1, y1, x1, y2, p.x, p.y, p.r.x, p.r.y) ||
-                    EYMath.isLineSegmentIntersect(x2, y1, x2, y2, p.x, p.y, p.r.x, p.r.y) ||
-                    EYMath.isLineSegmentIntersect(x1, y1, x2, y1, p.x, p.y, p.r.x, p.r.y) ||
-                    EYMath.isLineSegmentIntersect(x1, y2, x2, y2, p.x, p.y, p.r.x, p.r.y)) {
+            if (EYMath.isLineSegmentIntersect(x1, y1, x1, y2, p.x, p.y, p.front.x, p.front.y) ||
+                    EYMath.isLineSegmentIntersect(x2, y1, x2, y2, p.x, p.y, p.front.x, p.front.y) ||
+                    EYMath.isLineSegmentIntersect(x1, y1, x2, y1, p.x, p.y, p.front.x, p.front.y) ||
+                    EYMath.isLineSegmentIntersect(x1, y2, x2, y2, p.x, p.y, p.front.x, p.front.y)) {
                 segmentSearchSet.add(p.segment);
             }
         }
         outSegs.addAll(segmentSearchSet);
         return outSegs;
     }
-    private TreeSet<SegmentRoute> segmentRouteSearchSet = new TreeSet<SegmentRoute>(ModelElement.comparator);
+    private final TreeSet<Route> segmentRouteSearchSet = new TreeSet<Route>(ModelElement.comparator);
 
-    public List<SegmentRoute> segmentRouteSearch(double x1, double y1, double x2, double y2, List<SegmentRoute> outSegs) {
+    public List<Route> segmentRouteSearch(double x1, double y1, double x2, double y2, List<Route> outSegs) {
         outSegs.clear();
         if (x1 > x2) {
             double t = x1;
@@ -336,17 +321,17 @@ public class GeometryModel implements ModelImageWriter, DomainSelectListener {
                 segmentRouteSearchSet.add(p.segment.route);
                 continue;
             }
-            if (EYMath.isLineSegmentIntersect(x1, y1, x1, y2, p.x, p.y, p.l.x, p.l.y) ||
-                    EYMath.isLineSegmentIntersect(x2, y1, x2, y2, p.x, p.y, p.l.x, p.l.y) ||
-                    EYMath.isLineSegmentIntersect(x1, y1, x2, y1, p.x, p.y, p.l.x, p.l.y) ||
-                    EYMath.isLineSegmentIntersect(x1, y2, x2, y2, p.x, p.y, p.l.x, p.l.y)) {
+            if (EYMath.isLineSegmentIntersect(x1, y1, x1, y2, p.x, p.y, p.back.x, p.back.y) ||
+                    EYMath.isLineSegmentIntersect(x2, y1, x2, y2, p.x, p.y, p.back.x, p.back.y) ||
+                    EYMath.isLineSegmentIntersect(x1, y1, x2, y1, p.x, p.y, p.back.x, p.back.y) ||
+                    EYMath.isLineSegmentIntersect(x1, y2, x2, y2, p.x, p.y, p.back.x, p.back.y)) {
                 segmentRouteSearchSet.add(p.segment.route);
                 continue;
             }
-            if (EYMath.isLineSegmentIntersect(x1, y1, x1, y2, p.x, p.y, p.r.x, p.r.y) ||
-                    EYMath.isLineSegmentIntersect(x2, y1, x2, y2, p.x, p.y, p.r.x, p.r.y) ||
-                    EYMath.isLineSegmentIntersect(x1, y1, x2, y1, p.x, p.y, p.r.x, p.r.y) ||
-                    EYMath.isLineSegmentIntersect(x1, y2, x2, y2, p.x, p.y, p.r.x, p.r.y)) {
+            if (EYMath.isLineSegmentIntersect(x1, y1, x1, y2, p.x, p.y, p.front.x, p.front.y) ||
+                    EYMath.isLineSegmentIntersect(x2, y1, x2, y2, p.x, p.y, p.front.x, p.front.y) ||
+                    EYMath.isLineSegmentIntersect(x1, y1, x2, y1, p.x, p.y, p.front.x, p.front.y) ||
+                    EYMath.isLineSegmentIntersect(x1, y2, x2, y2, p.x, p.y, p.front.x, p.front.y)) {
                 segmentRouteSearchSet.add(p.segment.route);
             }
         }
@@ -354,33 +339,42 @@ public class GeometryModel implements ModelImageWriter, DomainSelectListener {
         return outSegs;
     }
 
-    public static <E extends Point> boolean canSeeEach(E e1, E e2, Collection<ApproximatePoint> aps) {
+
+    public static boolean canSeeEach(Point e1, Point e2, Collection<ApproximatePoint> aps) {
         for (ApproximatePoint ap : aps) {
-            if (EYMath.isLineSegmentIntersect(e1.x, e1.y, e2.x, e2.y, ap.x, ap.y, ap.l.x, ap.l.y) || EYMath.isLineSegmentIntersect(e1.x, e1.y, e2.x, e2.y, ap.x, ap.y, ap.r.x, ap.r.y)) {
+            if (EYMath.isLineSegmentIntersect(e1.x, e1.y, e2.x, e2.y, ap.x, ap.y, ap.back.x, ap.back.y) || EYMath.isLineSegmentIntersect(e1.x, e1.y, e2.x, e2.y, ap.x, ap.y, ap.front.x, ap.front.y)) {
                 return false;
             }
         }
         return true;
     }
-    private int nodesNetShapeTime = 0;
-    private Path2D nodesNetPath = new Path2D.Double();
 
-    public Shape nodesNetShape(AffineTransform tr) {
-        if (nodesNetShapeTime != compileTime) {
-
-            setNodesFlag(0);
-            nodesNetPath.reset();
-            Node n = nodes.get(0);
-            nodesNetPath = n.neighborNetPath(nodesNetPath);
-            nodesNetShapeTime = compileTime;
+    public static boolean canSeeEach(double x1,double y1,double x2,double y2, Collection<ApproximatePoint> aps) {
+        for (ApproximatePoint ap : aps) {
+            if (EYMath.isLineSegmentIntersect(x1, y1, x2, y2, ap.x, ap.y, ap.back.x, ap.back.y) || EYMath.isLineSegmentIntersect(x1, y1, x2, y2, ap.x, ap.y, ap.front.x, ap.front.y)) {
+                return false;
+            }
         }
-        return nodesNetPath.createTransformedShape(tr);
+        return true;
     }
 
-    public void setNodesFlag(int flag) {
-        for (Node n : nodes) {
-            n.flag = flag;
+    public List<ApproximatePoint> getDomainAffectApproximatePoint(List<ApproximatePoint> aps,double x,double y,double r){
+        approximatePointSearch(aps,x-r-segmentApproximateSize,
+                y-r-segmentApproximateSize,
+                x+r+segmentApproximateSize,
+                y+r+segmentApproximateSize);
+        return aps;
+    }
+
+    public LinkedList<Point> getHolesXYs(){
+        LinkedList<Point> holesXYs=new LinkedList<Point>();
+        for(Route route:routes){
+            if(!route.isCounterClockwise()){
+                Point holePoint = route.getHolePoint();
+                holesXYs.add(holePoint);
+            }
         }
+        return holesXYs;
     }
 
     /**
@@ -389,16 +383,16 @@ public class GeometryModel implements ModelImageWriter, DomainSelectListener {
      * @param flatness
      * @return
      */
-    private LinkedList<ApproximatePoint> approximatePoint(double size, double flatness) {
-        for (SegmentRoute sr : routes) {
+    private LinkedList<ApproximatePoint> GenerateApproximatePoints(double size, double flatness) {
+        for (Route sr : routes) {
 //            System.out.println("sr.type"+sr.type());
-            aprxPts.addAll(sr.approximatePoints(size, flatness));
+            approximatePoints.addAll(sr.GenerateApproximatePoints(size, flatness));
         }
-//        System.out.println("aprxPts.size() = " + aprxPts.size());
-        return aprxPts;
+//        System.out.println("GenerateApproximatePoints.size() = " + GenerateApproximatePoints.size());
+        return approximatePoints;
     }
-    private ApproximatePoint tempApproximatePointSearchAp1 = ApproximatePoint.tempApproximatePoint(0, 0);
-    private ApproximatePoint tempApproximatePointSearchAp2 = ApproximatePoint.tempApproximatePoint(0, 0);
+    private final ApproximatePoint tempApproximatePointSearchAp1 = ApproximatePoint.tempApproximatePoint(0, 0);
+    private final ApproximatePoint tempApproximatePointSearchAp2 = ApproximatePoint.tempApproximatePoint(0, 0);
 
     public List<ApproximatePoint> approximatePointSearch(List<ApproximatePoint> list, ApproximatePoint from, ApproximatePoint to) {
         if (from.x > to.x) {
@@ -436,110 +430,54 @@ public class GeometryModel implements ModelImageWriter, DomainSelectListener {
         return approximatePointsSearchTree.domainSearch(list, tempApproximatePointSearchAp1, tempApproximatePointSearchAp2);
     }
 
-    public LinkedList<ApproximatePoint> getApproximatePts() {
-        return aprxPts;
+    public LinkedList<ApproximatePoint> getApproximatePoints() {
+        return approximatePoints;
     }
 
-    public ArrayList<Node> getNodes() {
-        return nodes;
+    public void addToPath(Path2D path){
+        for(Route route:routes){
+            route.addToPath(path);
+        }
     }
 
-    public ArrayList<Triangle> getTriangles() {
-        return triangles;
-    }
 
     public static void main(String[] args) {
         GeometryModel gm = new GeometryModel();
         gm.addShape(new Rectangle2D.Double(0, 0, 48, 12));
     }
 
-   
 
     @Override
     public void writeModelBuffer(BufferedImage modelImage, ModelPanelManager manager) {
         Graphics2D g2 = modelImage.createGraphics();
-//        g2.setBackground(Color.WHITE);
-//         g2.clearRect(0, 0, modelImage.getWidth(), modelImage.getHeight());
-        //g2.setComposite(AlphaComposite.Clear);
+
 
         g2.setComposite(AlphaComposite.Clear);
-        g2.fillRect(0,0,modelImage.getWidth(),modelImage.getHeight());
-     
+        g2.fillRect(0, 0, modelImage.getWidth(), modelImage.getHeight());
+
         AffineTransform tx = manager.getViewTransform();
         g2.setComposite(AlphaComposite.Src);
         Path2D path = new Path2D.Double();
-//        if (showModelShape) {
-//            for (SegmentRoute route : routes) {
-//
-//                for (Segment segment : route.getSegments()) {
-//                    path.moveTo(segment.getLeftVertex().getX(), segment.getRightVertex().getY());
-//                    segment.addToPath(path);
-//                }
-//            }
-//        }
-        path.append(modelShape, false);
-        g2.setColor(showModelShapeColor);
-        g2.draw(path.createTransformedShape(tx));
-        path.reset();
 
 
-        if (showNode) {
-            System.out.println("showNode"+nodes.size());
-            path.append(manager.viewMarker(nodes, showNodeSize, showNodeMarkerType), false);
-        }
-        g2.setColor(showNodeColor);
-        g2.draw(path.createTransformedShape(null));
-        path.reset();
-        
-        if (showNodeNeighborNet) {
-            if (nodes.size() > 0) {
-                Node n = nodes.get(0);
-                n.neighborNetPath(path);
-            }
-        }
-        g2.setColor(showNodeNeigborNetColor);
-        g2.draw(path.createTransformedShape(tx));
-        path.reset();
-
-        if(showApproximatePoint){
-            path.append(manager.viewMarker(aprxPts, showApproximatePointSize, showApproximatePointType),false);
+        if (showApproximatePoint) {
+            path.append(manager.viewMarker(approximatePoints, showApproximatePointSize, showApproximatePointType), false);
         }
         g2.setColor(showApproximateColor);
         g2.draw(path.createTransformedShape(null));
         path.reset();
     }
     boolean showModelShape = true;
-    boolean showNode = true;
-    boolean showNodeNeighborNet = false;
+
     boolean showApproximatePoint = true;
     boolean showApproximatePointRoute = false;
-    double showNodeSize = 5;
-    double showApproximatePointSize=3;
+
+    double showApproximatePointSize = 3;
     Color showModelShapeColor = Color.BLACK;
-    Color showNodeColor = Color.BLUE;
-    Color showNodeNeigborNetColor=Color.GRAY;
-    Color showApproximateColor=Color.BLACK;
+
+    Color showNodeNeigborNetColor = Color.GRAY;
+    Color showApproximateColor = Color.BLACK;
     ModelPanelManager.ViewMarkerType showNodeMarkerType = ModelPanelManager.ViewMarkerType.Rectangle;
-        ModelPanelManager.ViewMarkerType  showApproximatePointType=ModelPanelManager.ViewMarkerType.Rectangle;
-    ReentrantLock showLock = new ReentrantLock();
+    ModelPanelManager.ViewMarkerType showApproximatePointType = ModelPanelManager.ViewMarkerType.Rectangle;
 
-    @Override
-    public boolean isRubberAutoClear() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void selecting(int x1, int y1, int x2, int y2, ModelPanelManager vt, BufferedImage rubberImage) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public boolean selected(int x1, int y1, int x2, int y2, ModelPanelManager vt) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void clearRubber(BufferedImage rubberImage, ModelPanelManager aThis) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
 }

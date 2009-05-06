@@ -54,27 +54,27 @@ public class CubicBezierSegment extends Segment {
     }
 
     @Override
-    public Point getLeftVertex() {
+    public Point getFirstVertex() {
         return pts[0];
     }
 
     @Override
-    public Point getRightVertex() {
+    public Point getLastVertex() {
         return pts[3];
     }
 
     @Override
-    public void setLeftVertex(Point v) {
+    public void setFirstVertex(Point v) {
         pts[0] = v;
     }
 
     @Override
-    public void setRightVertex(Point v) {
+    public void setLastVertex(Point v) {
         pts[3] = v;
     }
 
     @Override
-    public LinkedList<ApproximatePoint> approximatePoints(double size, double flatness, LinkedList<ApproximatePoint> aprxPts) {
+    public LinkedList<ApproximatePoint> GenerateApproximatePoints(double size, double flatness, LinkedList<ApproximatePoint> aprxPts) {
         aprxPts.add(new ApproximatePoint(pts[0].x, pts[0].y, this, 0));
         double [] ctrlPts=new double[]{pts[0].x,pts[0].y,pts[1].x,pts[1].y,pts[2].x,pts[2].y,pts[3].x,pts[3].y};
         cubicBezierApproximatePoints(size*size, flatness*flatness, 0, 1, ctrlPts, aprxPts);
@@ -96,4 +96,5 @@ public class CubicBezierSegment extends Segment {
             cubicBezierApproximatePoints(sizeSqr, flatnessSqr, t, endParm, ctrlPtsR, aprxPts);
         }
     }
+
 }
