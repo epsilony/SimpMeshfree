@@ -68,4 +68,9 @@ public class QuadBezierSegment extends Segment{
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
+    public double[] parameterDifference(double t, double[] pt) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
 }

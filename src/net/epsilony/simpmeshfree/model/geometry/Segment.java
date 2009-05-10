@@ -4,8 +4,9 @@
  */
 package net.epsilony.simpmeshfree.model.geometry;
 
-import net.epsilony.simpmeshfree.boundaryCondition.BoundaryCondition;
+
 import java.awt.geom.Path2D;
+import java.util.Collection;
 import java.util.LinkedList;
 import net.epsilony.simpmeshfree.utils.ModelElementIndexManager;
 
@@ -19,14 +20,15 @@ abstract public class Segment extends ModelElement {
     static ModelElementIndexManager segmentIM = new ModelElementIndexManager();
 //    LinkedList<BoundaryNode> nodes = new LinkedList<BoundaryNode>();
     Route route;
-    BoundaryCondition boundaryCondition;
+    LinkedList<BoundaryCondition> boundaryConditions=new LinkedList<BoundaryCondition>();
 
-    public BoundaryCondition getBoundaryCondition() {
-        return boundaryCondition;
+    public LinkedList<BoundaryCondition> getBoundaryConditions() {
+        return boundaryConditions;
     }
 
-    public void setBoundaryCondition(BoundaryCondition boundaryCondition) {
-        this.boundaryCondition = boundaryCondition;
+    public void setBoundaryConditions(Collection<BoundaryCondition> bcs) {
+        boundaryConditions.clear();
+        boundaryConditions.addAll(bcs);
     }
 
 
@@ -69,6 +71,8 @@ abstract public class Segment extends ModelElement {
     abstract public void setLastVertex(Point v);
 
     abstract public double[] parameterPoint(double t, double[] pt);
+
+    abstract public double[] parameterDifference(double t,double[] pt);
 
     @Override
     public String toString() {

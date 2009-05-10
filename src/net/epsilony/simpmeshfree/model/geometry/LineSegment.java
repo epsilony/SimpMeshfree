@@ -113,4 +113,11 @@ public class LineSegment extends Segment {
     public void setLastVertex(Point v) {
         pts[1]=v;
     }
+
+    @Override
+    public double[] parameterDifference(double t, double[] pt) {
+        pt[0]=pts[1].x-pts[0].x;
+        pt[1]=pts[1].y-pts[0].y;
+        return pt;
+    }
 }

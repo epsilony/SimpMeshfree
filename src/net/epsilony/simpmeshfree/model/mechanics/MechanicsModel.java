@@ -7,18 +7,33 @@ package net.epsilony.simpmeshfree.model.mechanics;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+
+import java.util.ListIterator;
+import net.epsilony.math.analysis.GaussLegendreQuadrature;
 import net.epsilony.math.radialbasis.RadialBasisFunction;
+import net.epsilony.math.util.EYMath;
 import net.epsilony.math.util.TriangleQuadrature;
+
 import net.epsilony.simpmeshfree.model.geometry.ApproximatePoint;
+import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition;
+import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition.BoundaryConditionType;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryNode;
 import net.epsilony.simpmeshfree.model.geometry.GeometryModel;
 import net.epsilony.simpmeshfree.model.geometry.ModelElement.ModelElementType;
 import net.epsilony.simpmeshfree.model.geometry.Node;
 import net.epsilony.simpmeshfree.model.geometry.Point;
+import net.epsilony.simpmeshfree.model.geometry.Route;
+import net.epsilony.simpmeshfree.model.geometry.Segment;
 import net.epsilony.simpmeshfree.model.geometry.TriangleJni;
 import net.epsilony.simpmeshfree.shapefun.ShapeFunction;
 import net.epsilony.util.collection.LayeredDomainTree;
+import no.uib.cipr.matrix.DenseMatrix;
+import no.uib.cipr.matrix.DenseVector;
+import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
+import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
+import no.uib.cipr.matrix.sparse.SparseVector;
+import org.apache.commons.math.ArgumentOutsideDomainException;
 
 /**
  *
@@ -34,6 +49,9 @@ public class MechanicsModel {
     LinkedList<BoundaryNode> boundaryNodes = new LinkedList<BoundaryNode>();
     LinkedList<double[]> triangleQuadratureDomains = new LinkedList<double[]>();
     LayeredDomainTree<Node> nodesDomainTree = null;
+    FlexCompRowMatrix compRowMatrix = null;
+    Matrix constitutiveLaw = null;
+    Vector bVector;
 
     public MechanicsModel(GeometryModel gm) {
         this.gm = gm;
@@ -66,25 +84,216 @@ public class MechanicsModel {
         triangleQuadratureDomains = triangleJni.getTriangleXYsList();
     }
 
-    public void quadrateTriangleDomains(int n) {
+    public void quadrateTriangleDomains(int n) throws ArgumentOutsideDomainException {
         double[] xys = new double[n * n * 2];
         double[] weights = new double[n * n];
         for (double[] triangleDomain : triangleQuadratureDomains) {
             TriangleQuadrature.triangleQuadratePointWeight(xys, weights, n, triangleDomain[0], triangleDomain[1], triangleDomain[2], triangleDomain[3], triangleDomain[4], triangleDomain[5]);
         }
-        int i, j;
+        int i, j, k, l;
         double x, y, w;
         double nodesAverDistance;
-        LinkedList<Node> supportNodes=new LinkedList<Node>();
+        ArrayList<Node> supportNodes = new ArrayList<Node>(100);
         Vector[] partialValues;
+        compRowMatrix = new FlexCompRowMatrix(nodes.size() * 2, nodes.size() * 2);
+        DenseMatrix bk = new DenseMatrix(3, 2);
+        DenseMatrix bl = new DenseMatrix(3, 2);
+        DenseMatrix kkl = new DenseMatrix(2, 2);
+        DenseMatrix tempMat = new DenseMatrix(2, 3);
+        i = 0;
+        for (Node node : nodes) {
+            node.setFlag(i);
+            i++;
+        }
         for (i = 0; i < n; i++) {
             for (j = 0; j < n; j++) {
                 x = xys[(i * n + j) * 2];
                 y = xys[(i * n + j) * 2 + 1];
                 w = xys[i * n + j];
-                nodesAverDistance=supportDomain.supportNode(x, y, supportNodes);
+                nodesAverDistance = supportDomain.supportNodes(x, y, supportNodes);
                 radialBasisFunction.setNodesAverageDistance(nodesAverDistance);
-                partialValues=shapeFunction.shapePartialValues(supportNodes, x, y);
+                partialValues = shapeFunction.shapePartialValues(supportNodes, x, y);
+                for (k = 0; k < supportNodes.size(); k++) {
+                    for (l = k; l < supportNodes.size(); l++) {
+                        bk.set(0, 0, partialValues[0].get(k));
+                        bk.set(1, 1, partialValues[1].get(k));
+                        bk.set(2, 0, partialValues[1].get(k));
+                        bk.set(2, 1, partialValues[0].get(k));
+                        bl.set(0, 0, partialValues[0].get(l));
+                        bl.set(1, 1, partialValues[1].get(l));
+                        bl.set(2, 0, partialValues[1].get(l));
+                        bl.set(2, 1, partialValues[0].get(l));
+                        bk.transAmult(constitutiveLaw, tempMat);
+                        tempMat.mult(bl, kkl);
+                        int kIndex = supportNodes.get(k).flag * 2;
+                        final int lIndex = supportNodes.get(l).flag * 2;
+                        compRowMatrix.add(kIndex, lIndex, kkl.get(0, 0) * w);
+                        compRowMatrix.add(kIndex, lIndex + 1, kkl.get(0, 1) * w);
+                        compRowMatrix.add(kIndex + 1, lIndex + 1, kkl.get(1, 1) * w);
+                    }
+                }
+            }
+        }
+    }
+
+    public void natureBoundaryQuadrate(int n) throws ArgumentOutsideDomainException {
+        LinkedList<Route> routes = gm.getRoutes();
+        LinkedList<ApproximatePoint> aprxPts;
+        ArrayList<Node> supportNodes = new ArrayList<Node>();
+        ArrayList<BoundaryCondition> naturalBCs = new ArrayList<BoundaryCondition>(10);
+        LinkedList<BoundaryCondition> tempBCs = null;
+        LinkedList<BoundaryCondition> conNaturalBCs = new LinkedList<BoundaryCondition>();
+        LinkedList<double[]> conNaturalValues = new LinkedList<double[]>();
+        ApproximatePoint aprxStart, aprx, aprxFront;
+        Segment segment = null;
+        Vector shapeVector;
+        double t, w, t1, t2, x, y, traX, traY,ds;
+        double parmStart, parmEnd;
+        BoundaryCondition tempBC;
+        double[] txy = new double[2];
+        double[] quadratePoints = GaussLegendreQuadrature.getGaussLegendreQuadraturePoints(n);
+        double[] quadrateCoefs = GaussLegendreQuadrature.getGaussLegendreQuadratureCoefficients(n);
+        int i = 0, j, k, index;
+        bVector = new DenseVector(nodes.size() * 2);
+        for (Node node : nodes) {
+            node.setFlag(i);
+            i++;
+        }
+        for (Route route : routes) {
+            aprxPts = route.GetApproximatePoints();
+            aprxStart = aprxPts.getFirst();
+            aprx = aprxStart;
+
+            do {
+                if (aprx.getSegmentParm() == 0) {
+                    segment = aprx.getSegment();
+                    tempBCs = segment.getBoundaryConditions();
+                    naturalBCs.clear();
+                    conNaturalBCs.clear();
+                    if (null != tempBCs) {
+                        for (BoundaryCondition bc : tempBCs) {
+                            if (bc.getType() == BoundaryConditionType.Natural) {
+                                naturalBCs.add(bc);
+                            } else if (bc.getType() == BoundaryConditionType.ConNatural) {
+                                conNaturalBCs.add(bc);
+                            }
+                        }
+                    }
+                    for (BoundaryCondition bc : conNaturalBCs) {
+                        bc.getConNaturalValues(conNaturalValues);
+                        for (double[] values : conNaturalValues) {
+                            t = values[0];
+                            traX = values[1];
+                            traY = values[2];
+                            supportDomain.boundarySupportNodes(segment, t, supportNodes);
+                            segment.parameterPoint(t, txy);
+                            x = txy[0];
+                            y = txy[1];
+                            shapeVector = shapeFunction.shapeValues(supportNodes, x, y);
+                            for (k = 0; k < shapeVector.size(); k++) {
+                                index = supportNodes.get(k).getFlag() * 2;
+                                bVector.add(index, shapeVector.get(k) * traX);
+                                bVector.add(index + 1, shapeVector.get(k) * traY);
+                            }
+                        }
+                    }
+                }
+                if (naturalBCs.size() > 0) {
+                    parmStart = aprx.getSegmentParm();
+                    aprxFront = aprx.getFront();
+                    if (aprxFront.getSegmentParm() == 0) {
+                        parmEnd = 1;
+                    } else {
+                        parmEnd = aprxFront.getSegmentParm();
+                    }
+
+                    for (i = 0; i < n; i++) {
+                        t1 = (parmStart - parmEnd) * 0.5;
+                        t2 = (parmStart + parmEnd) * 0.5;
+                        t = t2 + t1 * quadratePoints[i];
+                        w = quadrateCoefs[i] * t1;
+                        supportDomain.boundarySupportNodes(segment, t, supportNodes);
+                        segment.parameterPoint(t, txy);
+                        x = txy[0];
+                        y = txy[1];
+                        segment.parameterDifference(t, txy);
+                        ds=Math.sqrt(txy[0]*txy[0]+txy[1]*txy[1]);
+
+                        shapeVector = shapeFunction.shapeValues(supportNodes, x, y);
+                        for (j = 0; j < naturalBCs.size(); j++) {
+                            tempBC = naturalBCs.get(j);
+                            if (0x00 != tempBC.getValues(t, txy)) {
+                                traX = txy[0];
+                                traY = txy[1];
+                                for (k = 0; i < shapeVector.size(); k++) {
+                                    index = supportNodes.get(k).getFlag() * 2;
+                                    bVector.add(index, shapeVector.get(k) * traX * w*ds);
+                                    bVector.add(index + 1, shapeVector.get(k) * traY * w*ds);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                aprx = aprx.getFront();
+            } while (aprx != aprxStart);
+        }
+    }
+
+    public void setEssentialBoundaryConditions() {
+        Segment segment;
+        LinkedList<BoundaryCondition> tempBCs;
+        int col, rowcol, size = nodes.size();
+        nodes.size();
+        double[] txy = new double[2];
+        double ux, uy;
+        int i;
+        byte tb;
+        for (BoundaryNode bNode : boundaryNodes) {
+            segment = bNode.getSegment();
+            tempBCs = segment.getBoundaryConditions();
+            if (null == tempBCs) {
+                continue;
+            }
+            for (BoundaryCondition bc : tempBCs) {
+                if (bc.getType() != BoundaryConditionType.Essential) {
+                    continue;
+                }
+                tb = bc.getValues(bNode.getSegmentParm(), txy);
+                if (0x00 == tb) {
+                    continue;
+                }
+                rowcol = bNode.getFlag() * 2;
+                if ((BoundaryCondition.X & tb) != 0) {
+                    ux = txy[0];
+                    for (i = 0; i <= rowcol; i++) {
+                        bVector.add(i, -compRowMatrix.get(i, rowcol) * ux);
+                    }
+
+                    for (i = rowcol + 2; i < size; i++) {
+                        bVector.add(i, -compRowMatrix.get(rowcol, i) * ux);
+                        compRowMatrix.set(rowcol, i, 0);
+                    }
+                    compRowMatrix.set(rowcol, rowcol, ux);
+                     bVector.set(rowcol,ux);
+                }
+
+                if ((BoundaryCondition.Y & tb) != 0) {
+                    rowcol = bNode.getFlag() * 2 + 1;
+                    uy = txy[0];
+                    for (i = 0; i <= rowcol; i++) {
+                        bVector.add(i, -compRowMatrix.get(i, rowcol) * uy);
+                    }
+
+                    for (i = rowcol + 2; i < size; i++) {
+                        bVector.add(i, -compRowMatrix.get(rowcol, i) * uy);
+                        if (compRowMatrix.get(rowcol, i) != 0) {
+                            compRowMatrix.set(rowcol, i, 0);
+                        }
+                    }
+                    compRowMatrix.set(rowcol, rowcol, uy);
+                    bVector.set(rowcol,uy);
+                }
             }
         }
     }
@@ -97,25 +306,125 @@ public class MechanicsModel {
     public class RoundSupportDomain implements SupportDomain {
 
         double r;
-        Node nodeFrom=Node.tempNode(0, 0);
-        Node nodeTo=Node.tempNode(0, 0);
+        Node nodeFrom = Node.tempNode(0, 0);
+        Node nodeTo = Node.tempNode(0, 0);
 
         @Override
-        public double supportNode(double x, double y, List<Node> list) {
+        public double supportNodes(double x, double y, List<Node> output) {
+            output.clear();
             LinkedList<Node> nodes = new LinkedList<Node>();
-            nodeFrom.setXY(x-r,y-r);
-            nodeTo.setXY(x+r, y+r);
-            nodesDomainTree.domainSearch(nodes,nodeFrom,nodeTo);
-            double nodesAverageDistance=r/(Math.sqrt(nodes.size())-1);
+            nodeFrom.setXY(x - r, y - r);
+            nodeTo.setXY(x + r, y + r);
+            nodesDomainTree.domainSearch(nodes, nodeFrom, nodeTo);
+            double nodesAverageDistance = r / (Math.sqrt(nodes.size()) - 1);
             LinkedList<ApproximatePoint> aps = new LinkedList<ApproximatePoint>();
 
             gm.pointDomainSearch(ApproximatePoint.tempApproximatePoint(x, y), r + gm.getSegmentApproximateSize(), aps);
-            for (Node node : list) {
+            boolean crossed = false;
+            double t;
+            Segment segment;
+            BoundaryNode bNode;
+            ApproximatePoint frontAp, backAp;
+            for (Node node : nodes) {
                 if (!node.isInDistance(x, y, r)) {
                     continue;
                 }
-                if (GeometryModel.canSeeEach(node.getX(),node.getY(),x,y, aps)) {
-                    list.add(node);
+                if (node.type() != ModelElementType.BoundaryNode) {
+                    if (GeometryModel.canSeeEach(node.getX(), node.getY(), x, y, aps)) {
+                        output.add(node);
+                    }
+                } else {
+                    crossed = false;
+                    bNode = (BoundaryNode) node;
+                    t = bNode.getSegmentParm();
+                    segment = bNode.getSegment();
+                    for (ApproximatePoint ap : aps) {
+                        frontAp = ap.getFront();
+                        backAp = ap.getBack();
+                        if (!(backAp.getSegment() == segment && backAp.getSegmentParm() <= t && (ap.getSegmentParm() >= t || ap.getSegmentParm() == 0))) {
+                            crossed = EYMath.isLineSegmentIntersect(x, y, node.getX(), node.getY(), ap.getX(), ap.getY(), ap.getBack().getX(), ap.getBack().getY());
+                            if (crossed) {
+                                break;
+                            }
+                        }
+                        if (!(ap.getSegment() == segment && ap.getSegmentParm() <= t && (frontAp.getSegmentParm() >= t || frontAp.getSegmentParm() == 0))) {
+                            crossed = EYMath.isLineSegmentIntersect(x, y, node.getX(), node.getY(), ap.getX(), ap.getY(), frontAp.getX(), frontAp.getY());
+                            if (crossed) {
+                                break;
+                            }
+                        }
+
+                    }
+                    if (!crossed) {
+                        output.add(node);
+                    }
+
+                }
+            }
+            return nodesAverageDistance;
+        }
+
+        @Override
+        public double boundarySupportNodes(Segment bSegment, double parm, List<Node> output) {
+            output.clear();
+            LinkedList<Node> nodes = new LinkedList<Node>();
+            double[] pt = new double[2];
+            bSegment.parameterPoint(parm, pt);
+            double x = pt[0];
+            double y = pt[1];
+            nodeFrom.setXY(x - r, y - r);
+            nodeTo.setXY(x + r, y + r);
+            nodesDomainTree.domainSearch(nodes, nodeFrom, nodeTo);
+            double nodesAverageDistance = r / (Math.sqrt(nodes.size()) - 1);
+            LinkedList<ApproximatePoint> aps = new LinkedList<ApproximatePoint>();
+
+            gm.pointDomainSearch(ApproximatePoint.tempApproximatePoint(x, y), r + gm.getSegmentApproximateSize(), aps);
+            boolean crossed = false;
+            double t;
+            Segment segment;
+            BoundaryNode bNode;
+            ListIterator<ApproximatePoint> li = aps.listIterator();
+            while (li.hasNext()) {
+                ApproximatePoint ap = (ApproximatePoint) li.next();
+                if (ap.getSegment() == bSegment && ap.getSegmentParm() <= parm && (ap.getFront().getSegmentParm() >= parm || ap.getFront().getSegmentParm() == 0)) {
+                    li.remove();
+                }
+            }
+            ApproximatePoint frontAp, backAp;
+            for (Node node : nodes) {
+                if (!node.isInDistance(x, y, r)) {
+                    continue;
+                }
+                if (node.type() != ModelElementType.BoundaryNode) {
+                    if (GeometryModel.canSeeEach(node.getX(), node.getY(), x, y, aps)) {
+                        output.add(node);
+                    }
+                } else {
+                    crossed = false;
+                    bNode = (BoundaryNode) node;
+                    t = bNode.getSegmentParm();
+                    segment = bNode.getSegment();
+                    for (ApproximatePoint ap : aps) {
+                        frontAp = ap.getFront();
+                        backAp = ap.getBack();
+                        if (!(backAp.getSegment() == segment && backAp.getSegmentParm() <= t && (ap.getSegmentParm() >= t || ap.getSegmentParm() == 0))) {
+                            crossed = EYMath.isLineSegmentIntersect(x, y, node.getX(), node.getY(), ap.getX(), ap.getY(), ap.getBack().getX(), ap.getBack().getY());
+                            if (crossed) {
+                                break;
+                            }
+                        }
+                        if (!(ap.getSegment() == segment && ap.getSegmentParm() <= t && (frontAp.getSegmentParm() >= t || frontAp.getSegmentParm() == 0))) {
+                            crossed = EYMath.isLineSegmentIntersect(x, y, node.getX(), node.getY(), ap.getX(), ap.getY(), frontAp.getX(), frontAp.getY());
+                            if (crossed) {
+                                break;
+                            }
+                        }
+
+                    }
+                    if (!crossed) {
+                        output.add(node);
+                    }
+
                 }
             }
             return nodesAverageDistance;
@@ -134,7 +443,7 @@ public class MechanicsModel {
 //            tempApproximatePoint2 = ApproximatePoint.tempApproximatePoint(0, 0);
 //        }
 //        @Override
-//        public List<Node> supportNode(Node n, List<Node> list) {
+//        public List<Node> supportNodes(Node n, List<Node> list) {
 //            list.clear();
 //            n.bfsTraverse(layer, nodes);
 //            double minX,maxX,minY,maxY,x,y;
@@ -170,9 +479,23 @@ public class MechanicsModel {
 //        }
 //
 //        @Override
-//        public List<Node> supportNode(double x, double y, List<Node> list) {
+//        public List<Node> supportNodes(double x, double y, List<Node> list) {
 //            throw new UnsupportedOperationException("Not supported yet.");
 //        }
 //
 //    }
+
+    public static void main(String[] args) {
+        FlexCompRowMatrix matrix = new FlexCompRowMatrix(10, 10);
+        for (int i = 0; i < 10; i++) {
+            for (int j = 0; j < 10; j++) {
+                matrix.set(i, j, 0);
+            }
+        }
+        SparseVector v = matrix.getRow(0);
+        int t = v.getUsed();
+        System.out.println("t = " + t);
+        v.zero();
+        System.out.println("v.getUsed() = " + v.getUsed());
+    }
 }

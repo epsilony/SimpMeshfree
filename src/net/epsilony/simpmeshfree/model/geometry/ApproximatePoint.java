@@ -46,19 +46,27 @@ public class ApproximatePoint extends Point{
         this.segmentParm=segmentParm;
     }
 
-    public ApproximatePoint getL() {
+    public ApproximatePoint getBack() {
         return back;
     }
 
-    public void setL(ApproximatePoint l) {
+    public double getSegmentParm() {
+        return segmentParm;
+    }
+
+    public Segment getSegment() {
+        return segment;
+    }
+
+    public void setBack(ApproximatePoint l) {
         this.back = l;
     }
 
-    public ApproximatePoint getR() {
+    public ApproximatePoint getFront() {
         return front;
     }
 
-    public void setR(ApproximatePoint r) {
+    public void setFront(ApproximatePoint r) {
         this.front = r;
     }
 

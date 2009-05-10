@@ -97,4 +97,27 @@ public class CubicBezierSegment extends Segment {
         }
     }
 
+    @Override
+    public double[] parameterDifference(double t, double[] pt) {
+        double p01,p12,p23,p02,p13,p02d,p13d;
+        p01=pts[1].x*(1-t)+t*(pts[0].x);
+        p12=pts[2].x*(1-t)+t*(pts[1].x);
+        p23=pts[3].x*(1-t)+t*(pts[2].x);
+        p02=(1-t)*p01+t*p12;
+        p13=(1-t)*p12+t*p23;
+        p02d=(1-t)*(pts[1].x-pts[0].x)-p01+p12+t*(pts[2].x-pts[1].x);
+        p13d=(1-t)*(pts[2].x-pts[1].x)-p12+p23+t*(pts[3].x-pts[2].x);
+        pt[0]=(1-t)*p02d-p02+p13+t*p13d;
+
+        p01=pts[1].y*(1-t)+t*(pts[0].y);
+        p12=pts[2].y*(1-t)+t*(pts[1].y);
+        p23=pts[3].y*(1-t)+t*(pts[2].y);
+        p02=(1-t)*p01+t*p12;
+        p13=(1-t)*p12+t*p23;
+        p02d=(1-t)*(pts[1].y-pts[0].y)-p01+p12+t*(pts[2].y-pts[1].y);
+        p13d=(1-t)*(pts[2].y-pts[1].y)-p12+p23+t*(pts[3].y-pts[2].y);
+        pt[1]=(1-t)*p02d-p02+p13+t*p13d;
+        return pt;
+    }
+
 }
