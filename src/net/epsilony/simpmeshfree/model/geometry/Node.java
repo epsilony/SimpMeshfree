@@ -40,6 +40,14 @@ public class Node extends Point {
     int matrixIndex;
     int bandWidth;
 
+    public int getMatrixIndex() {
+        return matrixIndex;
+    }
+
+    public void setMatrixIndex(int matrixIndex) {
+        this.matrixIndex = matrixIndex;
+    }
+
     @Override
     public ModelElementType type() {
         return ModelElementType.Node;

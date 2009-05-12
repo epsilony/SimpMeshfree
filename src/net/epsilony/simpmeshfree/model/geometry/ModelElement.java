@@ -15,11 +15,10 @@ import net.epsilony.simpmeshfree.utils.ModelElementIndexManager;
 public abstract class ModelElement {
 
     public enum ModelElementType {
-
         Point, LineSegment, Node,RegularizeNode, Triangle, BoundaryNode, QuadBezierSegment, CubicBezierSegment, Vertex, ApproximatPoint, Segment,SegmentRoute;
     }
 
-    public static final Comparator<ModelElement> comparator=new Comparator<ModelElement>() {
+    public static final Comparator<ModelElement> indexComparator=new Comparator<ModelElement>() {
 
         @Override
         public int compare(ModelElement o1, ModelElement o2) {

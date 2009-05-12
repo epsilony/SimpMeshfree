@@ -249,7 +249,7 @@ public class GeometryModel implements ModelImageWriter{
         return outPts;
     }
     private final LinkedList<ApproximatePoint> segmentSearchApproximatePointList = new LinkedList<ApproximatePoint>();
-    private final TreeSet<Segment> segmentSearchSet = new TreeSet<Segment>(ModelElement.comparator);
+    private final TreeSet<Segment> segmentSearchSet = new TreeSet<Segment>(ModelElement.indexComparator);
 
     /**
      * 搜索与直线(x1,y1)-(x2,y2)有可能相交的LineSegment
@@ -298,7 +298,7 @@ public class GeometryModel implements ModelImageWriter{
         outSegs.addAll(segmentSearchSet);
         return outSegs;
     }
-    private final TreeSet<Route> segmentRouteSearchSet = new TreeSet<Route>(ModelElement.comparator);
+    private final TreeSet<Route> segmentRouteSearchSet = new TreeSet<Route>(ModelElement.indexComparator);
 
     public List<Route> segmentRouteSearch(double x1, double y1, double x2, double y2, List<Route> outSegs) {
         outSegs.clear();

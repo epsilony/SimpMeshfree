@@ -33,7 +33,7 @@ public class QuadBezierSegment extends Segment{
     }
 
     @Override
-    public boolean intersectLine(Point v1, Point v2) {
+    public boolean isIntersectByLine(Point v1, Point v2) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

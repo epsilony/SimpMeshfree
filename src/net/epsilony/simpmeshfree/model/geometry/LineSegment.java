@@ -62,8 +62,9 @@ public class LineSegment extends Segment {
         path.lineTo(pts[1].x, pts[1].y);
     }
 
+
     @Override
-    public boolean intersectLine(Point v1, Point v2) {
+    public boolean isIntersectByLine(Point v1, Point v2) {
         return isLineSegmentIntersect(pts[0].x, pts[0].y, pts[1].x, pts[1].y, v1.x, v1.y, v2.x, v2.y);
     }
 

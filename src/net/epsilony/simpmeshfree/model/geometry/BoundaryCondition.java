@@ -23,6 +23,12 @@ public interface BoundaryCondition {
 
     public BoundaryConditionType getType();
 
+    /**
+     *
+     * @param t
+     * @param output
+     * @return &X!=0x00:X方向上值被设置
+     */
     public byte getValues(double t,double[] output);
 
     public List<double[]> getConNaturalValues(List<double[]> output);
