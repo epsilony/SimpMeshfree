@@ -22,6 +22,19 @@ public class Route extends ModelElement {
     static ModelElementIndexManager routeIm = new ModelElementIndexManager();
     LinkedList<Segment> segments = new LinkedList<Segment>();
 
+    @Override
+    public String toString() {
+        StringBuilder sb=new StringBuilder(1024);
+        for(Segment segment:segments){
+            Point firstVertex = segment.getFirstVertex();
+            sb.append(firstVertex.x);
+            sb.append(" ");
+            sb.append(firstVertex.y);
+            sb.append(segment.type());
+        }
+        return sb.toString();
+    }
+
     public LinkedList<Segment> getSegments() {
         return segments;
     }
@@ -165,8 +178,8 @@ public class Route extends ModelElement {
 
             start = start.front;
         } while (start != stopCond);
-        pt.x=(x1+x2)/2;
-        pt.y=(y1+y2)/2;
+        pt.x = (x1 + x2) / 2;
+        pt.y = (y1 + y2) / 2;
         return pt;
 
     }
@@ -190,6 +203,22 @@ public class Route extends ModelElement {
         for (Segment seg : segments) {
             seg.addToPath(path);
         }
+        path.closePath();
+    }
+
+    public void addApproximateRouteToPath(Path2D path) {
+        if (segments == null || segments.isEmpty() || aprxPts.isEmpty()) {
+            return;
+        }
+        ApproximatePoint start, end, stop;
+        start = aprxPts.getFirst();
+        stop = start;
+        path.moveTo(start.x, start.y);
+        do {
+            end = start.front;
+            path.lineTo(end.x, end.y);
+            start = start.front;
+        } while (start != stop);
         path.closePath();
     }
 }

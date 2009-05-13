@@ -4,6 +4,12 @@
  */
 package net.epsilony.simpmeshfree.model.mechanics;
 
+import java.awt.AlphaComposite;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Path2D;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -26,10 +32,14 @@ import net.epsilony.simpmeshfree.model.geometry.Route;
 import net.epsilony.simpmeshfree.model.geometry.Segment;
 import net.epsilony.simpmeshfree.model.geometry.TriangleJni;
 import net.epsilony.simpmeshfree.shapefun.ShapeFunction;
+import net.epsilony.simpmeshfree.utils.ModelImagePainter;
+import net.epsilony.simpmeshfree.utils.ModelPanelManager;
+import net.epsilony.simpmeshfree.utils.ModelPanelManager.ViewMarkerType;
 import net.epsilony.util.collection.LayeredDomainTree;
 import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
+import no.uib.cipr.matrix.UpperSPDBandMatrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
 import no.uib.cipr.matrix.sparse.SparseVector;
@@ -40,11 +50,15 @@ import org.apache.log4j.Logger;
  *
  * @author epsilon
  */
-public class MechanicsModel {
+public class MechanicsModel implements ModelImagePainter {
 
     GeometryModel gm;
     SupportDomain supportDomain = null;
     ShapeFunction shapeFunction;
+
+    public void setShapeFunction(ShapeFunction shapeFunction) {
+        this.shapeFunction = shapeFunction;
+    }
     RadialBasisFunction radialBasisFunction;
     LinkedList<Node> nodes = new LinkedList<Node>();
     LinkedList<BoundaryNode> boundaryNodes = new LinkedList<BoundaryNode>();
@@ -54,6 +68,7 @@ public class MechanicsModel {
     Matrix constitutiveLaw = null;
     Vector bVector;
     static Logger log = Logger.getLogger(MechanicsModel.class);
+    static Logger logDeep = Logger.getLogger(MechanicsModel.class.getName()+".Deep1");
     int logi;
 
     public MechanicsModel(GeometryModel gm) {
@@ -61,7 +76,7 @@ public class MechanicsModel {
     }
 
     public void generateNodesByTriangle(double size, double flatness, String s, boolean needNeighbors, boolean resetNodesIndex) {
-        log.info(String.format("Start generateNodesByTiangle%nsize=%6.3e flatness=%6.3 s=%s needNeighbors=%b resetNodesIndex %b", size, flatness, s, needNeighbors, resetNodesIndex));
+        log.info(String.format("Start generateNodesByTiangle%nsize=%6.3e flatness=%6.3e s=%s needNeighbors=%b resetNodesIndex %b", size, flatness, s, needNeighbors, resetNodesIndex));
         if (resetNodesIndex) {
             Node n = Node.tempNode(0, 0);
             n.getIndexManager().reset();
@@ -189,10 +204,16 @@ public class MechanicsModel {
             aprxPts = route.GetApproximatePoints();
             aprxStart = aprxPts.getFirst();
             aprx = aprxStart;
-
+            if (log.isDebugEnabled()) {
+                log.debug(route);
+                log.debug("route Approximate Point size=" + aprxPts.size());
+            }
             do {
                 if (aprx.getSegmentParm() == 0) {
                     segment = aprx.getSegment();
+                    if (log.isDebugEnabled()) {
+                        log.debug(segment);
+                    }
                     tempBCs = segment.getBoundaryConditions();
                     naturalBCs.clear();
                     conNaturalBCs.clear();
@@ -204,6 +225,10 @@ public class MechanicsModel {
                                 conNaturalBCs.add(bc);
                             }
                         }
+                    }
+                    if (log.isDebugEnabled()) {
+                        log.debug("conNaturalBCs.size() =" + conNaturalBCs.size());
+                        log.debug("naturalBCs.size()" + naturalBCs.size());
                     }
                     for (BoundaryCondition bc : conNaturalBCs) {
                         bc.getConNaturalValues(conNaturalValues);
@@ -223,7 +248,11 @@ public class MechanicsModel {
                             }
                         }
                     }
+                    if (log.isDebugEnabled()) {
+                        log.debug("conNaturalBCs applied");
+                    }
                 }
+
                 if (naturalBCs.size() > 0) {
                     parmStart = aprx.getSegmentParm();
                     aprxFront = aprx.getFront();
@@ -322,11 +351,105 @@ public class MechanicsModel {
                 }
             }
         }
+        if(logDeep.isDebugEnabled()){
+            logDeep.debug((compRowMatrix));
+        }
         log.info("End of setEssentialBoundaryConditions");
     }
 
     public void setSupportDomain(SupportDomain supportDomain) {
         this.supportDomain = supportDomain;
+    }
+    UpperSPDBandMatrix matA;
+    DenseVector xVector = new DenseVector(nodes.size() * 2);
+    int quadN;
+
+    public int getQuadN() {
+        return quadN;
+    }
+
+    public void setQuadN(int quadN) {
+        this.quadN = quadN;
+    }
+
+    public void solve() throws ArgumentOutsideDomainException {
+        log.info("Start solve()");
+        quadrateTriangleDomains(quadN);
+
+        natureBoundaryQuadrate(quadN);
+
+        setEssentialBoundaryConditions();
+
+        AmdJni amdJni = new AmdJni();
+
+        matA = amdJni.complile(compRowMatrix, bVector);
+
+        log.info("solve the Ax=b now");
+        matA.solve(bVector, xVector);
+        log.info("Finished: solve the Ax=b");
+        int index;
+        log.info("edit the nodes ux uy data");
+        for (Node node : nodes) {
+            index = amdJni.P[node.getMatrixIndex()] * 2;
+            node.setUx(xVector.get(index));
+            node.setUy(xVector.get(index + 1));
+        }
+        log.info("End of solve()");
+        if(log.isDebugEnabled()){
+            log.debug("nodes results");
+            for(Node node:nodes){
+                log.debug(String.format("%10.2f  %10.2f  %10.3e  %10.3e", node.getX(),node.getY(),node.getUx(),node.getUy()));
+            }
+        }
+    }
+    boolean showNodes = true;
+    double nodesScreenSize = 4;
+    ViewMarkerType nodesScreenType = ViewMarkerType.Round;
+    ViewMarkerType boundaryNodesScreenType = ViewMarkerType.Cross;
+    double boundaryNodesScreenSize = 3;
+    Color nodesColor = Color.YELLOW;
+    boolean showDisplacedNodes = false;
+    Color nodesDisplacedColor = Color.lightGray;
+    double displaceFactor = 500;
+
+    public double getDisplaceFactor() {
+        return displaceFactor;
+    }
+
+    public void setDisplaceFactor(double displaceFactor) {
+        this.displaceFactor = displaceFactor;
+    }
+
+    @Override
+    public void paintModel(BufferedImage modelImage, ModelPanelManager manager) {
+        Graphics2D g2 = modelImage.createGraphics();
+
+
+        g2.setComposite(AlphaComposite.Clear);
+        g2.fillRect(0, 0, modelImage.getWidth(), modelImage.getHeight());
+
+        AffineTransform tx = manager.getViewTransform();
+        g2.setComposite(AlphaComposite.Src);
+        Path2D path = new Path2D.Double();
+
+        if (showNodes) {
+            path.append(manager.viewMarker(nodes, nodesScreenSize, nodesScreenType), false);
+            path.append(manager.viewMarker(boundaryNodes, boundaryNodesScreenSize, boundaryNodesScreenType), false);
+            g2.setColor(nodesColor);
+            g2.draw(path.createTransformedShape(null));
+        }
+        path.reset();
+
+        if (showDisplacedNodes) {
+            for (Node node : nodes) {
+                manager.viewMarker(node.getX() + displaceFactor * node.getUx(), node.getY() + displaceFactor * node.getUy(), nodesScreenSize, nodesScreenType, path);
+            }
+            for (Node node : boundaryNodes) {
+                manager.viewMarker(node.getX() + displaceFactor * node.getUx(), node.getY() + displaceFactor * node.getUy(), boundaryNodesScreenSize, boundaryNodesScreenType, path);
+            }
+            g2.setColor(nodesDisplacedColor);
+            g2.draw(path.createTransformedShape(null));
+        }
     }
 //
 
@@ -408,7 +531,7 @@ public class MechanicsModel {
         FlexCompRowMatrix matrix = new FlexCompRowMatrix(10, 10);
         for (int i = 0; i < 10; i++) {
             for (int j = 0; j < 10; j++) {
-                matrix.set(i, j, 0);
+                matrix.set(i, j, 1);
             }
         }
         SparseVector v = matrix.getRow(0);
@@ -419,5 +542,6 @@ public class MechanicsModel {
         matrix.compact();
         v = matrix.getRow(0);
         System.out.println("v.getUsed() = " + v.getUsed());
+        System.out.println(matrix);
     }
 }

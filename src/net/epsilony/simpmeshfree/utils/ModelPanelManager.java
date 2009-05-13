@@ -9,7 +9,6 @@ import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Graphics2D;
 import java.awt.event.HierarchyEvent;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.util.logging.Level;
@@ -17,7 +16,6 @@ import java.util.logging.Logger;
 import javax.swing.JPanel;
 import java.awt.Shape;
 import java.awt.event.HierarchyBoundsListener;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelListener;
@@ -31,6 +29,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -41,7 +40,7 @@ import net.epsilony.simpmeshfree.model.geometry.Point;
  *
  * @author epsilon
  */
-public class ModelPanelManager implements MouseMotionListener, MouseListener, MouseWheelListener, HierarchyBoundsListener{
+public class ModelPanelManager implements MouseMotionListener, MouseListener, MouseWheelListener, HierarchyBoundsListener {
 
     //从模型空间到显示空间的2维坐标变换
     private AffineTransform viewTransform = new AffineTransform();
@@ -97,6 +96,7 @@ public class ModelPanelManager implements MouseMotionListener, MouseListener, Mo
         if (panel.getWidth() == 0 || panel.getHeight() == 0) {
             return;
         }
+        boolean needgc = false;
         modelImageLock.lock();
         try {
             if (modelImage.getWidth() < panel.getWidth() || modelImage.getHeight() < panel.getHeight()) {
@@ -109,14 +109,15 @@ public class ModelPanelManager implements MouseMotionListener, MouseListener, Mo
                 wr = bi.getRaster();
                 wr.setRect(rubberImage.getRaster());
                 rubberImage = bi;
-                System.gc();
+                needgc=true;
             }
         } finally {
             modelImageLock.unlock();
         }
+        if (needgc) {
+            System.gc();
+        }
     }
-
-  
 
     public enum ViewMoveOperationStatus {
 
@@ -127,11 +128,11 @@ public class ModelPanelManager implements MouseMotionListener, MouseListener, Mo
 
     public class ZoomSelectListener implements DomainSelectListener {
 
-        Color rubberColor = new Color(0, 0, 255, 255);
+        Color rubberColor = Color.ORANGE;
         Rectangle2D rubberRect = new Rectangle2D.Double();
 
         @Override
-        public void selecting(int x1, int y1, int x2, int y2, ModelPanelManager vt, BufferedImage rubberImage) {
+        public Rectangle2D selecting(int x1, int y1, int x2, int y2, ModelPanelManager vt, BufferedImage rubberImage) {
             Graphics2D g2 = rubberImage.createGraphics();
             g2.setColor(rubberColor);
             g2.setComposite(AlphaComposite.Src);
@@ -146,6 +147,7 @@ public class ModelPanelManager implements MouseMotionListener, MouseListener, Mo
                 y1 = t;
             }
             g2.drawRect(x1, y1, x2 - x1, y2 - y1);
+            return null;
         }
         private Point2D pt1 = new Point2D.Double(),  pt2 = new Point2D.Double();
 
@@ -202,24 +204,6 @@ public class ModelPanelManager implements MouseMotionListener, MouseListener, Mo
     BufferedImage rubberImage;
     BufferedImage modelImage;
 
-//    private SelectStatus getSelectStatus() {
-//        selectLock.lock();
-//        try {
-//            return selectStatus;
-//        } finally {
-//            selectLock.unlock();
-//        }
-//    }
-
-//    private void setSelectStatus(SelectStatus selectStatus) {
-//        selectLock.lock();
-//        try {
-//            this.selectStatus = selectStatus;
-//        } finally {
-//            selectLock.unlock();
-//        }
-//
-//    }
     private class SelectTask implements Runnable {
 
         DomainSelectListener listener;
@@ -228,6 +212,7 @@ public class ModelPanelManager implements MouseMotionListener, MouseListener, Mo
         boolean stopped = false;
         boolean autoRepaint = false;
         int serialSelectIndex = 0;
+        Rectangle2D formRubberRect;
 
         public void setListener(DomainSelectListener listener) {
             selectLock.lock();
@@ -265,23 +250,33 @@ public class ModelPanelManager implements MouseMotionListener, MouseListener, Mo
                             case DomainSelecting:
                                 g2 = rubberImage.createGraphics();
                                 if (listener.isRubberAutoClear()) {
-
-                                    tx1 = min(min(sx1, sx2), formerRubberXmin);
-                                    ty1 = min(min(sy1, sy2), formerRubberYmin);
-                                    tx2 = max(max(sx1, sx2), formerRubberXmax);
-                                    ty2 = max(max(sy1, sy2), formerRubberYmax);
                                     clearRubber(formerRubberXmin, formerRubberYmin, formerRubberXmax - formerRubberXmin + 1, formerRubberYmax - formerRubberYmin + 1);
                                 } else {
                                     listener.clearRubber(rubberImage, ModelPanelManager.this);
                                 }
 
-                                listener.selecting(sx1, sy1, sx2, sy2, ModelPanelManager.this, rubberImage);
+                                formRubberRect = listener.selecting(sx1, sy1, sx2, sy2, ModelPanelManager.this, rubberImage);
                                 if (listener.isRubberAutoClear()) {
+                                    tx1 = formerRubberXmin;
+                                    ty1 = formerRubberYmin;
+                                    tx2 = formerRubberXmax;
+                                    ty2 = formerRubberYmax;
+                                    if (null == formRubberRect) {
+                                        formerRubberXmin = min(sx1, sx2);
+                                        formerRubberYmin = min(sy1, sy2);
+                                        formerRubberXmax = max(sx1, sx2);
+                                        formerRubberYmax = max(sy1, sy2);
+                                    } else {
+                                        formerRubberXmin = (int) formRubberRect.getMinX();
+                                        formerRubberYmin = (int) formRubberRect.getMinY();
+                                        formerRubberXmax = 1 + (int) formRubberRect.getMaxX();
+                                        formerRubberYmax = 1 + (int) formRubberRect.getMaxY();
+                                    }
+                                    tx1 = min(tx1, formerRubberXmin);
+                                    ty1 = min(ty1, formerRubberYmin);
+                                    tx2 = max(tx2, formerRubberXmax);
+                                    ty2 = max(ty2, formerRubberXmax);
                                     panel.repaint(tx1, ty1, tx2 - tx1 + 1, ty2 - ty1 + 1);
-                                    formerRubberXmin = min(sx1, sx2);
-                                    formerRubberYmin = min(sy1, sy2);
-                                    formerRubberXmax = max(sx1, sx2);
-                                    formerRubberYmax = max(sy1, sy2);
                                 }
                                 selectCondition.await();
                                 continue;
@@ -591,10 +586,12 @@ public class ModelPanelManager implements MouseMotionListener, MouseListener, Mo
                     case 1:
                         selectLock.lock();
                         try {
-                            selectTask.serialListener.terminateSelection();
-                            selectTask.clearRubber();
-                            selectStatus=SelectStatus.None;
-                            selectCondition.signalAll();
+                            if (selectStatus == SelectStatus.SerialSelecting) {
+                                selectTask.serialListener.terminateSelection();
+                                selectTask.clearRubber();
+                                selectStatus = SelectStatus.None;
+                                selectCondition.signalAll();
+                            }
                         } finally {
                             selectLock.unlock();
                         }
@@ -888,9 +885,9 @@ public class ModelPanelManager implements MouseMotionListener, MouseListener, Mo
     /**
      * 重要的函数，应在本类所连接的JPanel子类覆盖paintComponent()方法，并在其中加入本函数的调用
      * <PRE>
-     * inside the JPanel:
+     * inside the extended JPanel:
      * ModelPanelManager manger=...
-     *
+     * @overide
      * private void paintComponent(){
      *      super.paintComponent();
      *      ...
@@ -907,14 +904,13 @@ public class ModelPanelManager implements MouseMotionListener, MouseListener, Mo
         modelImageLock.lock();
         try {
             g2.drawImage(modelImage, null, panel);
-
+//            g2.drawImage(modelImage, null, null);
         } finally {
             modelImageLock.unlock();
         }
         selectLock.lock();
         try {
             g2.drawImage(rubberImage, null, panel);
-
         } finally {
             selectLock.unlock();
         }
@@ -923,7 +919,7 @@ public class ModelPanelManager implements MouseMotionListener, MouseListener, Mo
 
     class ModelImageRepaintTask implements Runnable {
 
-        ModelImageWriter writer;
+        LinkedList<ModelImagePainter> imagePainters = new LinkedList<ModelImagePainter>();
         private boolean stopped;
         private int x;
         private int y;
@@ -937,7 +933,9 @@ public class ModelPanelManager implements MouseMotionListener, MouseListener, Mo
                 while (!stopped) {
                     try {
                         modelImageCondition.await();
-                        writer.writeModelBuffer(modelImage, ModelPanelManager.this);
+                        for (ModelImagePainter painter : imagePainters) {
+                            painter.paintModel(modelImage, ModelPanelManager.this);
+                        }
                         panel.repaint(x, y, width, height);
 //                        panel.repaint();
                     } catch (InterruptedException ex) {
@@ -980,14 +978,14 @@ public class ModelPanelManager implements MouseMotionListener, MouseListener, Mo
 
         public ModelImageRepaintTask() {
             thread = new Thread(this);
-            thread.setPriority(Thread.MAX_PRIORITY);
+//            thread.setPriority(Thread.MAX_PRIORITY);
             thread.start();
         }
 
-        public void setModelImageWriter(ModelImageWriter writer) {
+        public void addImagePainter(ModelImagePainter painter) {
             modelImageLock.lock();
             try {
-                this.writer = writer;
+                imagePainters.add(painter);
             } finally {
                 modelImageLock.unlock();
             }
@@ -1005,10 +1003,10 @@ public class ModelPanelManager implements MouseMotionListener, MouseListener, Mo
      * 注：一般重设后需要调用{@link #setModelBound(double, double, double, double) } {@link #viewWhole() }
      * <br>synchronized by modelImage Lock</br>
      * @param writer
-     * @see ModelImageWriter
+     * @see ModelImagePainter
      */
-    public void setModelImageWriter(ModelImageWriter writer) {
-        modelImageRepaintTask.setModelImageWriter(writer);
+    public void addModelImagePainter(ModelImagePainter painte) {
+        modelImageRepaintTask.addImagePainter(painte);
     }
 
     /**
@@ -1036,7 +1034,7 @@ public class ModelPanelManager implements MouseMotionListener, MouseListener, Mo
         modelImageRepaintTask.repaintModel(x, y, width, height);
     }
 
-    public ModelPanelManager(JPanel panel, double x1, double y1, double x2, double y2, ModelImageWriter modelWriter) {
+    public ModelPanelManager(JPanel panel, double x1, double y1, double x2, double y2) {
         this.panel = panel;
 //        modelImage = new BufferedImage((int) panel.getPreferredSize().getWidth(), (int) panel.getPreferredSize().getHeight(), BufferedImage.TYPE_4BYTE_ABGR_PRE);
 //        rubberImage = new BufferedImage((int) panel.getPreferredSize().getWidth(), (int) panel.getPreferredSize().getHeight(), BufferedImage.TYPE_4BYTE_ABGR_PRE);
@@ -1047,7 +1045,6 @@ public class ModelPanelManager implements MouseMotionListener, MouseListener, Mo
         panel.addMouseMotionListener(this);
         panel.addHierarchyBoundsListener(this);
         setModelBound(x1, y1, x2, y2);
-        setModelImageWriter(modelWriter);
     }
 
     /**
@@ -1131,6 +1128,56 @@ public class ModelPanelManager implements MouseMotionListener, MouseListener, Mo
     public enum ViewMarkerType {
 
         Rectangle, UpTriangle, DownTriangle, Round, X, Cross;
+    }
+
+    /**
+     * 可以追加Path2D将模型空间中的一个点(x,y)以半径为size个pixel, 以type为形式在JPanel中相应位置标注出来
+     * <br>synchronized by modelImage Lock</br>
+     * @param x 模型空间中的一点x坐标
+     * @param y 模型空间中一点y坐标
+     * @param size 在JPanel中显示的点的标注的半径
+     * @param type 点的标注的形式
+     * @param path 用于输出
+     */
+    public void viewMarker(double x, double y, double size, ViewMarkerType type, Path2D path) {
+        modelImageLock.lock();
+        try {
+            modelPtMarker.setLocation(x, y);
+            viewTransform.transform(modelPtMarker, screenPtMarker);
+            size = Math.abs(size);
+            switch (type) {
+                case Rectangle:
+                    rectMarker.setRect(screenPtMarker.getX() - size / 2, screenPtMarker.getY() - size / 2, size, size);
+                    path.append(rectMarker, false);
+                    break;
+                case X:
+                    path.moveTo(screenPtMarker.getX() - size / 2, screenPtMarker.getY() - size / 2);
+                    path.lineTo(screenPtMarker.getX() + size / 2, screenPtMarker.getY() + size / 2);
+                    path.moveTo(screenPtMarker.getX() - size / 2, screenPtMarker.getY() + size / 2);
+                    path.lineTo(screenPtMarker.getX() + size / 2, screenPtMarker.getY() - size / 2);
+                    break;
+                case Round:
+                    ellMarker.setFrame(screenPtMarker.getX() - size / 2, screenPtMarker.getY() - size / 2, size, size);
+                    path.append(ellMarker, false);
+                    break;
+                case DownTriangle:
+                    path.moveTo(screenPtMarker.getX() - size * sqrt(3) / 4, screenPtMarker.getY() - size / 4);
+                    path.lineTo(screenPtMarker.getX() + size * sqrt(3) / 4, screenPtMarker.getY() - size / 4);
+                    path.lineTo(screenPtMarker.getX(), screenPtMarker.getY() + size / 2);
+                    path.closePath();
+                    break;
+                case UpTriangle:
+                    path.moveTo(screenPtMarker.getX() - size * sqrt(3) / 4, screenPtMarker.getY() + size / 4);
+                    path.lineTo(screenPtMarker.getX() + size * sqrt(3) / 4, screenPtMarker.getY() + size / 4);
+                    path.lineTo(screenPtMarker.getX(), screenPtMarker.getY() - size / 2);
+                    path.closePath();
+                    break;
+                default:
+                    throw new UnsupportedOperationException();
+            }
+        } finally {
+            modelImageLock.unlock();
+        }
     }
 
     /**

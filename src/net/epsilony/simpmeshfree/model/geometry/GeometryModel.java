@@ -19,8 +19,9 @@ import java.util.List;
 import java.util.TreeSet;
 
 import net.epsilony.math.util.EYMath;
-import net.epsilony.simpmeshfree.utils.ModelImageWriter;
+import net.epsilony.simpmeshfree.utils.ModelImagePainter;
 import net.epsilony.simpmeshfree.utils.ModelPanelManager;
+import net.epsilony.simpmeshfree.utils.ModelPanelManager.ViewMarkerType;
 import net.epsilony.util.collection.LayeredDomainTree;
 import org.apache.log4j.Logger;
 
@@ -28,7 +29,7 @@ import org.apache.log4j.Logger;
  *
  * @author epsilon
  */
-public class GeometryModel implements ModelImageWriter {
+public class GeometryModel implements ModelImagePainter {
 
     static Logger log = Logger.getLogger(GeometryModel.class);
 
@@ -134,7 +135,7 @@ public class GeometryModel implements ModelImageWriter {
     }
 
     public void compile(double size, double flatness) {
-        log.info(String.format("Start compile(%6.3f, %6.3f",size,flatness));
+        log.info(String.format("Start compile(%6.3f, %6.3f", size, flatness));
         segmentApproximateSize = size;
         segmentFlatness = flatness;
         log.info("Start Generate Approximate Points");
@@ -158,7 +159,7 @@ public class GeometryModel implements ModelImageWriter {
                 }
             }
         }
-        log.info(String.format("End of Generate Approximate Points%nleftDown(%5.2f,%5.2f),rightUp(%5.2f,%5.2f)", leftDown.x,leftDown.y,rightUp.x,rightUp.y));
+        log.info(String.format("End of Generate Approximate Points%nleftDown(%5.2f,%5.2f),rightUp(%5.2f,%5.2f)", leftDown.x, leftDown.y, rightUp.x, rightUp.y));
 
         approximatePointsSearchTree = new LayeredDomainTree<ApproximatePoint>(approximatePoints, Point.compX, Point.compY, wider);
         compileCounter++;
@@ -268,24 +269,31 @@ public class GeometryModel implements ModelImageWriter {
         searchApproximatePointTo.setXY(x2 + segmentApproximateSize, y2 + segmentApproximateSize);
         approximatePointsSearchTree.domainSearch(segmentSearchApproximatePointList, searchApproximatePointFrom, searchApproximatePointTo);
         segmentSearchSet.clear();
+        if(log.isDebugEnabled()){
+            log.debug(String.format("from:%s to:%s", searchApproximatePointFrom,searchApproximatePointTo));
+        }
         for (ApproximatePoint p : segmentSearchApproximatePointList) {
-            if (p.x <= x2 && p.x >= x1 || p.y <= y2 && p.y >= y1) {
-                segmentSearchSet.add(p.segment);
-                continue;
+            segmentSearchSet.add(p.segment);
+            if(p.segmentParm==0){
+                segmentSearchSet.add(p.back.segment);
             }
-            if (EYMath.isLineSegmentIntersect(x1, y1, x1, y2, p.x, p.y, p.back.x, p.back.y) ||
-                    EYMath.isLineSegmentIntersect(x2, y1, x2, y2, p.x, p.y, p.back.x, p.back.y) ||
-                    EYMath.isLineSegmentIntersect(x1, y1, x2, y1, p.x, p.y, p.back.x, p.back.y) ||
-                    EYMath.isLineSegmentIntersect(x1, y2, x2, y2, p.x, p.y, p.back.x, p.back.y)) {
-                segmentSearchSet.add(p.segment);
-                continue;
-            }
-            if (EYMath.isLineSegmentIntersect(x1, y1, x1, y2, p.x, p.y, p.front.x, p.front.y) ||
-                    EYMath.isLineSegmentIntersect(x2, y1, x2, y2, p.x, p.y, p.front.x, p.front.y) ||
-                    EYMath.isLineSegmentIntersect(x1, y1, x2, y1, p.x, p.y, p.front.x, p.front.y) ||
-                    EYMath.isLineSegmentIntersect(x1, y2, x2, y2, p.x, p.y, p.front.x, p.front.y)) {
-                segmentSearchSet.add(p.segment);
-            }
+//            if (p.x <= x2 && p.x >= x1 || p.y <= y2 && p.y >= y1) {
+//                segmentSearchSet.add(p.segment);
+//                continue;
+//            }
+//            if (EYMath.isLineSegmentIntersect(x1, y1, x1, y2, p.x, p.y, p.back.x, p.back.y) ||
+//                    EYMath.isLineSegmentIntersect(x2, y1, x2, y2, p.x, p.y, p.back.x, p.back.y) ||
+//                    EYMath.isLineSegmentIntersect(x1, y1, x2, y1, p.x, p.y, p.back.x, p.back.y) ||
+//                    EYMath.isLineSegmentIntersect(x1, y2, x2, y2, p.x, p.y, p.back.x, p.back.y)) {
+//                segmentSearchSet.add(p.segment);
+//                continue;
+//            }
+//            if (EYMath.isLineSegmentIntersect(x1, y1, x1, y2, p.x, p.y, p.front.x, p.front.y) ||
+//                    EYMath.isLineSegmentIntersect(x2, y1, x2, y2, p.x, p.y, p.front.x, p.front.y) ||
+//                    EYMath.isLineSegmentIntersect(x1, y1, x2, y1, p.x, p.y, p.front.x, p.front.y) ||
+//                    EYMath.isLineSegmentIntersect(x1, y2, x2, y2, p.x, p.y, p.front.x, p.front.y)) {
+//                segmentSearchSet.add(p.segment);
+//            }
         }
         outSegs.addAll(segmentSearchSet);
         return outSegs;
@@ -376,6 +384,9 @@ public class GeometryModel implements ModelImageWriter {
      */
     private LinkedList<ApproximatePoint> GenerateApproximatePoints(double size, double flatness) {
         for (Route sr : routes) {
+            if(log.isDebugEnabled()){
+                log.debug(sr);
+            }
 //            System.out.println("sr.type"+sr.type());
             approximatePoints.addAll(sr.GenerateApproximatePoints(size, flatness));
         }
@@ -435,9 +446,88 @@ public class GeometryModel implements ModelImageWriter {
         GeometryModel gm = new GeometryModel();
         gm.addShape(new Rectangle2D.Double(0, 0, 48, 12));
     }
+    boolean showModelShape = true;
+    boolean showApproximatePoints = true;
+    boolean showApproximateRoute = false;
+    double approximatePointScreenSize = 3;
+    Color modelShapeColor = Color.BLACK;
+    Color approximatePointsColor = Color.BLACK;
+    Color approximateRouteColor = Color.LIGHT_GRAY;
+
+    public double getApproximatePointScreenSize() {
+        return approximatePointScreenSize;
+    }
+
+    public void setApproximatePointScreenSize(double approximatePointScreenSize) {
+        this.approximatePointScreenSize = approximatePointScreenSize;
+    }
+
+    public Color getApproximatePointsColor() {
+        return approximatePointsColor;
+    }
+
+    public void setApproximatePointsColor(Color approximatePointsColor) {
+        this.approximatePointsColor = approximatePointsColor;
+    }
+
+    public Color getApproximateRouteColor() {
+        return approximateRouteColor;
+    }
+
+    public void setApproximateRouteColor(Color approximateRouteColor) {
+        this.approximateRouteColor = approximateRouteColor;
+    }
+
+    public Color getModelShapeColor() {
+        return modelShapeColor;
+    }
+
+    public void setModelShapeColor(Color modelShapeColor) {
+        this.modelShapeColor = modelShapeColor;
+    }
+
+    public boolean isShowApproximatePoints() {
+        return showApproximatePoints;
+    }
+
+    public void setShowApproximatePoints(boolean showApproximatePoints) {
+        this.showApproximatePoints = showApproximatePoints;
+    }
+
+    public boolean isShowApproximateRoute() {
+        return showApproximateRoute;
+    }
+
+    public void setShowApproximateRoute(boolean showApproximateRoute) {
+        this.showApproximateRoute = showApproximateRoute;
+    }
+
+    public boolean isShowModelShape() {
+        return showModelShape;
+    }
+
+    public void setShowModelShape(boolean showModelShape) {
+        this.showModelShape = showModelShape;
+    }
+
+    ModelPanelManager.ViewMarkerType approximatePointScreenType = ModelPanelManager.ViewMarkerType.Rectangle;
+
+    public ViewMarkerType getApproximatePointScreenType() {
+        return approximatePointScreenType;
+    }
+
+    public void setApproximatePointScreenType(ViewMarkerType approximatePointScreenType) {
+        this.approximatePointScreenType = approximatePointScreenType;
+    }
+
+    public void addApproximateRouteToPath(Path2D path){
+        for (Route route : routes) {
+                route.addApproximateRouteToPath(path);
+            }
+    }
 
     @Override
-    public void writeModelBuffer(BufferedImage modelImage, ModelPanelManager manager) {
+    public void paintModel(BufferedImage modelImage, ModelPanelManager manager) {
         Graphics2D g2 = modelImage.createGraphics();
 
 
@@ -449,20 +539,25 @@ public class GeometryModel implements ModelImageWriter {
         Path2D path = new Path2D.Double();
 
 
-        if (showApproximatePoint) {
-            path.append(manager.viewMarker(approximatePoints, showApproximatePointSize, showApproximatePointType), false);
+        if (showApproximatePoints) {
+            path.append(manager.viewMarker(approximatePoints, approximatePointScreenSize, approximatePointScreenType), false);
+            g2.setColor(approximatePointsColor);
+            g2.draw(path.createTransformedShape(null));
         }
-        g2.setColor(showApproximateColor);
-        g2.draw(path.createTransformedShape(null));
+
         path.reset();
+        if (showApproximateRoute) {
+            addApproximateRouteToPath(path);
+            g2.setColor(approximateRouteColor);
+            g2.draw(path.createTransformedShape(tx));
+        }
+
+        path.reset();
+        if (showModelShape) {
+            addToPath(path);
+            g2.setColor(modelShapeColor);
+            g2.draw(path.createTransformedShape(tx));
+        }
+
     }
-    boolean showModelShape = true;
-    boolean showApproximatePoint = true;
-    boolean showApproximatePointRoute = false;
-    double showApproximatePointSize = 3;
-    Color showModelShapeColor = Color.BLACK;
-    Color showNodeNeigborNetColor = Color.GRAY;
-    Color showApproximateColor = Color.BLACK;
-    ModelPanelManager.ViewMarkerType showNodeMarkerType = ModelPanelManager.ViewMarkerType.Rectangle;
-    ModelPanelManager.ViewMarkerType showApproximatePointType = ModelPanelManager.ViewMarkerType.Rectangle;
 }

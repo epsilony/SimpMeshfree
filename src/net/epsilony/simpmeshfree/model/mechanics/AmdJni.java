@@ -5,16 +5,13 @@
 package net.epsilony.simpmeshfree.model.mechanics;
 
 import java.util.Arrays;
-import java.util.List;
-import net.epsilony.simpmeshfree.model.geometry.Node;
 import no.uib.cipr.matrix.DenseVector;
-import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.UpperSPDBandMatrix;
-import no.uib.cipr.matrix.UpperSymmBandMatrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.VectorEntry;
 import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
 import no.uib.cipr.matrix.sparse.SparseVector;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -22,6 +19,7 @@ import no.uib.cipr.matrix.sparse.SparseVector;
  */
 public class AmdJni {
 
+    static Logger log=Logger.getLogger(AmdJni.class);
     int n;
     int[] Ap;
     int[] Ai;
@@ -59,6 +57,7 @@ public class AmdJni {
     }
 
     public int bandWidth() {
+        log.info("Start bandwidth");
         int bandWidth = 0;
         int start, end, max, t;
         for (int i = 0; i < n; i++) {
@@ -76,11 +75,16 @@ public class AmdJni {
                 bandWidth = max - i;
             }
         }
+        log.info("end of bandWith()");
         return bandWidth;
     }
 
     public UpperSPDBandMatrix complile(FlexCompRowMatrix m, Vector b){//,List<Node> nodes) {
+        log.info("Start complile");
+        log.info("Start amdOrder jni");
         amdOrder(m);
+        log.info("Finished: amdOrder jni");
+
         int bw = bandWidth();
         UpperSPDBandMatrix result = new UpperSPDBandMatrix(m.numRows(), bw);
         SparseVector rowVect;
@@ -102,6 +106,7 @@ public class AmdJni {
 //            n.setMatrixIndex(P[i]);
 //            i=i+1;
 //        }
+        log.info("End of compile()");
         return result;
     }
 

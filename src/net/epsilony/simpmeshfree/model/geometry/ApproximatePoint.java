@@ -2,7 +2,6 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package net.epsilony.simpmeshfree.model.geometry;
 
 import net.epsilony.simpmeshfree.model.geometry.ModelElement.ModelElementType;
@@ -12,11 +11,12 @@ import net.epsilony.simpmeshfree.utils.ModelElementIndexManager;
  *
  * @author epsilon
  */
-public class ApproximatePoint extends Point{
-    public static ApproximatePoint tempApproximatePoint(double x,double y){
-        ApproximatePoint ap=new ApproximatePoint();
-        ap.x=x;
-        ap.y=y;
+public class ApproximatePoint extends Point {
+
+    public static ApproximatePoint tempApproximatePoint(double x, double y) {
+        ApproximatePoint ap = new ApproximatePoint();
+        ap.x = x;
+        ap.y = y;
         return ap;
     }
     static ModelElementIndexManager aPointIm = new ModelElementIndexManager();
@@ -33,17 +33,16 @@ public class ApproximatePoint extends Point{
     public ModelElementType type() {
         return ModelElementType.ApproximatPoint;
     }
-
-    ApproximatePoint back,front;
+    ApproximatePoint back, front;
     Segment segment;
     double segmentParm;
 
-    public ApproximatePoint(double x,double y,Segment attachedSegment,double segmentParm) {
-        this.x=x;
-        this.y=y;
-        index=aPointIm.getNewIndex();
+    public ApproximatePoint(double x, double y, Segment attachedSegment, double segmentParm) {
+        this.x = x;
+        this.y = y;
+        index = aPointIm.getNewIndex();
         this.segment = attachedSegment;
-        this.segmentParm=segmentParm;
+        this.segmentParm = segmentParm;
     }
 
     public ApproximatePoint getBack() {
@@ -72,9 +71,20 @@ public class ApproximatePoint extends Point{
 
     @Override
     public String toString() {
-        return String.format("%s%d:(%f.1, %f.1)-%s%d l:%d r:%d", type(),index,x,y,segment.type(),segment.index,back.index,front.index);
+        StringBuilder sb = new StringBuilder(200);
+        sb.append(String.format("%s %d:(%.2f, %.2f)-%s t=%.4f", type(), index, x, y, segment, segmentParm));
+        if (null == front) {
+            sb.append("front null");
+        } else {
+            sb.append("front:");
+            sb.append(front.segmentParm);
+        }
+        if (null== back) {
+            sb.append("back null");
+        } else {
+            sb.append("back:");
+            sb.append(back.segmentParm);
+        }
+        return sb.toString();
     }
-
-
-
 }

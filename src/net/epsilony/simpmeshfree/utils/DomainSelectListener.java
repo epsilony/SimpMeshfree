@@ -4,6 +4,7 @@
  */
 package net.epsilony.simpmeshfree.utils;
 
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 
 /**
@@ -36,8 +37,9 @@ public interface DomainSelectListener {
      * @param y2 屏幕上第二点y坐标，不一定比第一点x坐标值大。
      * @param manager
      * @param rubberImage
+     * @return 返回相应橡皮条效果的范围，用于自动擦除橡皮条，如果为null，则下次自动擦除以(x1,y1)-(x2,y2)为对角线的区域
      */
-    public void selecting(int x1, int y1, int x2, int y2, ModelPanelManager manager, BufferedImage rubberImage);
+    public Rectangle2D selecting(int x1, int y1, int x2, int y2, ModelPanelManager manager, BufferedImage rubberImage);
 
     /**<p>确定所选范围后被调用</p>
      * <br>一般利用屏幕空间所选的范围对角线坐标(x1,y1),(x2,y2)和manager.inverseTransform()获得模型空间对应的模型坐标</br>
@@ -47,7 +49,7 @@ public interface DomainSelectListener {
      * @param x2 屏幕上第二点x坐标，不一定比第一点x坐标值大。
      * @param y2 屏幕上第二点y坐标，不一定比第一点x坐标值大。
      * @param manager {@link ModelPanelManager}
-     * @return 是否要求重画JPanel 如返回值为false则一般情竞下需要本函数的实现中调用manager.repaintPanel()
+     * @return 是否要求重画JPanel 如返回值为false则一般情况下需要本函数的实现中调用manager.repaintPanel()
      */
     public boolean selected(int x1, int y1, int x2, int y2, ModelPanelManager manager);
 }

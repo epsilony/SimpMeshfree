@@ -139,6 +139,6 @@ public class Point extends ModelElement {
 
     @Override
     public String toString() {
-        return String.format("Point:%d-(%.2f, %.2f)", index, x, y);
+        return String.format("%s:%d-(%.2f, %.2f)", type(),index, x, y);
     }
 }

@@ -238,6 +238,23 @@ public class Node extends Point {
         return neighbors;
     }
 
+    double ux, uy;
+
+    public double getUx() {
+        return ux;
+    }
+
+    public void setUx(double ux) {
+        this.ux = ux;
+    }
+
+    public double getUy() {
+        return uy;
+    }
+
+    public void setUy(double uy) {
+        this.uy = uy;
+    }
 
 
 

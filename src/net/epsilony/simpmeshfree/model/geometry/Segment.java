@@ -45,8 +45,16 @@ abstract public class Segment extends ModelElement {
         } else {
             boundaryConditions = null;
         }
-
     }
+
+    public boolean addBoundaryCondition(BoundaryCondition e) {
+        if(null==boundaryConditions){
+            boundaryConditions=new LinkedList<BoundaryCondition>();
+        }
+        return boundaryConditions.add(e);
+    }
+
+
 
     protected Segment() {
         index = segmentIM.getNewIndex();
@@ -103,11 +111,11 @@ abstract public class Segment extends ModelElement {
     @Override
     public String toString() {
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append(type());
         sb.append(":");
         for (int i = 0; i < pts.length; i++) {
-            sb.append(String.format("(%f.1, %f.1) ", pts[i].x, pts[i].y));
+            sb.append(String.format("(%.2f, %.2f) ", pts[i].x, pts[i].y));
         }
         return sb.toString();
     }

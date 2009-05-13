@@ -11,6 +11,6 @@ import java.awt.image.BufferedImage;
  *
  * @author epsilon
  */
-public interface ModelImageWriter {
-    public void writeModelBuffer(BufferedImage modelImage,ModelPanelManager manager);
+public interface ModelImagePainter {
+    public void paintModel(BufferedImage modelImage,ModelPanelManager manager);
 }
