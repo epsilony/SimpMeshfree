@@ -17,27 +17,27 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
+
 import net.epsilony.math.util.EYMath;
 import net.epsilony.simpmeshfree.utils.ModelImageWriter;
 import net.epsilony.simpmeshfree.utils.ModelPanelManager;
 import net.epsilony.util.collection.LayeredDomainTree;
+import org.apache.log4j.Logger;
 
 /**
  *
  * @author epsilon
  */
-public class GeometryModel implements ModelImageWriter{
+public class GeometryModel implements ModelImageWriter {
+
+    static Logger log = Logger.getLogger(GeometryModel.class);
 
     public LinkedList<Route> getRoutes() {
         return routes;
     }
-
     LinkedList<Route> routes = new LinkedList<Route>();
-
     LinkedList<ApproximatePoint> approximatePoints = new LinkedList<ApproximatePoint>();
-
     private int compileCounter = 0;
-
     LayeredDomainTree<ApproximatePoint> approximatePointsSearchTree;
     boolean wider = true;
     double segmentApproximateSize;
@@ -52,12 +52,12 @@ public class GeometryModel implements ModelImageWriter{
     public Point getRightUp() {
         return rightUp;
     }
-
-
     double[] addShapeTemps = new double[6];
 
-
     public void addShape(Shape shape) {
+        if (log.isDebugEnabled()) {
+            log.debug("Start addShape()");
+        }
 //        this.modelShape = shape;
         PathIterator pi = shape.getPathIterator(null);
         boolean hasMoveTo = false;
@@ -119,10 +119,11 @@ public class GeometryModel implements ModelImageWriter{
             }
             pi.next();
         }
-//        System.out.println("routes.size() = " + routes.size());
+        if (log.isDebugEnabled()) {
+            log.debug("End of addShape()");
+        }
 
     }
-
 
     public double getSegmentApproximateSize() {
         return segmentApproximateSize;
@@ -133,11 +134,14 @@ public class GeometryModel implements ModelImageWriter{
     }
 
     public void compile(double size, double flatness) {
+        log.info(String.format("Start compile(%6.3f, %6.3f",size,flatness));
         segmentApproximateSize = size;
         segmentFlatness = flatness;
+        log.info("Start Generate Approximate Points");
         GenerateApproximatePoints(size, flatness);
         leftDown.setXY(approximatePoints.getFirst());
         rightUp.setXY(approximatePoints.getFirst());
+
         for (ApproximatePoint ap : approximatePoints) {
             if (ap.x < leftDown.x) {
                 leftDown.x = ap.x;
@@ -154,22 +158,11 @@ public class GeometryModel implements ModelImageWriter{
                 }
             }
         }
-//        triangleJni.setSwitchs(switches);
-//        triangleJni.setPointsSegments(GenerateApproximatePoints, points);
-//        double[] tds = new double[holes.size() * 2];
-//        int i = 0;
-//        for (Point p : holes) {
-//            tds[i * 2] = p.x;
-//            tds[i * 2 + 1] = p.y;
-//            i++;
-//        }
-//        triangleJni.setHoles(tds, holes.size());
-//        triangleJni.triangleFun();
-//        triangleJni.getNodesTriangles(nodes, triangles);
-//        System.out.println("nodes.size() = " + nodes.size());
-//        nodesSearchTree = new LayeredDomainTree<Node>(nodes, Point.compX, Point.compY, wider);
+        log.info(String.format("End of Generate Approximate Points%nleftDown(%5.2f,%5.2f),rightUp(%5.2f,%5.2f)", leftDown.x,leftDown.y,rightUp.x,rightUp.y));
+
         approximatePointsSearchTree = new LayeredDomainTree<ApproximatePoint>(approximatePoints, Point.compX, Point.compY, wider);
         compileCounter++;
+        log.info(String.format("End of complile, compileCounter=%d", compileCounter));
     }
     //用于加速搜索的临时变量
     private final ApproximatePoint searchApproximatePointFrom = ApproximatePoint.tempApproximatePoint(0, 0),  searchApproximatePointTo = ApproximatePoint.tempApproximatePoint(0, 0);
@@ -191,7 +184,6 @@ public class GeometryModel implements ModelImageWriter{
 //        outPts.clear();
 //        return nodesSearchTree.domainSearch(outPts, searchNodeFrom, searchNodeTo);
 //    }
-
     /**
      * 
      * @param <E>
@@ -339,7 +331,6 @@ public class GeometryModel implements ModelImageWriter{
         return outSegs;
     }
 
-
     public static boolean canSeeEach(Point e1, Point e2, Collection<ApproximatePoint> aps) {
         for (ApproximatePoint ap : aps) {
             if (EYMath.isLineSegmentIntersect(e1.x, e1.y, e2.x, e2.y, ap.x, ap.y, ap.back.x, ap.back.y) || EYMath.isLineSegmentIntersect(e1.x, e1.y, e2.x, e2.y, ap.x, ap.y, ap.front.x, ap.front.y)) {
@@ -349,7 +340,7 @@ public class GeometryModel implements ModelImageWriter{
         return true;
     }
 
-    public static boolean canSeeEach(double x1,double y1,double x2,double y2, Collection<ApproximatePoint> aps) {
+    public static boolean canSeeEach(double x1, double y1, double x2, double y2, Collection<ApproximatePoint> aps) {
         for (ApproximatePoint ap : aps) {
             if (EYMath.isLineSegmentIntersect(x1, y1, x2, y2, ap.x, ap.y, ap.back.x, ap.back.y) || EYMath.isLineSegmentIntersect(x1, y1, x2, y2, ap.x, ap.y, ap.front.x, ap.front.y)) {
                 return false;
@@ -358,18 +349,18 @@ public class GeometryModel implements ModelImageWriter{
         return true;
     }
 
-    public List<ApproximatePoint> getDomainAffectApproximatePoint(List<ApproximatePoint> aps,double x,double y,double r){
-        approximatePointSearch(aps,x-r-segmentApproximateSize,
-                y-r-segmentApproximateSize,
-                x+r+segmentApproximateSize,
-                y+r+segmentApproximateSize);
+    public List<ApproximatePoint> getDomainAffectApproximatePoint(List<ApproximatePoint> aps, double x, double y, double r) {
+        approximatePointSearch(aps, x - r - segmentApproximateSize,
+                y - r - segmentApproximateSize,
+                x + r + segmentApproximateSize,
+                y + r + segmentApproximateSize);
         return aps;
     }
 
-    public LinkedList<Point> getHolesXYs(){
-        LinkedList<Point> holesXYs=new LinkedList<Point>();
-        for(Route route:routes){
-            if(!route.isCounterClockwise()){
+    public LinkedList<Point> getHolesXYs() {
+        LinkedList<Point> holesXYs = new LinkedList<Point>();
+        for (Route route : routes) {
+            if (!route.isCounterClockwise()) {
                 Point holePoint = route.getHolePoint();
                 holesXYs.add(holePoint);
             }
@@ -434,18 +425,16 @@ public class GeometryModel implements ModelImageWriter{
         return approximatePoints;
     }
 
-    public void addToPath(Path2D path){
-        for(Route route:routes){
+    public void addToPath(Path2D path) {
+        for (Route route : routes) {
             route.addToPath(path);
         }
     }
-
 
     public static void main(String[] args) {
         GeometryModel gm = new GeometryModel();
         gm.addShape(new Rectangle2D.Double(0, 0, 48, 12));
     }
-
 
     @Override
     public void writeModelBuffer(BufferedImage modelImage, ModelPanelManager manager) {
@@ -468,16 +457,12 @@ public class GeometryModel implements ModelImageWriter{
         path.reset();
     }
     boolean showModelShape = true;
-
     boolean showApproximatePoint = true;
     boolean showApproximatePointRoute = false;
-
     double showApproximatePointSize = 3;
     Color showModelShapeColor = Color.BLACK;
-
     Color showNodeNeigborNetColor = Color.GRAY;
     Color showApproximateColor = Color.BLACK;
     ModelPanelManager.ViewMarkerType showNodeMarkerType = ModelPanelManager.ViewMarkerType.Rectangle;
     ModelPanelManager.ViewMarkerType showApproximatePointType = ModelPanelManager.ViewMarkerType.Rectangle;
-
 }

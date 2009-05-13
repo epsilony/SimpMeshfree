@@ -11,6 +11,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -18,6 +19,7 @@ import java.util.TreeSet;
  */
 public class TriangleJni {
 
+    static Logger log=Logger.getLogger(TriangleJni.class);
     public double[] pointsXYIn;// = new double[]{80, 0, 100, 50, 0, 100, -100, 50, -80, 0, -100, -50, 0, -100, 100, -50, 0, -90, 80, -50, 0, -10, -80, -50, -70, 50, -60, 30, -10, 55, -40, 55, 70, 50, 60, 30, 10, 55, 40, 55, -10, 25, -20, -10, 10, 25, 20, -10, -50, 0, 50, 0};
     public int pointsXYSizeIn;// = 26;
     public int[] pointsMarkerIn;// = new int[]{2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 7, 7, 0, 0};
@@ -55,12 +57,17 @@ public class TriangleJni {
     }
 
     public void complie(GeometryModel gm,String switchs){
+        log.info("Start Complie");
+        log.info("set Points Segments by GeometryModel's approximate Points");
         setPointsSegments(gm.getApproximatePoints(),new LinkedList<Point>());
         setSwitchs(switchs);
+        log.info("set hole inside points");
         LinkedList<Point> holePoints=gm.getHolesXYs();
         double[] holesXYs=new double[2*holePoints.size()];
         setHoles(holesXYs, holePoints.size());
+        log.info("jni the triangle");
         triangleFun();
+        log.info("End of compile");
     }
     private ArrayList<ApproximatePoint> approximatePoints=new ArrayList<ApproximatePoint>();
     public void setPointsSegments(List<ApproximatePoint> aprxPts, List<Point> pts) {
@@ -100,6 +107,7 @@ public class TriangleJni {
     }
 
     public LinkedList<double[]> getTriangleXYsList(){
+        log.info("Start getTriangleXYsList()");
         LinkedList<double[]> triXYs=new LinkedList<double[]>();
         double [] triXY;
         for (int i = 0; i < trianglesSizeOut; i++) {
@@ -112,11 +120,12 @@ public class TriangleJni {
             triXY[5] = pointsXYOut[(trianglesOut[i * 3+2] - 1)*2+1];
             triXYs.add(triXY);
         }
+        log.info(String.format("End of getTriangleXYsList%n result.size()=%d",triXYs.size()));
         return triXYs;
     }
 
     public ArrayList<Node> getNodes(boolean needNeighbors){
-        
+        log.info(String.format("start getNodes(%b)", needNeighbors));
         ArrayList<Node> nodes=new ArrayList<Node>(pointsXYSizeOut);
 //        System.out.println("pointsXYSizeOut = " + pointsXYSizeOut);
         for(int i = 0;i<approximatePoints.size();i++){
@@ -129,8 +138,11 @@ public class TriangleJni {
 //        System.out.println("segmentsSizeOut = " + segmentsSizeOut);
 //        System.out.println("segmentsOut.length = " + segmentsOut.length);
        if(needNeighbors==false){
+           log.info("End of getNodes()");
            return nodes;
        }
+
+        log.info("Start filling nodes' neighbors and triangles");
         TreeSet<Node>[] neighbors= new TreeSet[pointsXYSizeOut];
         Comparator<Node> nodeCmp = new Comparator<Node>() {
 
@@ -166,7 +178,10 @@ public class TriangleJni {
 //        System.out.println("nodes.size()" + nodes.size());
         return nodes;
     }
+
+
     public ArrayList<Node> getNodesTriangles(ArrayList<Node> nodes, ArrayList<Triangle> trs) {
+        log.info("Start getNodesTriangles");
         nodes.clear();
         nodes.ensureCapacity(pointsXYSizeOut);
 //        System.out.println("pointsXYSizeOut = " + pointsXYSizeOut);
@@ -211,6 +226,7 @@ public class TriangleJni {
             n2.triangles.add(tr);
             n3.triangles.add(tr);
         }
+        log.info("End of getNodesTriangles()");
 //        System.out.println("nodes.size()" + nodes.size());
         return nodes;
     }
