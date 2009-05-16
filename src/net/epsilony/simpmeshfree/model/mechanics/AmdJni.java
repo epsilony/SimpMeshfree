@@ -86,7 +86,8 @@ public class AmdJni {
         log.info("Finished: amdOrder jni");
 
         int bw = bandWidth();
-        UpperSPDBandMatrix result = new UpperSPDBandMatrix(m.numRows(), bw);
+
+        UpperSPDBandMatrix result = new UpperSPDBandMatrix(m.numRows(),m.numRows());
         SparseVector rowVect;
         int row, col;
         DenseVector tv = new DenseVector(b);

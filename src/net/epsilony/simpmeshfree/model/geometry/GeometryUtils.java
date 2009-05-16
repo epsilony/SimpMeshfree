@@ -4,10 +4,12 @@
  */
 package net.epsilony.simpmeshfree.model.geometry;
 
+import java.awt.geom.Rectangle2D;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.TreeSet;
+import org.apache.log4j.Logger;
 import static net.epsilony.math.util.EYMath.*;
 
 /**
@@ -15,6 +17,8 @@ import static net.epsilony.math.util.EYMath.*;
  * @author epsilon
  */
 public class GeometryUtils {
+
+    static Logger log = Logger.getLogger(GeometryUtils.class);
 
     /**
      * 过滤nodes，使其只含有半径为r的，以x,y为中心的闭区域内的与(x,y)之间没有曲段遮挡的结点
@@ -70,6 +74,9 @@ public class GeometryUtils {
                     break;
                 }
             }
+            if (null == tempNodeAp) {
+                log.error("tempNode==null");
+            }
             aps.add(tempNodeAp);
         }
 
@@ -78,13 +85,13 @@ public class GeometryUtils {
             start = ap.back;
             end = ap;
             outProduct = vectorProduct(end.x - start.x, end.y - start.y, x - start.x, y - start.y);
-            if (outProduct >= 0 && !apTree.contains(start) && isLineCircleIntersects(x, y, r, start.x, start.y, end.x, end.y)) {
+            if (outProduct <= 0 && !apTree.contains(start) && isLineCircleIntersects(x, y, r, start.x, start.y, end.x, end.y)) {
                 removeOutsightNodes(x, y, start, end, nodes);
             }
             start = ap;
             end = ap.front;
             outProduct = vectorProduct(end.x - start.x, end.y - start.y, x - start.x, y - start.y);
-            if (outProduct >= 0 && !apTree.contains(end) && isLineCircleIntersects(x, y, r, start.x, start.y, end.x, end.y)) {
+            if (outProduct <= 0 && !apTree.contains(end) && isLineCircleIntersects(x, y, r, start.x, start.y, end.x, end.y)) {
                 removeOutsightNodes(x, y, start, end, nodes);
             }
             apTree.add(ap);
@@ -94,8 +101,6 @@ public class GeometryUtils {
             aps.remove(tempNodeAp);
             tempNodeAp.back.front = tempNodeAp.front;
             tempNodeAp.front.back = tempNodeAp.back;
-            tempNodeAp.back = null;
-            tempNodeAp.front = null;
         }
     }
 
@@ -125,22 +130,37 @@ public class GeometryUtils {
         while (nodeIt.hasNext()) {
             Node tNode = nodeIt.next();
             outProduct = vectorProduct(v1x, v1y, tNode.x - start.x, tNode.y - start.y);
-            if (outProduct <= 0) {
+//            if (outProduct >=0) {
+//                v4x = tNode.x - x;
+//                v4y = tNode.y - y;
+//                if (vectorProduct(v2x, v2y, v4x, v4y) <= 0 && vectorProduct(v3x, v3y, v4x, v4y) >= 0) {//如果结点在线段(start)-(end)的背面或线段上
+//                    if (tNode.type() == ModelElement.ModelElementType.BoundaryNode) {
+//                        tbNode = (BoundaryNode) tNode;
+//                        if (!(start.segment == tbNode.segment && (tbNode.segmentParm <= end.segmentParm || end.segmentParm == 0) && (tbNode.segmentParm >= start.segmentParm))) {//如tNode是边界上的结点且不在(start,end)曲线段上则去除tNode
+//                            nodeIt.remove();
+//                        }
+//                    } else {
+//                        if (outProduct > 0) {//如tNode在(start)-(end)的背面且不在(start)-(end)上，且其不是边界上的点
+//                            nodeIt.remove();
+//                        }
+//                    }
+//                }
+//            }
+            if (outProduct > 0) {
                 v4x = tNode.x - x;
                 v4y = tNode.y - y;
-                if (vectorProduct(v2x, v2y, v4x, v4y) >= 0 && vectorProduct(v3x, v3y, v4x, v4y) <= 0) {//如果结点在线段(start)-(end)的背面或线段上
-                    if (tNode.type() == ModelElement.ModelElementType.BoundaryNode) {
-                        tbNode = (BoundaryNode) tNode;
-                        if (!(start.segment == tbNode.segment && (tbNode.segmentParm <= end.segmentParm || end.segmentParm == 0) && (tbNode.segmentParm >= start.segmentParm))) {//如tNode是边界上的结点且不在(start,end)曲线段上则去除tNode
-                            nodeIt.remove();
-                        }
-                    } else {
-                        if (outProduct < 0) {//如tNode在(start)-(end)的背面且不在(start)-(end)上，且其不是边界上的点
-                            nodeIt.remove();
-                        }
-                    }
+                if (vectorProduct(v2x, v2y, v4x, v4y) <= 0 && vectorProduct(v3x, v3y, v4x, v4y) >= 0) {//如果结点在线段(start)-(end)的背面或线段上
+                    nodeIt.remove();
                 }
             }
         }
+    }
+
+    public static void main(String[] args) {
+        GeometryModel gm = new GeometryModel();
+        gm.addShape(new Rectangle2D.Double(0, -6, 48, 6));
+        gm.compile(0.5, 0.1);
+        LinkedList<ApproximatePoint> aprxPts = new LinkedList<ApproximatePoint>();
+//        gm.approximatePointSearch(aprxPts, 0.2-0.5-10)
     }
 }

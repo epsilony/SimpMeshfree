@@ -366,13 +366,20 @@ public class GeometryModel implements ModelImagePainter {
     }
 
     public LinkedList<Point> getHolesXYs() {
+        log.info("Start getHolesXYs");
         LinkedList<Point> holesXYs = new LinkedList<Point>();
         for (Route route : routes) {
             if (!route.isCounterClockwise()) {
                 Point holePoint = route.getHolePoint();
+                if(log.isDebugEnabled()){
+                    log.debug("Hole:");
+                    log.debug(route);
+                    log.debug(holePoint);
+                }
                 holesXYs.add(holePoint);
             }
         }
+        log.info("End of getHolesXYs");
         return holesXYs;
     }
 
@@ -383,13 +390,19 @@ public class GeometryModel implements ModelImagePainter {
      * @return
      */
     private LinkedList<ApproximatePoint> GenerateApproximatePoints(double size, double flatness) {
+        approximatePoints.clear();
+        log.info("Start GenerateApproximatePoints");
+//        if(log.isDebugEnabled()){
+//            log.debug(routes);
+//        }
         for (Route sr : routes) {
-            if(log.isDebugEnabled()){
-                log.debug(sr);
-            }
+//            if(log.isDebugEnabled()){
+//                log.debug(sr);
+//            }
 //            System.out.println("sr.type"+sr.type());
             approximatePoints.addAll(sr.GenerateApproximatePoints(size, flatness));
         }
+        log.info("End of GenerateApproximatePoints, size="+approximatePoints.size());
 //        System.out.println("GenerateApproximatePoints.size() = " + GenerateApproximatePoints.size());
         return approximatePoints;
     }

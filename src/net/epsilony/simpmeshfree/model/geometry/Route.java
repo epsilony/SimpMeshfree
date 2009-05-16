@@ -7,11 +7,10 @@ package net.epsilony.simpmeshfree.model.geometry;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.util.LinkedList;
-import java.util.ListIterator;
 import java.util.Random;
 import net.epsilony.math.util.EYMath;
 import net.epsilony.simpmeshfree.utils.ModelElementIndexManager;
-import static java.lang.Math.*;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -19,13 +18,14 @@ import static java.lang.Math.*;
  */
 public class Route extends ModelElement {
 
+    static Logger log = Logger.getLogger(Route.class);
     static ModelElementIndexManager routeIm = new ModelElementIndexManager();
     LinkedList<Segment> segments = new LinkedList<Segment>();
 
     @Override
     public String toString() {
-        StringBuilder sb=new StringBuilder(1024);
-        for(Segment segment:segments){
+        StringBuilder sb = new StringBuilder(1024);
+        for (Segment segment : segments) {
             Point firstVertex = segment.getFirstVertex();
             sb.append(firstVertex.x);
             sb.append(" ");
@@ -97,20 +97,22 @@ public class Route extends ModelElement {
             v1y = end.y - start.y;
             v2x = front.x - end.x;
             v2y = front.y - end.y;
-            innerProduct = v1x * v2x + v1y + v2y;
+            innerProduct = v1x * v2x + v1y * v2y;
 
             outProduct = v1x * v2y - v1y * v2x;
             if (0 == outProduct) {
+                start = start.front;
                 continue;
             }
             if (0 == innerProduct) {
                 sumRotation += outProduct > 0 ? Math.PI / 2 : -Math.PI / 2;
+            } else {
+                len = Math.sqrt((v1x * v1x + v1y * v1y) * (v2x * v2x + v2y * v2y));
+                sumRotation += outProduct > 0 ? Math.acos(innerProduct / len) : -Math.acos(innerProduct / len);
             }
-            len = Math.sqrt((v1x * v1x + v1y * v1y) * (v2x * v2x + v2y * v2y));
-            sumRotation += outProduct > 0 ? Math.acos(innerProduct / len) : -Math.acos(innerProduct / len);
             start = start.front;
         } while (start != stopCond);
-        if (sumRotation >= 0) {
+        if (sumRotation <= 0) {
             return true;
         } else {
             return false;
@@ -121,9 +123,10 @@ public class Route extends ModelElement {
         Point pt = Point.tempPoint(0, 0);
         //假设本Route是顺时针的，因此要找一个右拐的ApproximatePoint
         ApproximatePoint start, end, front, stopCond;
-        double innerProduct, v1x, v1y, v2x, v2y;
+        double outProduct, v1x, v1y, v2x, v2y;
         start = aprxPts.get(new Random().nextInt(aprxPts.size()));
         stopCond = start;
+        boolean find = false;
         //寻找一个凸顶点（end)
         do {
             end = start.front;
@@ -132,13 +135,15 @@ public class Route extends ModelElement {
             v1y = end.y - start.y;
             v2x = front.x - end.x;
             v2y = front.y - end.y;
-            innerProduct = v1x * v2y - v2x * v1y;
-            if (innerProduct < 0) {
+            outProduct = v1x * v2y - v2x * v1y;
+            if (outProduct > 0) {
+                find = true;
                 break;
             }
             start = start.front;
         } while (start != stopCond);
-        if (start == stopCond) {
+        if (!find) {
+            log.error("haven't find!");
             return null;
         }
 
@@ -155,8 +160,8 @@ public class Route extends ModelElement {
         do {
             end = start.front;
             if (EYMath.isLineSegmentIntersect(x1, y1, x2, y2, start.x, start.y, end.x, end.y)) {
-                innerProduct = v1x * (end.y - start.y) - v1y * (end.x - start.x);
-                if (innerProduct != 0) {
+                outProduct = v1x * (end.y - start.y) - v1y * (end.x - start.x);
+                if (outProduct != 0) {
                     Point2D cpt = EYMath.linesIntersectionPoint(x1, y1, x2, y2, start.x, start.y, end.x, end.y);
                     x2 = cpt.getX();
                     y2 = cpt.getY();
@@ -220,5 +225,15 @@ public class Route extends ModelElement {
             start = start.front;
         } while (start != stop);
         path.closePath();
+    }
+
+    public static void main(String[] args) {
+        LinkedList<Integer> list = new LinkedList<Integer>();
+        list.add(0);
+        list.add(1);
+        list.add(2);
+        for (Integer i : list) {
+            System.out.println("i=" + i);
+        }
     }
 }

@@ -16,6 +16,12 @@ public class BoundaryNode extends Node {
         super(approximatePoint);
 //        this.approximatePoint = approximatePoint;
         segmentParm=approximatePoint.segmentParm;
+        segment=approximatePoint.segment;
+    }
+
+    public BoundaryNode(double x,double y){
+        this.x=x;
+        this.y=y;
     }
     
 //    ApproximatePoint approximatePoint;
