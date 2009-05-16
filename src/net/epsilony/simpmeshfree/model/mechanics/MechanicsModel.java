@@ -182,7 +182,7 @@ public class MechanicsModel implements ModelImagePainter {
                 radialBasisFunction.setNodesAverageDistance(nodesAverDistance);
                 partialValues = shapeFunction.shapePartialValues(supportNodes, x, y);
                 for (k = 0; k < supportNodes.size(); k++) {
-                    for (l = k; l < supportNodes.size(); l++) {
+                    for (l = 0; l < supportNodes.size(); l++) {
                         bk.set(0, 0, partialValues[0].get(k));
                         bk.set(1, 1, partialValues[1].get(k));
                         bk.set(2, 0, partialValues[1].get(k));
