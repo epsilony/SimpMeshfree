@@ -55,6 +55,14 @@ public class Route extends ModelElement {
         segments.clear();
     }
 
+    public void close(){
+        Segment back=segments.getLast();
+        for(Segment s:segments){
+            back.front=s;
+            s.back=back;
+            back=s;
+        }
+    }
     public boolean add(Segment e) {
         e.route = this;
         return segments.add(e);

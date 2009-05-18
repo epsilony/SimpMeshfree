@@ -19,6 +19,15 @@ abstract public class Segment extends ModelElement {
 //    LinkedList<BoundaryNode> nodes = new LinkedList<BoundaryNode>();
     Route route;
     LinkedList<BoundaryCondition> boundaryConditions;
+    Segment back,front;
+
+    public Segment getBack() {
+        return back;
+    }
+
+    public Segment getFront() {
+        return front;
+    }
 
     /**
      * 获取该线段所赋的边界条件

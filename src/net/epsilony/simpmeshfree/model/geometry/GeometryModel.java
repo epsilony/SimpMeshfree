@@ -73,6 +73,7 @@ public class GeometryModel implements ModelImagePainter {
                     if (hasMoveTo && !hasClose) {
                         rt.add(new LineSegment(lastEnd, routeHead));
 //                        rt.compile();
+                        rt.close();
                         routes.add(rt);
                     }
                     lastEnd = new Point(addShapeTemps[0], addShapeTemps[1]);
@@ -94,6 +95,7 @@ public class GeometryModel implements ModelImagePainter {
                     hasClose = true;
 //                    System.out.println(rt);
 //                    rt.compile();
+                    rt.close();
                     routes.add(rt);
                     break;
                 case PathIterator.SEG_LINETO:

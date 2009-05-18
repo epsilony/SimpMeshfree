@@ -37,4 +37,6 @@ public interface BoundaryCondition {
      * @return
      */
     public List<double[]> getConNaturalValues(List<double[]> output);
+
+
 }
