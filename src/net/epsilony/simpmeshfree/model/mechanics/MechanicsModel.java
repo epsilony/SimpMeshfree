@@ -20,6 +20,7 @@ import net.epsilony.math.radialbasis.RadialBasisFunction;
 import net.epsilony.math.util.EYMath;
 import net.epsilony.math.util.AreaCoordTriangleQuadrature;
 
+import net.epsilony.simpmeshfree.model.ModelTestFrame;
 import net.epsilony.simpmeshfree.model.geometry.ApproximatePoint;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition.BoundaryConditionType;
@@ -41,14 +42,20 @@ import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.UpperSymmBandMatrix;
+import no.uib.cipr.matrix.UpperSymmPackMatrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
-import no.uib.cipr.matrix.sparse.SparseVector;
 import org.apache.commons.math.ArgumentOutsideDomainException;
 import org.apache.log4j.Logger;
 
 /**
- *
+ * <br>RPIM法无网格法</br>
+ * <br>正确运行本类的一个最简单代法见{@link ModelTestFrame}的构造部分</br>
+ * <br>其中至少需要调用以下函数以完成一个次最简单的计算</br>
+ * <br>{@link MechanicsModel#setConstitutiveLaw(no.uib.cipr.matrix.Matrix) }，</br>
+ * <br>{@link MechanicsModel#setRadialBasisFunction(net.epsilony.math.radialbasis.RadialBasisFunction) }</br>
+ * <br>{@link MechanicsModel#setShapeFunction(net.epsilony.simpmeshfree.shapefun.ShapeFunction) }</br>
+ * <br>{@link MechanicsModel#setSupportDomain(net.epsilony.simpmeshfree.model.mechanics.SupportDomain) }</br>
  * @author epsilon
  */
 public class MechanicsModel implements ModelImagePainter {
@@ -57,14 +64,22 @@ public class MechanicsModel implements ModelImagePainter {
         return nodes;
     }
     GeometryModel gm;
-    SupportDomain supportDomain = null;
+    SupportDomain supportDomain;
     ShapeFunction shapeFunction;
 
+    /**
+     * 设置形函数
+     * @param shapeFunction
+     */
     public void setShapeFunction(ShapeFunction shapeFunction) {
         this.shapeFunction = shapeFunction;
     }
     RadialBasisFunction radialBasisFunction;
 
+    /**
+     * 设置形函数所用的径向基函数
+     * @param radialBasisFunction
+     */
     public void setRadialBasisFunction(RadialBasisFunction radialBasisFunction) {
         this.radialBasisFunction = radialBasisFunction;
     }
@@ -73,14 +88,19 @@ public class MechanicsModel implements ModelImagePainter {
     LinkedList<double[]> triangleQuadratureDomains = new LinkedList<double[]>();
     LayeredDomainTree<Node> nodesDomainTree = null;
     FlexCompRowMatrix compRowMatrix = null;
-    Matrix constitutiveLaw = null;
+    UpperSymmPackMatrix upperSymmPackMatrix = null;
+    DenseMatrix constitutiveLaw = null;
 
     public Matrix getConstitutiveLaw() {
         return constitutiveLaw;
     }
 
+    /**
+     * 设置本构矩阵
+     * @param constitutiveLaw
+     */
     public void setConstitutiveLaw(Matrix constitutiveLaw) {
-        this.constitutiveLaw = constitutiveLaw;
+        this.constitutiveLaw = new DenseMatrix(constitutiveLaw);
     }
     Vector bVector;
     static Logger log = Logger.getLogger(MechanicsModel.class);
@@ -92,6 +112,14 @@ public class MechanicsModel implements ModelImagePainter {
     }
     TriangleJni triJni;
 
+    /**
+     * 用过将几何模形多边形化 调用triangle作Delaunay划分 构造结构内的结点
+     * @param size 多边形代中边长的最大长度
+     * @param flatness 多边形化中多边形离原曲线的最远距离
+     * @param s triangle函数的switchs
+     * @param needNeighbors 是否填写结点的邻居信息
+     * @param resetNodesIndex 是否重置结点的编号（从1开始）
+     */
     public void generateNodesByTriangle(double size, double flatness, String s, boolean needNeighbors, boolean resetNodesIndex) {
         log.info(String.format("Start generateNodesByTiangle%nsize=%6.3e flatness=%6.3e s=%s needNeighbors=%b resetNodesIndex %b", size, flatness, s, needNeighbors, resetNodesIndex));
         if (resetNodesIndex) {
@@ -139,7 +167,93 @@ public class MechanicsModel implements ModelImagePainter {
     }
 
     public void quadrateTriangleDomains(int qn) throws ArgumentOutsideDomainException {
-        log.info(String.format("Start quadrateTriangleDomains(%d)", qn));
+        quadrateTriangleDomainsByGrid(qn);
+    }
+
+    public void quadrateTriangleDomainsByGrid(int qn) throws ArgumentOutsideDomainException {
+        log.info(String.format("Start quadrateTriangleDomainsByGrid(%d)", qn));
+        double nodesAverDistance;
+        ArrayList<Node> supportNodes = new ArrayList<Node>(100);
+        Vector[] partialValues;
+        upperSymmPackMatrix = new UpperSymmPackMatrix(nodes.size() * 2);
+
+        double[] weights = null;
+        double[] points = null;
+
+        weights = GaussLegendreQuadrature.getGaussLegendreQuadratureCoefficients(qn);
+        points = GaussLegendreQuadrature.getGaussLegendreQuadraturePoints(qn);
+        if (log.isDebugEnabled()) {
+            log.debug("weights:" + Arrays.toString(weights));
+            log.debug("area Coordinates: " + Arrays.toString(points));
+        }
+        double d00 = constitutiveLaw.get(0, 0);
+        double d01 = constitutiveLaw.get(0, 1);
+        double d10 = constitutiveLaw.get(1, 0);
+        double d11 = constitutiveLaw.get(1, 1);
+        double d22 = constitutiveLaw.get(2, 2);
+        for (double[] triangleDomain : triangleQuadratureDomains) {
+
+
+            if (log.isDebugEnabled()) {
+                log.debug(String.format("%d: triangleDomain %s", logi, Arrays.toString(triangleDomain)));
+                logi++;
+            }
+            double x1 = triangleDomain[0];
+            double y1 = triangleDomain[1];
+            double x2 = triangleDomain[2];
+            double y2 = triangleDomain[3];
+            double x3 = triangleDomain[4];
+            double y3 = triangleDomain[5];
+            double u, v, x, y, J;
+
+
+            for (int k = 0; k < weights.length; k++) {
+                for (int l = 0; l < weights.length; l++) {
+                    u = (points[k] + 1) / 2;
+                    v = (points[l] + 1) / 2;
+                    x = x1 + u * x2 - u * x1 + u * x3 * v - u * x2 * v;
+                    y = y1 + u * y2 - u * y1 + v * u * y3 - v * u * y2;
+                    J = 0.25 * Math.abs(u * (x2 * y3 - x1 * y3 + x1 * y2 - x3 * y2 + x3 * y1 - x2 * y1));
+                    nodesAverDistance = supportDomain.supportNodes(x, y, supportNodes);
+                    radialBasisFunction.setNodesAverageDistance(nodesAverDistance);
+                    partialValues = shapeFunction.shapePartialValues(supportNodes, x, y);
+                    for (int m = 0; m < supportNodes.size(); m++) {
+                        double mx = partialValues[0].get(m);
+                        double my = partialValues[1].get(m);
+                        for (int n = 0; n < supportNodes.size(); n++) {
+                            int nIndex = supportNodes.get(n).getMatrixIndex() * 2;
+                            int mIndex = supportNodes.get(m).getMatrixIndex() * 2;
+                            if (mIndex > nIndex) {
+                                continue;
+                            }
+
+
+                            double nx = partialValues[0].get(n);
+                            double ny = partialValues[1].get(n);
+
+                            double td, w;
+
+                            td = mx * d00 * nx + my * d22 * ny;
+                            w = weights[k] * weights[l] * J;
+                            upperSymmPackMatrix.add(mIndex, nIndex, w * td);
+                            td = mx * d01 * ny + my * d22 * nx;
+                            upperSymmPackMatrix.add(mIndex, nIndex + 1, w * td);
+                            td = my * d11 * ny + mx * d22 * nx;
+                            upperSymmPackMatrix.add(mIndex + 1, nIndex + 1, w * td);
+
+                            td = my * d10 * nx + mx * d22 * ny;
+                            upperSymmPackMatrix.add(mIndex + 1, nIndex, w * td);
+
+                        }
+                    }
+                }
+            }
+        }
+        log.info("End of quadrateTriangleDomainsByGrid");
+    }
+
+    public void quadrateTriangleDomainsByAreaCoord(int qn) throws ArgumentOutsideDomainException {
+        log.info(String.format("Start quadrateTriangleDomainsByAreaCoord(%d)", qn));
         double x, y, w, area;
         double nodesAverDistance;
         ArrayList<Node> supportNodes = new ArrayList<Node>(100);
@@ -158,7 +272,7 @@ public class MechanicsModel implements ModelImagePainter {
             log.debug("area Coordinates: " + Arrays.toString(areaCoords));
         }
         logi = 0;
-           int tsum=0;
+        int tsum = 0;
         for (double[] triangleDomain : triangleQuadratureDomains) {
 
 
@@ -173,7 +287,7 @@ public class MechanicsModel implements ModelImagePainter {
             double x3 = triangleDomain[4];
             double y3 = triangleDomain[5];
             area = Math.abs((x1 - x2) * (y3 - y2) - (x3 - x2) * (y1 - y2)) / 2;
- 
+
             for (i = 0; i < weights.length; i++) {
                 x = x1 * areaCoords[i * 3] + x2 * areaCoords[i * 3 + 1] + x3 * areaCoords[i * 3 + 2];
                 y = y1 * areaCoords[i * 3] + y2 * areaCoords[i * 3 + 1] + y3 * areaCoords[i * 3 + 2];
@@ -196,7 +310,7 @@ public class MechanicsModel implements ModelImagePainter {
                     }
                     if (out) {
                         tsum++;
-                        logDeep.debug(String.format("%d:point(%.2f,%.2f)is outof %s", tsum,x, y, Arrays.toString(triangleDomain)));
+                        logDeep.debug(String.format("%d:point(%.2f,%.2f)is outof %s", tsum, x, y, Arrays.toString(triangleDomain)));
                     }
                 }
                 w = weights[i];
@@ -235,7 +349,7 @@ public class MechanicsModel implements ModelImagePainter {
         }
 
 
-        log.info("End of quadrateTriangleDomains");
+        log.info("End of quadrateTriangleDomainsByAreaCoord");
     }
 
     public void natureBoundaryQuadrate(int n) throws ArgumentOutsideDomainException {
@@ -390,7 +504,83 @@ public class MechanicsModel implements ModelImagePainter {
     }
 
     public void applyEssentialBoundaryConditions() {
-        log.info("Start applyEssentialBoundaryConditions");
+        applyEssentialBoundaryConditionsByPenalty();
+    }
+
+    public void applyEssentialBoundaryConditionsByPenalty() {
+        log.info("Start applyEssentialBoundaryConditionsByPenalty");
+        Segment segment;
+        double segmentParm;
+
+        LinkedList<BoundaryCondition> tempBCs;
+        int rowcol;
+        nodes.size();
+        double[] txy = new double[2];
+        double ux, uy;
+        byte tb;
+        double kMax = upperSymmPackMatrix.get(0, 0);
+        for (int i = 0; i < upperSymmPackMatrix.numRows(); i++) {
+            if (kMax < upperSymmPackMatrix.get(i, i)) {
+                kMax = upperSymmPackMatrix.get(i, i);
+            }
+        }
+        double alpha = 1e8 * kMax;
+        for (BoundaryNode bNode : boundaryNodes) {
+            segment = bNode.getSegment();
+            segmentParm = bNode.getSegmentParm();
+            if (0 == segmentParm) {
+                LinkedList<BoundaryCondition> bc1, bc2;
+                bc1 = segment.getBoundaryConditions();
+                bc2 = segment.getBack().getBoundaryConditions();
+                if (bc1 != null || bc2 != null) {
+                    tempBCs = new LinkedList<BoundaryCondition>();
+                    if (bc1 != null) {
+                        tempBCs.addAll(segment.getBoundaryConditions());
+                    }
+                    if (bc2 != null) {
+                        tempBCs.addAll(segment.getBack().getBoundaryConditions());
+                    }
+                } else {
+                    tempBCs = null;
+                }
+            } else {
+                tempBCs = segment.getBoundaryConditions();
+            }
+            if (null == tempBCs) {
+                continue;
+            }
+
+            for (BoundaryCondition bc : tempBCs) {
+                if (bc.getType() != BoundaryConditionType.Essential) {
+                    continue;
+                }
+
+                tb = bc.getValues(bNode.getSegmentParm(), txy);
+                if (BoundaryCondition.NOT == tb) {
+                    continue;
+                }
+
+                rowcol = bNode.getMatrixIndex() * 2;
+                if ((BoundaryCondition.X & tb) == BoundaryCondition.X) {
+                    ux = txy[0];
+                    double kii = upperSymmPackMatrix.get(rowcol, rowcol);
+                    upperSymmPackMatrix.set(rowcol, rowcol, alpha * kii);
+                    bVector.set(rowcol, alpha * kii * ux);
+                }
+
+                if ((BoundaryCondition.Y & tb) == BoundaryCondition.Y) {
+                    uy = txy[1];
+                    double kii = upperSymmPackMatrix.get(rowcol + 1, rowcol + 1);
+                    upperSymmPackMatrix.set(rowcol + 1, rowcol + 1, alpha * kii);
+                    bVector.set(rowcol + 1, alpha * kii * uy);
+                }
+            }
+        }
+        log.info("End of applyEssentialBoundaryConditionsByPenalty");
+    }
+
+    public void applyAccurateEssentialBoundaryConditions() {
+        log.info("Start applyAccurateEssentialBoundaryConditions");
         Segment segment;
         double segmentParm;
 
@@ -492,7 +682,7 @@ public class MechanicsModel implements ModelImagePainter {
 
             }
         }
-        log.info("End of setEssentialBoundaryConditions");
+        log.info("End of applyAccurateEssentialBoundaryConditions");
     }
 
     public void setSupportDomain(SupportDomain supportDomain) {
@@ -516,14 +706,15 @@ public class MechanicsModel implements ModelImagePainter {
         quadrateTriangleDomains(quadN);
         bVector = new DenseVector(nodes.size() * 2);
 
-//        natureBoundaryQuadrate(quadN);
+        natureBoundaryQuadrate(quadN);
 
         applyEssentialBoundaryConditions();
 
 //        AmdJni amdJni = new AmdJni();
 //
 //        matA = amdJni.complile(compRowMatrix, bVector);
-        matA = new UpperSymmBandMatrix(compRowMatrix, compRowMatrix.numRows() / 2 + 1);
+//        matA = new UpperSymmBandMatrix(compRowMatrix, compRowMatrix.numRows() / 2 + 1);
+//        matA=upperSymmPackMatrix;
 //        for (int i = 0; i < compRowMatrix.numRows(); i++) {
 //            for (int j = i; j < compRowMatrix.numRows(); j++) {
 //                if (compRowMatrix.get(i, j) - compRowMatrix.get(j, i) > 0.001) {
@@ -542,7 +733,8 @@ public class MechanicsModel implements ModelImagePainter {
 //        for(int i=0;i<bVector.size();i++){
 //            bVector.set(i,1);
 //        }
-        matA.solve(bVector, xVector);
+//        matA.solve(bVector, xVector);
+        upperSymmPackMatrix.solve(bVector, xVector);
 
         log.info("Finished: solve the Ax=b");
         int index;
@@ -569,18 +761,21 @@ public class MechanicsModel implements ModelImagePainter {
                     logDeep.debug(String.format("es node x=%5.3f y=%5.3f,fvector=%e %e", node.getX(), node.getY(), bVector.get(node.getMatrixIndex() * 2), bVector.get(node.getMatrixIndex() * 2 + 1)));
                 }
             }
+//            for(Node node:nodes){
+//                logDeep.debug(node.getIndex()+" "+node.getMatrixIndex());
+//            }
 
         }
 
-        DenseVector testVector = new DenseVector(bVector.size());
-        matA.mult(xVector, testVector);
-        for (int i = 0; i < xVector.size(); i++) {
-            if (bVector.get(i) - testVector.get(i) > 1) {
-                System.out.println(i);
-                System.out.println(bVector.get(i));
-                System.out.println(testVector.get(i));
-            }
-        }
+//        DenseVector testVector = new DenseVector(bVector.size());
+//        matA.mult(xVector, testVector);
+//        for (int i = 0; i < xVector.size(); i++) {
+//            if (bVector.get(i) - testVector.get(i) > 1) {
+//                System.out.println(i);
+//                System.out.println(bVector.get(i));
+//                System.out.println(testVector.get(i));
+//            }
+//        }
 
         log.info("End of solve()");
     }
@@ -756,21 +951,8 @@ public class MechanicsModel implements ModelImagePainter {
     }
 
     public static void main(String[] args) {
-        FlexCompRowMatrix matrix = new FlexCompRowMatrix(10, 10);
-        for (int i = 0; i < 10; i++) {
-            for (int j = 0; j < 10; j++) {
-                matrix.set(i, j, 1);
-            }
-
-        }
-        SparseVector v = matrix.getRow(0);
-        int t = v.getUsed();
-        System.out.println("t = " + t);
-        v.zero();
-        System.out.println("v.getUsed() = " + v.getUsed());
-        matrix.compact();
-        v = matrix.getRow(0);
-        System.out.println("v.getUsed() = " + v.getUsed());
-        System.out.println(matrix);
+        UpperSymmPackMatrix mat = new UpperSymmPackMatrix(3);
+        mat.set(3, 1, 1);
+        System.out.println(mat);
     }
 }

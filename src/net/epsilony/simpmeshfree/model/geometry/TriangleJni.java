@@ -19,6 +19,7 @@ import org.apache.log4j.Logger;
  */
 public class TriangleJni {
 
+    
     static Logger log = Logger.getLogger(TriangleJni.class);
     public double[] pointsXYIn;// = new double[]{80, 0, 100, 50, 0, 100, -100, 50, -80, 0, -100, -50, 0, -100, 100, -50, 0, -90, 80, -50, 0, -10, -80, -50, -70, 50, -60, 30, -10, 55, -40, 55, 70, 50, 60, 30, 10, 55, 40, 55, -10, 25, -20, -10, 10, 25, 20, -10, -50, 0, 50, 0};
     public int pointsXYSizeIn;// = 26;
@@ -47,16 +48,34 @@ public class TriangleJni {
      */
     String s = new String();// = "pq0";
 
+    /**
+     * 设置孔洞中一点的位置
+     * @param holesXYIn {x<sub>1</sub>, y<sub>1</sub>, x<sub>2</sub>, y<sub>2</sub>, ... , x<sub>n</sub>, y<sub>n</sub>}
+     * @param holesXYSizeIn n:共有多少个孔洞
+     */
     public void setHoles(double[] holesXYIn, int holesXYSizeIn) {
         this.holesXYSizeIn = holesXYSizeIn;
         this.holesXYIn = Arrays.copyOf(holesXYIn, holesXYSizeIn * 2);
     }
 
+    /**
+     * 设置triangle的switches
+     * @param s
+     */
     public void setSwitchs(String s) {
         this.s = s;
     }
     boolean needfit = true;
 
+    /**
+     * 依几何模型生成一个划分，本函数的调用一般在:
+     * <br>{@link #setSwitchs(java.lang.String)}</br>
+     * <br>{@link #setHoles(double[], int) }</br>
+     * <br>{@link #setPointsSegments(java.util.List, java.util.List) }</br>
+     * <br>之后</br>
+     * @param gm {@link GeometryModel}
+     * @param switchs
+     */
     public void complie(GeometryModel gm, String switchs) {
         log.info("Start Complie");
         log.info("set Points Segments by GeometryModel's approximate Points");
@@ -79,6 +98,7 @@ public class TriangleJni {
         needfit = true;
     }
     private ArrayList<ApproximatePoint> approximatePoints = new ArrayList<ApproximatePoint>();
+
 
     public void setPointsSegments(List<ApproximatePoint> aprxPts, List<Point> pts) {
         approximatePoints.clear();
@@ -120,6 +140,9 @@ public class TriangleJni {
 
     }
 
+    /**
+     * 将triangle划开的点移动到几何边界上去
+     */
     private void fitPointsAlignSegment() {
         if (needfit == false) {
             return;
@@ -161,6 +184,10 @@ public class TriangleJni {
         needfit = false;
     }
 
+    /**
+     * 获取最近一次调用{@link #complie(net.epsilony.simpmeshfree.model.geometry.GeometryModel, java.lang.String) }后生成的三角形几何信息
+     * @return {trangle<sub>1</sub>.x<sub>1</sub>, trangle<sub>1</sub>.y<sub>1</sub>, trangle<sub>1</sub>.x<sub>2</sub>, trangle<sub>1</sub>.y<sub>2</sub>, trangle<sub>1</sub>.x<sub>3</sub>, trangle<sub>1</sub>.y<sub>3</sub>, trangle<sub>2</sub>.x<sub>1</sub>, trangle<sub>2</sub>.y<sub>1</sub>, trangle<sub>2</sub>.x<sub>2</sub>, trangle<sub>2</sub>.y<sub>2</sub>, trangle<sub>2</sub>.x<sub>3</sub>, trangle<sub>2</sub>.y<sub>3</sub>, ..., trangle<sub>n</sub>.x<sub>1</sub>, trangle<sub>n</sub>.y<sub>1</sub>, trangle<sub>n</sub>.x<sub>2</sub>, trangle<sub>n</sub>.y<sub>2</sub>, trangle<sub>n</sub>.x<sub>3</sub>, trangle<sub>n</sub>.y<sub>3</sub>}
+     */
     public LinkedList<double[]> getTriangleXYsList() {
         log.info("Start getTriangleXYsList()");
         LinkedList<double[]> triXYs = new LinkedList<double[]>();
@@ -179,6 +206,7 @@ public class TriangleJni {
         log.info(String.format("End of getTriangleXYsList%n result.size()=%d", triXYs.size()));
         return triXYs;
     }
+
 
     private BoundaryNode newSegmentBoundaryNode(ApproximatePoint ap, double x, double y) {
         ApproximatePoint apfr = ap.front;
@@ -199,6 +227,11 @@ public class TriangleJni {
         return bd;
     }
 
+    /**
+     * 获取最近一次调用{@link #complie(net.epsilony.simpmeshfree.model.geometry.GeometryModel, java.lang.String) }后由划分顶点构成的结点
+     * @param needNeighbors 是否将结点的邻接结点信息写入结点
+     * @return 包括边界结点{@link BoundaryNode}的结点列
+     */
     public ArrayList<Node> getNodes(boolean needNeighbors) {
         log.info(String.format("start getNodes(%b)", needNeighbors));
 //        if (log.isDebugEnabled()) {
@@ -288,6 +321,13 @@ public class TriangleJni {
         return nodes;
     }
 
+    /**
+     * 获取最近一次调用{@link #complie(net.epsilony.simpmeshfree.model.geometry.GeometryModel, java.lang.String) }后由划分顶点构成的结点 以及划分出来的三角形
+     * @param nodes
+     * @param trs
+     * @return
+     * @see Triangle
+     */
     public ArrayList<Node> getNodesTriangles(ArrayList<Node> nodes, ArrayList<Triangle> trs) {
         log.info("Start getNodesTriangles");
         nodes.clear();

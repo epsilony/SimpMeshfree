@@ -16,9 +16,7 @@ import java.awt.Graphics2D;
 import java.awt.Shape;
 import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
-import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.PathIterator;
-import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Enumeration;
 import java.util.LinkedList;
@@ -32,7 +30,6 @@ import net.epsilony.simpmeshfree.model.geometry.Node;
 import net.epsilony.simpmeshfree.model.geometry.Segment;
 import net.epsilony.simpmeshfree.model.mechanics.MechanicsModel;
 import net.epsilony.simpmeshfree.model.mechanics.MechanicsModel.SimpleRoundSupportDomain;
-import net.epsilony.simpmeshfree.model.mechanics.SupportDomain;
 import net.epsilony.simpmeshfree.shapefun.RadialPolynomialShapeFunction;
 import net.epsilony.simpmeshfree.utils.Constitutives;
 import net.epsilony.simpmeshfree.utils.ModelPanelManager;
@@ -52,7 +49,7 @@ public class ModelTestFrame extends javax.swing.JFrame {
 
     double P = -1000;
     double E = 3e7;
-    double v = 0.3;
+    double nu = 0.3;
     double D = 12;
     double L = 48;
     static Logger log = Logger.getLogger(ModelTestFrame.class);
@@ -70,13 +67,14 @@ public class ModelTestFrame extends javax.swing.JFrame {
             mpm.paintPanel((Graphics2D) g);
             Graphics2D g2 = (Graphics2D) g;
             g2.setColor(Color.BLUE);
-//            for (BoundaryNode bn : mm.getBoundaryNodes()) {
-//                if (bn.getSegment() == null) {
-//                    g2.draw(mpm.viewMarker(bn.getX(), bn.getY(), 10, ModelPanelManager.ViewMarkerType.UpTriangle));
-//                }
-//            }
-          
-                g2.draw(mpm.viewMarker(outputs, 10,ModelPanelManager.ViewMarkerType.UpTriangle));
+            double I=D*D*D/12;
+            for(Node node:mm.getNodes()){
+                double x=node.getX();
+                double y=node.getY();
+                double u= -P*y/(6*E*I)*((6*L-3*x)*x+(2+nu)*(y*y-D*D/4));
+                double v= P/(6*E*I)*(3*nu*y*y*(L-x)+(4+5*nu)*D*D*x/4+(3*L-x)*x*x);
+                g2.draw(mpm.viewMarker(x+u*500, y+v*500, 10, ModelPanelManager.ViewMarkerType.DownTriangle));
+            }
 
         }
     }
@@ -102,9 +100,10 @@ public class ModelTestFrame extends javax.swing.JFrame {
         Area area = new Area(rect);
         System.out.println(ShapeUtils.toString(area));
 
-//        area.subtract(new Area(new Ellipse2D.Double(21, -3, 6, 6)));
+////        area.subtract(new Area(new Ellipse2D.Double(21, -3, 6, 6)));
+////        area.subtract(new Area(new Ellipse2D.Double(3, -2, 4, 4)));
 //
-//        area.subtract(new Area(new Ellipse2D.Double(3, -2, 4, 4)));
+//        area.subtract(new Area(new Rectangle2D.Double(3, -0.5, 42,1)));
         System.out.println(ShapeUtils.toString(area));
         gm.addShape(area);
 
@@ -118,8 +117,8 @@ public class ModelTestFrame extends javax.swing.JFrame {
             }
         }
         LineSegment lineSegment = (LineSegment) segs.getFirst();
-//        lineSegment.addBoundaryCondition(BoundaryConditions.getTimoshenkoEssential(E, v, P, L, D, lineSegment));
-        lineSegment.addBoundaryCondition(BoundaryConditions.getStretchEssential(0));
+        lineSegment.addBoundaryCondition(BoundaryConditions.getTimoshenkoEssential(E, nu, P, L, D, lineSegment));
+//        lineSegment.addBoundaryCondition(BoundaryConditions.getStretchEssential(0));
         gm.segmentSearch(47, -1, 49, 1, segs);
         if (log.isDebugEnabled()) {
             log.debug("segs:");
@@ -128,24 +127,24 @@ public class ModelTestFrame extends javax.swing.JFrame {
             }
         }
         LineSegment lineSegment2 = (LineSegment) segs.getFirst();
-//        lineSegment2.addBoundaryCondition(BoundaryConditions.getTimoshenkoNatural(E, v, P, L, D, lineSegment));
-        lineSegment2.addBoundaryCondition(BoundaryConditions.getStretchEssential(1e-3));
+        lineSegment2.addBoundaryCondition(BoundaryConditions.getTimoshenkoNatural(E, nu, P, L, D, lineSegment));
+//        lineSegment2.addBoundaryCondition(BoundaryConditions.getStretchEssential(1e-3));
         mpm = new ModelPanelManager(panel, gm.getLeftDown().getX(), gm.getLeftDown().getY(), gm.getRightUp().getX(), gm.getRightUp().getY());
         mpm.addModelImagePainter(gm);
 
-        mm.generateNodesByTriangle(1, 0.1, "pqa0.5nQ", true, true);
-        mm.generateQuadratureDomainsByTriangle(2, 0.1, "pqa2nQ");
+        mm.generateNodesByTriangle(2, 0.1, "pqa1nQ", true, true);
+        mm.generateQuadratureDomainsByTriangle(4, 0.1, "pqa8nQ");
 //        mm.generateQuadratureDomainsByTriangle();
-        mm.setQuadN(5);
+        mm.setQuadN(4);
         mpm.addModelImagePainter(mm);
-        mm.setSupportDomain(mm.new SimpleRoundSupportDomain(4, 8, 3, 6));
+        mm.setSupportDomain(mm.new SimpleRoundSupportDomain(2, 4, 3, 6));
         RadialBasisFunction rbf = new MultiQuadRadial(3, 1.03);
         mm.setRadialBasisFunction(rbf);
         mm.setShapeFunction(new RadialPolynomialShapeFunction(rbf, 1));
-        mm.setConstitutiveLaw(Constitutives.planeStressMatrix(E, v));
-        SupportDomain supportDomain = mm.getSupportDomain();
+        mm.setConstitutiveLaw(Constitutives.planeStressMatrix(E, nu));
+//        SupportDomain supportDomain = mm.getSupportDomain();
 
-        supportDomain.boundarySupportNodes(lineSegment2, 0.0986, outputs);
+//        supportDomain.boundarySupportNodes(lineSegment2, 0.0986, outputs);
 //        for(Node nd:outputs){
 //            System.out.println(nd.getX()+"  "+nd.getY());
 //        }
@@ -173,11 +172,6 @@ public class ModelTestFrame extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         jPanel1.setBackground(java.awt.Color.white);
-        jPanel1.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                clickTestSupportDomain(evt);
-            }
-        });
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -215,18 +209,6 @@ public class ModelTestFrame extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void clickTestSupportDomain(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_clickTestSupportDomain
-        // TODO add your handling code here:
-        Point2D dstPt = new Point2D.Double();
-        try {
-            mpm.inverseTransform(evt.getX(), evt.getY(), dstPt);
-        } catch (NoninvertibleTransformException ex) {
-            java.util.logging.Logger.getLogger(ModelTestFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        mm.getSupportDomain().supportNodes(dstPt.getX(),dstPt.getY(),outputs);
-        repaint();
-    }//GEN-LAST:event_clickTestSupportDomain
-
     /**
      * @param args the command line arguments
      */
@@ -238,7 +220,7 @@ public class ModelTestFrame extends javax.swing.JFrame {
                 new ModelTestFrame().setVisible(true);
             }
         });
-
+//        new ModelTestFrame();
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;

@@ -21,6 +21,15 @@ abstract public class Segment extends ModelElement {
     LinkedList<BoundaryCondition> boundaryConditions;
     Segment back,front;
 
+    public void setBack(Segment back) {
+        this.back = back;
+    }
+
+    public void setFront(Segment front) {
+        this.front = front;
+    }
+
+
     public Segment getBack() {
         return back;
     }

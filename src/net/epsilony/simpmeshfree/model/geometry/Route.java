@@ -55,6 +55,9 @@ public class Route extends ModelElement {
         segments.clear();
     }
 
+    /**
+     * 设置所包含的Segment段(调用{@link Segment#setFront(net.epsilony.simpmeshfree.model.geometry.Segment) }, {@link Segment#setBack(net.epsilony.simpmeshfree.model.geometry.Segment) })
+     */
     public void close(){
         Segment back=segments.getLast();
         for(Segment s:segments){
@@ -63,12 +66,24 @@ public class Route extends ModelElement {
             back=s;
         }
     }
+
+    /**
+     * 简单加入，无深义
+     * @param e
+     * @return
+     */
     public boolean add(Segment e) {
         e.route = this;
         return segments.add(e);
     }
     LinkedList<ApproximatePoint> aprxPts = new LinkedList<ApproximatePoint>();
 
+    /**
+     * 获取近似多边形的顶点，存在本类中并返回存储后的结果
+     * @param size 近似多边形边长的最大值
+     * @param flatness 近似多边形与曲线的最大距离
+     * @return {@link ApproximatePoint}
+     */
     public LinkedList<ApproximatePoint> GenerateApproximatePoints(double size, double flatness) {
         aprxPts.clear();
         for (Segment s : segments) {
@@ -88,7 +103,7 @@ public class Route extends ModelElement {
     }
 
     /**
-     * 计算一条Route是否是逆时针的（右手法则z轴正向的）
+     * 计算一条Route是否是逆时针的（注: 右手法则z轴正向的，顺时针指从Z轴负向Z轴正看XY平面去，一个逆时针的圆中的面积是算作结构内部的）
      * @return true:顺时针 false:逆时针 特殊:两 条真线l12,l21组成的重合Route被视为是顺时针的
      */
     public boolean isCounterClockwise() {
@@ -127,6 +142,10 @@ public class Route extends ModelElement {
         }
     }
 
+    /**
+     * 如该Route是顺时针的，则利用近似多边形计算Route所围区域中一点，否则返回null
+     * @return null:本Route是逆时针的，Point:该Route顺时针所围区域中的一点，及结构中孔洞中的一点
+     */
     public Point getHolePoint() {
         Point pt = Point.tempPoint(0, 0);
         //假设本Route是顺时针的，因此要找一个右拐的ApproximatePoint
@@ -219,6 +238,10 @@ public class Route extends ModelElement {
         path.closePath();
     }
 
+    /**
+     * 将近似多边形绘入path中
+     * @param path
+     */
     public void addApproximateRouteToPath(Path2D path) {
         if (segments == null || segments.isEmpty() || aprxPts.isEmpty()) {
             return;
