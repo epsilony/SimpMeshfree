@@ -6,7 +6,7 @@ package net.epsilony.simpmeshfree.model.mechanics;
 
 import java.util.Arrays;
 import no.uib.cipr.matrix.DenseVector;
-import no.uib.cipr.matrix.UpperSPDBandMatrix;
+import no.uib.cipr.matrix.UpperSymmBandMatrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.VectorEntry;
 import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
@@ -19,7 +19,7 @@ import org.apache.log4j.Logger;
  */
 public class AmdJni {
 
-    static Logger log=Logger.getLogger(AmdJni.class);
+    static Logger log = Logger.getLogger(AmdJni.class);
     int n;
     int[] Ap;
     int[] Ai;
@@ -51,6 +51,12 @@ public class AmdJni {
         }
 
         AmdFun();
+        int[] tds=new int[P.length];
+        for(int i=0;i<tds.length;i++){
+            tds[P[i]]=i;
+        }
+
+        P=tds;
 
         return P;
 
@@ -59,38 +65,70 @@ public class AmdJni {
     public int bandWidth() {
         log.info("Start bandwidth");
         int bandWidth = 0;
-        int start, end, max, t;
+        int start, end;
+        int[] furthest = new int[n];
+        int row, col;
         for (int i = 0; i < n; i++) {
             start = Ap[i];
             end = Ap[i + 1];
-            max = i;
+            row = P[Ai[start]];
             for (int j = start + 1; j < end; j++) {
-                t = P[Ai[j]];
-                if (max < t) {
-                    max = t;
+                col = P[Ai[j]];
+                if (row > col) {
+                    if (furthest[col] < row) {
+                        furthest[col] = row;
+                    }
+                } else {
+                    if (furthest[row] < col) {
+                        furthest[row] = col;
+                    }
                 }
-
             }
-            if (bandWidth < max - i) {
-                bandWidth = max - i;
+
+        }
+
+
+        bandWidth = 0;
+        for (int i = 0; i < n; i++) {
+            if (bandWidth < furthest[i] - i) {
+                bandWidth = furthest[i] - i;
             }
         }
-        log.info("end of bandWith()");
+        log.info("end of bandWith:"+bandWidth);
         return bandWidth;
     }
 
-    public UpperSPDBandMatrix complile(FlexCompRowMatrix m, Vector b){//,List<Node> nodes) {
+    public int oriBandWidth(){
+         log.info("Start oriBandWidth");
+        int bandwidth = 0;
+        int start, end;
+        for (int i = 0; i < n; i++) {
+            start = Ap[i];
+            end = Ap[i + 1];
+            for (int j = start + 1; j < end; j++) {
+                if(Ai[j]-i>bandwidth){
+                    bandwidth=Ai[j]-i;
+                }
+            }
+        }
+        log.info("End of oriBandWidth:"+bandwidth);
+        return bandwidth;
+         
+    }
+
+    public Object[] compile(FlexCompRowMatrix m, Vector b) {//,List<Node> nodes) {
         log.info("Start complile");
         log.info("Start amdOrder jni");
         amdOrder(m);
+        oriBandWidth();
         log.info("Finished: amdOrder jni");
 
         int bw = bandWidth();
 
-        UpperSPDBandMatrix result = new UpperSPDBandMatrix(m.numRows(),m.numRows());
+        UpperSymmBandMatrix result = new UpperSymmBandMatrix(m.numRows(), bw);
         SparseVector rowVect;
         int row, col;
-        DenseVector tv = new DenseVector(b);
+        DenseVector resultv = new DenseVector(b.size());
         for (int i = 0; i < m.numRows(); i++) {
             rowVect = m.getRow(i);
             row = P[i];
@@ -98,17 +136,15 @@ public class AmdJni {
                 col = P[ve.index()];
                 if (col >= row) {
                     result.set(row, col, ve.get());
+                } else {
+                    result.set(col, row, ve.get());
                 }
             }
-            b.set(row, tv.get(i));
+            resultv.set(row, b.get(i));
         }
-//        int i=0;
-//        for(Node n:nodes){
-//            n.setMatrixIndex(P[i]);
-//            i=i+1;
-//        }
+
         log.info("End of compile()");
-        return result;
+        return new Object[]{result,resultv};
     }
 
     public native void AmdFun();
@@ -121,6 +157,23 @@ public class AmdJni {
         ajni.P = new int[5];
         ajni.AmdFun();
         System.out.println(Arrays.toString(ajni.P));
+        FlexCompRowMatrix m = new FlexCompRowMatrix(5, 5);
+        m.set(0, 0, 1);
+        m.set(0, 1, 1);
+        m.set(1, 1, 1);
+        m.set(1, 2, 1);
+        m.set(1, 4, 1);
+        m.set(2, 2, 1);
+        m.set(2, 3, 1);
+        m.set(2, 4, 1);
+        m.set(3, 3, 1);
+        m.set(4, 4, 1);
+        System.out.println(Arrays.toString(ajni.amdOrder(m)));
+        System.out.println("ajni.bandWidth() = " + ajni.bandWidth());
+        UpperSymmBandMatrix mm = new UpperSymmBandMatrix(4, 2);
+        mm.set(0, 2, 1);
+
+
     }
 
 

@@ -44,6 +44,7 @@ import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.UpperSymmBandMatrix;
 import no.uib.cipr.matrix.UpperSymmPackMatrix;
 import no.uib.cipr.matrix.Vector;
+import no.uib.cipr.matrix.sparse.FlexCompColMatrix;
 import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
 import org.apache.commons.math.ArgumentOutsideDomainException;
 import org.apache.log4j.Logger;
@@ -87,8 +88,7 @@ public class MechanicsModel implements ModelImagePainter {
     LinkedList<BoundaryNode> boundaryNodes = new LinkedList<BoundaryNode>();
     LinkedList<double[]> triangleQuadratureDomains = new LinkedList<double[]>();
     LayeredDomainTree<Node> nodesDomainTree = null;
-    FlexCompRowMatrix compRowMatrix = null;
-    UpperSymmPackMatrix upperSymmPackMatrix = null;
+    FlexCompRowMatrix kMat = null;
     DenseMatrix constitutiveLaw = null;
 
     public Matrix getConstitutiveLaw() {
@@ -102,7 +102,7 @@ public class MechanicsModel implements ModelImagePainter {
     public void setConstitutiveLaw(Matrix constitutiveLaw) {
         this.constitutiveLaw = new DenseMatrix(constitutiveLaw);
     }
-    Vector bVector;
+    DenseVector bVector;
     static Logger log = Logger.getLogger(MechanicsModel.class);
     static Logger logDeep = Logger.getLogger(MechanicsModel.class.getName() + ".deep1");
     int logi;
@@ -175,7 +175,7 @@ public class MechanicsModel implements ModelImagePainter {
         double nodesAverDistance;
         ArrayList<Node> supportNodes = new ArrayList<Node>(100);
         Vector[] partialValues;
-        upperSymmPackMatrix = new UpperSymmPackMatrix(nodes.size() * 2);
+        kMat = new FlexCompRowMatrix(nodes.size() * 2,nodes.size() * 2);
 
         double[] weights = null;
         double[] points = null;
@@ -235,14 +235,14 @@ public class MechanicsModel implements ModelImagePainter {
 
                             td = mx * d00 * nx + my * d22 * ny;
                             w = weights[k] * weights[l] * J;
-                            upperSymmPackMatrix.add(mIndex, nIndex, w * td);
+                            kMat.add(mIndex, nIndex, w * td);
                             td = mx * d01 * ny + my * d22 * nx;
-                            upperSymmPackMatrix.add(mIndex, nIndex + 1, w * td);
+                            kMat.add(mIndex, nIndex + 1, w * td);
                             td = my * d11 * ny + mx * d22 * nx;
-                            upperSymmPackMatrix.add(mIndex + 1, nIndex + 1, w * td);
+                            kMat.add(mIndex + 1, nIndex + 1, w * td);
 
                             td = my * d10 * nx + mx * d22 * ny;
-                            upperSymmPackMatrix.add(mIndex + 1, nIndex, w * td);
+                            kMat.add(mIndex + 1, nIndex, w * td);
 
                         }
                     }
@@ -258,7 +258,7 @@ public class MechanicsModel implements ModelImagePainter {
         double nodesAverDistance;
         ArrayList<Node> supportNodes = new ArrayList<Node>(100);
         Vector[] partialValues;
-        compRowMatrix = new FlexCompRowMatrix(nodes.size() * 2, nodes.size() * 2);
+        kMat = new FlexCompRowMatrix(nodes.size() * 2,nodes.size() * 2);
         DenseMatrix bk = new DenseMatrix(3, 2);
         DenseMatrix bl = new DenseMatrix(3, 2);
         DenseMatrix kkl = new DenseMatrix(2, 2);
@@ -318,7 +318,13 @@ public class MechanicsModel implements ModelImagePainter {
                 radialBasisFunction.setNodesAverageDistance(nodesAverDistance);
                 partialValues = shapeFunction.shapePartialValues(supportNodes, x, y);
                 for (k = 0; k < supportNodes.size(); k++) {
+                    int kIndex = supportNodes.get(k).getMatrixIndex() * 2;
+
                     for (l = 0; l < supportNodes.size(); l++) {
+                        int lIndex = supportNodes.get(l).getMatrixIndex() * 2;
+                        if (k < l) {
+                            continue;
+                        }
                         bk.set(0, 0, partialValues[0].get(k));
                         bk.set(1, 1, partialValues[1].get(k));
                         bk.set(2, 0, partialValues[1].get(k));
@@ -337,12 +343,11 @@ public class MechanicsModel implements ModelImagePainter {
 //                            logDeep.debug(kkl);
 //                            logDeep.debug(constitutiveLaw);
 //                        }
-                        int kIndex = supportNodes.get(k).getMatrixIndex() * 2;
-                        int lIndex = supportNodes.get(l).getMatrixIndex() * 2;
-                        compRowMatrix.add(kIndex, lIndex, kkl.get(0, 0) * w * area);
-                        compRowMatrix.add(kIndex, lIndex + 1, kkl.get(0, 1) * w * area);
-                        compRowMatrix.add(kIndex + 1, lIndex + 1, kkl.get(1, 1) * w * area);
-                        compRowMatrix.add(kIndex + 1, lIndex, kkl.get(1, 0) * w * area);
+
+                        kMat.add(kIndex, lIndex, kkl.get(0, 0) * w * area);
+                        kMat.add(kIndex, lIndex + 1, kkl.get(0, 1) * w * area);
+                        kMat.add(kIndex + 1, lIndex + 1, kkl.get(1, 1) * w * area);
+                        kMat.add(kIndex + 1, lIndex, kkl.get(1, 0) * w * area);
                     }
                 }
             }
@@ -518,10 +523,10 @@ public class MechanicsModel implements ModelImagePainter {
         double[] txy = new double[2];
         double ux, uy;
         byte tb;
-        double kMax = upperSymmPackMatrix.get(0, 0);
-        for (int i = 0; i < upperSymmPackMatrix.numRows(); i++) {
-            if (kMax < upperSymmPackMatrix.get(i, i)) {
-                kMax = upperSymmPackMatrix.get(i, i);
+        double kMax = kMat.get(0, 0);
+        for (int i = 0; i < kMat.numRows(); i++) {
+            if (kMax < kMat.get(i, i)) {
+                kMax = kMat.get(i, i);
             }
         }
         double alpha = 1e8 * kMax;
@@ -563,15 +568,15 @@ public class MechanicsModel implements ModelImagePainter {
                 rowcol = bNode.getMatrixIndex() * 2;
                 if ((BoundaryCondition.X & tb) == BoundaryCondition.X) {
                     ux = txy[0];
-                    double kii = upperSymmPackMatrix.get(rowcol, rowcol);
-                    upperSymmPackMatrix.set(rowcol, rowcol, alpha * kii);
+                    double kii = kMat.get(rowcol, rowcol);
+                    kMat.set(rowcol, rowcol, alpha * kii);
                     bVector.set(rowcol, alpha * kii * ux);
                 }
 
                 if ((BoundaryCondition.Y & tb) == BoundaryCondition.Y) {
                     uy = txy[1];
-                    double kii = upperSymmPackMatrix.get(rowcol + 1, rowcol + 1);
-                    upperSymmPackMatrix.set(rowcol + 1, rowcol + 1, alpha * kii);
+                    double kii = kMat.get(rowcol + 1, rowcol + 1);
+                    kMat.set(rowcol + 1, rowcol + 1, alpha * kii);
                     bVector.set(rowcol + 1, alpha * kii * uy);
                 }
             }
@@ -629,59 +634,36 @@ public class MechanicsModel implements ModelImagePainter {
                 rowcol = bNode.getMatrixIndex() * 2;
                 if ((BoundaryCondition.X & tb) == BoundaryCondition.X) {
                     ux = txy[0];
-                    for (i = 0; i < compRowMatrix.numRows(); i++) {
-                        bVector.add(i, -compRowMatrix.get(i, rowcol) * ux);
-                        compRowMatrix.set(i, rowcol, 0);
+                    for (i = 0; i < rowcol; i++) {
+                        bVector.add(i, -kMat.get(i, rowcol) * ux);
+                        kMat.set(i, rowcol, 0);
                     }
-                    for (i = 0; i < compRowMatrix.numColumns(); i++) {
-                        compRowMatrix.set(rowcol, i, 0);
+                    for (i = rowcol+1; i < kMat.numColumns(); i++) {
+                        bVector.add(i, -kMat.get(rowcol,i) * ux);
+                        kMat.set(rowcol, i, 0);
                     }
                     bVector.set(rowcol, ux);
-                    compRowMatrix.set(rowcol, rowcol, 1);
-//                    for (i = 0; i < nodes.size(); i++) {
-//                        bVector.add(i * 2, -compRowMatrix.get(i * 2, rowcol) * ux);
-//                        bVector.add(i * 2 + 1, -compRowMatrix.get(i * 2 + 1, rowcol) * ux);
-//                        compRowMatrix.set(i * 2, rowcol, 0);
-//                        compRowMatrix.set(i * 2 + 1, rowcol, 0);
-//                        compRowMatrix.set(rowcol, i * 2, 0);
-//                        compRowMatrix.set(rowcol, i * 2 + 1, 0);
-//                    }
-//
-//                    compRowMatrix.set(rowcol, rowcol, 1);
-//                    bVector.set(rowcol, ux);
+                    kMat.set(rowcol, rowcol, 1);
                 }
 
                 if ((BoundaryCondition.Y & tb) == BoundaryCondition.Y) {
                     uy = txy[1];
-                    for (i = 0; i < compRowMatrix.numRows(); i++) {
-                        bVector.add(i, -compRowMatrix.get(i, rowcol + 1) * uy);
-                        compRowMatrix.set(i, rowcol + 1, 0);
+                    for (i = 0; i < rowcol+1; i++) {
+                        bVector.add(i, -kMat.get(i, rowcol + 1) * uy);
+                        kMat.set(i, rowcol + 1, 0);
                     }
-                    for (i = 0; i < compRowMatrix.numColumns(); i++) {
-                        compRowMatrix.set(rowcol + 1, i, 0);
+                    for (i =rowcol+2; i < kMat.numColumns(); i++) {
+                        bVector.add(i, -kMat.get(rowcol + 1, i) * uy);
+                        kMat.set(rowcol + 1, i, 0);
                     }
 
-                    compRowMatrix.set(rowcol + 1, rowcol + 1, 1);
+                    kMat.set(rowcol + 1, rowcol + 1, 1);
                     bVector.set(rowcol + 1, uy);
                 }
 
             }
         }
-//        if (logDeep.isDebugEnabled()) {
-//            logDeep.debug((compRowMatrix));
-//        }
-        if (logDeep.isDebugEnabled()) {
-            for (BoundaryNode node : boundaryNodes) {
-                if (node.getX() != 48) {
-                    continue;
-                }
-                logDeep.debug(node.getX() + ", " + node.getY() + " ");
-                logDeep.debug(compRowMatrix.getRow(node.getMatrixIndex() * 2));
-                logDeep.debug("-----------------");
-                logDeep.debug(compRowMatrix.getRow(node.getMatrixIndex() * 2 + 1));
 
-            }
-        }
         log.info("End of applyAccurateEssentialBoundaryConditions");
     }
 
@@ -710,73 +692,15 @@ public class MechanicsModel implements ModelImagePainter {
 
         applyEssentialBoundaryConditions();
 
-//        AmdJni amdJni = new AmdJni();
-//
-//        matA = amdJni.complile(compRowMatrix, bVector);
-//        matA = new UpperSymmBandMatrix(compRowMatrix, compRowMatrix.numRows() / 2 + 1);
-//        matA=upperSymmPackMatrix;
-//        for (int i = 0; i < compRowMatrix.numRows(); i++) {
-//            for (int j = i; j < compRowMatrix.numRows(); j++) {
-//                if (compRowMatrix.get(i, j) - compRowMatrix.get(j, i) > 0.001) {
-//                    System.out.println("fail!!!!!!!!!!!!!!!!!!!");
-//                    System.out.println("i = " + i);
-//                    System.out.println("j = " + j);
-//                    System.out.println("compRowMatrix.get(i,j) = " + compRowMatrix.get(i, j));
-//                    System.out.println("compRowMatrix.get(j,i) = " + compRowMatrix.get(j, i));
-//                    return;
-//                }
-//            }
-//        }
-
+        RCMJni rcmJni = new RCMJni();
+        Object[] results = rcmJni.compile(kMat, bVector);
         log.info("solve the Ax=b now");
         xVector = new DenseVector(bVector.size());
-//        for(int i=0;i<bVector.size();i++){
-//            bVector.set(i,1);
-//        }
-//        matA.solve(bVector, xVector);
-        upperSymmPackMatrix.solve(bVector, xVector);
+        ((UpperSymmBandMatrix)results[0]).solve((DenseVector)results[1], xVector);
+
 
         log.info("Finished: solve the Ax=b");
-        int index;
-        log.info("edit the nodes ux uy data");
-        for (Node node : nodes) {
-            //index = amdJni.P[node.getMatrixIndex()] * 2;
-            index = node.getMatrixIndex() * 2;
-            node.setUx(xVector.get(index));
-            node.setUy(xVector.get(index + 1));
-        }
-        if (logDeep.isDebugEnabled()) {
-            for (Node node : nodes) {
-                if (node.getX() == 48) {
-                    logDeep.debug(String.format("node y=%5.3f,fvector=%e %e", node.getY(), bVector.get(node.getMatrixIndex() * 2), bVector.get(node.getMatrixIndex() * 2 + 1)));
-                }
-            }
-            for (Node node : nodes) {
-                if (node.getX() == 0) {
-                    logDeep.debug(String.format("es node y=%5.3f,fvector=%e %e", node.getY(), bVector.get(node.getMatrixIndex() * 2), bVector.get(node.getMatrixIndex() * 2 + 1)));
-                }
-            }
-            for (Node node : nodes) {
-                if (node.getX() != 0 && node.getX() != 48 && (bVector.get(node.getMatrixIndex() * 2) != 0 || bVector.get(node.getMatrixIndex() * 2 + 1) != 0)) {
-                    logDeep.debug(String.format("es node x=%5.3f y=%5.3f,fvector=%e %e", node.getX(), node.getY(), bVector.get(node.getMatrixIndex() * 2), bVector.get(node.getMatrixIndex() * 2 + 1)));
-                }
-            }
-//            for(Node node:nodes){
-//                logDeep.debug(node.getIndex()+" "+node.getMatrixIndex());
-//            }
-
-        }
-
-//        DenseVector testVector = new DenseVector(bVector.size());
-//        matA.mult(xVector, testVector);
-//        for (int i = 0; i < xVector.size(); i++) {
-//            if (bVector.get(i) - testVector.get(i) > 1) {
-//                System.out.println(i);
-//                System.out.println(bVector.get(i));
-//                System.out.println(testVector.get(i));
-//            }
-//        }
-
+        rcmJni.fillDisplacement(xVector, nodes);
         log.info("End of solve()");
     }
     boolean showNodes = true;

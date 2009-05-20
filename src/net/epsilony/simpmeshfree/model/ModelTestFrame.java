@@ -15,7 +15,6 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Shape;
 import java.awt.geom.Area;
-import java.awt.geom.Ellipse2D;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Rectangle2D;
 import java.util.Enumeration;
@@ -132,15 +131,15 @@ public class ModelTestFrame extends javax.swing.JFrame {
         mpm = new ModelPanelManager(panel, gm.getLeftDown().getX(), gm.getLeftDown().getY(), gm.getRightUp().getX(), gm.getRightUp().getY());
         mpm.addModelImagePainter(gm);
 
-        mm.generateNodesByTriangle(2, 0.1, "pqa1nQ", true, true);
-        mm.generateQuadratureDomainsByTriangle(4, 0.1, "pqa8nQ");
+        mm.generateNodesByTriangle(0.5, 0.05, "pqa0.125nQ", true, true);
+        mm.generateQuadratureDomainsByTriangle(0.75, 0.05, "pqa0.25nQ");
 //        mm.generateQuadratureDomainsByTriangle();
         mm.setQuadN(4);
         mpm.addModelImagePainter(mm);
-        mm.setSupportDomain(mm.new SimpleRoundSupportDomain(2, 4, 3, 6));
+        mm.setSupportDomain(mm.new SimpleRoundSupportDomain(1, 2, 3, 6));
         RadialBasisFunction rbf = new MultiQuadRadial(3, 1.03);
         mm.setRadialBasisFunction(rbf);
-        mm.setShapeFunction(new RadialPolynomialShapeFunction(rbf, 1));
+        mm.setShapeFunction(new RadialPolynomialShapeFunction(rbf, 2));
         mm.setConstitutiveLaw(Constitutives.planeStressMatrix(E, nu));
 //        SupportDomain supportDomain = mm.getSupportDomain();
 
