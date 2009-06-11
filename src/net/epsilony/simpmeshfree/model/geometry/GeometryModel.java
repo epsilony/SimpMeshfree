@@ -546,8 +546,8 @@ public class GeometryModel implements ModelImagePainter {
         Graphics2D g2 = modelImage.createGraphics();
 
 
-        g2.setComposite(AlphaComposite.Clear);
-        g2.fillRect(0, 0, modelImage.getWidth(), modelImage.getHeight());
+//        g2.setComposite(AlphaComposite.Clear);
+//        g2.fillRect(0, 0, modelImage.getWidth(), modelImage.getHeight());
 
         AffineTransform tx = manager.getViewTransform();
         g2.setComposite(AlphaComposite.Src);

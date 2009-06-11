@@ -112,6 +112,34 @@ public class BoundaryConditions {
         };
     }
 
+    public static BoundaryCondition getConstantEssentialBoundaryConditions(final double ux,final boolean bx,final double uy,final boolean by){
+        return new BoundaryCondition() {
+
+            @Override
+            public BoundaryConditionType getType() {
+                return BoundaryConditionType.Essential;
+            }
+
+            @Override
+            public byte getValues(double t, double[] output) {
+                output[0]=ux;
+                output[1]=uy;
+                byte result = 0;
+                if(bx){
+                    result|=X;
+                }
+                if(by){
+                    result|=Y;
+                }
+                return result;
+            }
+
+            @Override
+            public List<double[]> getConNaturalValues(List<double[]> output) {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+        };
+    }
     public static void main(String[] args){
         System.out.println((BoundaryCondition.XY&BoundaryCondition.X)==BoundaryCondition.X);
     }

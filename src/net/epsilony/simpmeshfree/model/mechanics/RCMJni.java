@@ -7,7 +7,9 @@ package net.epsilony.simpmeshfree.model.mechanics;
 import java.util.Arrays;
 import java.util.LinkedList;
 import net.epsilony.simpmeshfree.model.geometry.Node;
+import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
+import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.UpperSymmBandMatrix;
 import no.uib.cipr.matrix.VectorEntry;
 import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
@@ -86,6 +88,23 @@ public class RCMJni {
         log.info("Start complile");
 
         rcmOrder(m);
+//        Matrix denseMatrix=m;
+//        StringBuilder sb=new StringBuilder();
+//        for(int i=0;i<denseMatrix.numRows();i++){
+//            for(int j=0;j<denseMatrix.numRows();j++){
+//                if(0!=denseMatrix.get(i, j)){
+//                    if(i!=j){
+//                    sb.append("X");
+//                    }else{
+//                        sb.append("I");
+//                    }
+//                }else{
+//                    sb.append(" ");
+//                }
+//            }
+//            sb.append(String.format("|%n"));
+//        }
+//        System.out.println(sb);
         log.info("Former Half Band Width:"+bandWidth/2);
         log.info("Optimized Half Band Width:"+pBandWidth/2);
 
@@ -98,7 +117,11 @@ public class RCMJni {
             rowVect = m.getRow(i);
             row = PInv[i]-1;
             for (VectorEntry ve : rowVect) {
+                if(0==ve.get()){
+                        continue;
+                    }
                 col = PInv[ve.index()]-1;
+                
                 if (col >= row) {
                     result.set(row, col, ve.get());
                 } else {
@@ -109,6 +132,24 @@ public class RCMJni {
         }
 
         log.info("End of compile()");
+//        denseMatrix=new DenseMatrix(result);
+//        sb=new StringBuilder();
+//         for(int i=0;i<denseMatrix.numRows();i++){
+//            for(int j=0;j<denseMatrix.numRows();j++){
+//                if(0!=denseMatrix.get(i, j)){
+//                    if(i!=j){
+//                    sb.append("X");
+//                    }else{
+//                        sb.append("I");
+//                    }
+//                }else{
+//                    sb.append(" ");
+//                }
+//            }
+//            sb.append(String.format("|%n"));
+//        }
+//        System.out.println(sb);
+
         return new Object[]{result,resultv};
     }
 
@@ -195,4 +236,5 @@ public class RCMJni {
     //System.loadLibrary("TriangleJni");
     }
     native public void rcmfun();
+
 }

@@ -13,7 +13,6 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
-import java.util.List;
 
 import net.epsilony.math.analysis.GaussLegendreQuadrature;
 import net.epsilony.math.radialbasis.RadialBasisFunction;
@@ -26,10 +25,8 @@ import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition.BoundaryConditionType;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryNode;
 import net.epsilony.simpmeshfree.model.geometry.GeometryModel;
-import net.epsilony.simpmeshfree.model.geometry.GeometryUtils;
 import net.epsilony.simpmeshfree.model.geometry.ModelElement.ModelElementType;
 import net.epsilony.simpmeshfree.model.geometry.Node;
-import net.epsilony.simpmeshfree.model.geometry.Point;
 import net.epsilony.simpmeshfree.model.geometry.Route;
 import net.epsilony.simpmeshfree.model.geometry.Segment;
 import net.epsilony.simpmeshfree.model.geometry.TriangleJni;
@@ -37,15 +34,15 @@ import net.epsilony.simpmeshfree.shapefun.ShapeFunction;
 import net.epsilony.simpmeshfree.utils.ModelImagePainter;
 import net.epsilony.simpmeshfree.utils.ModelPanelManager;
 import net.epsilony.simpmeshfree.utils.ModelPanelManager.ViewMarkerType;
-import net.epsilony.util.collection.LayeredDomainTree;
 import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.UpperSymmBandMatrix;
 import no.uib.cipr.matrix.UpperSymmPackMatrix;
 import no.uib.cipr.matrix.Vector;
-import no.uib.cipr.matrix.sparse.FlexCompColMatrix;
+import no.uib.cipr.matrix.VectorEntry;
 import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
+import no.uib.cipr.matrix.sparse.SparseVector;
 import org.apache.commons.math.ArgumentOutsideDomainException;
 import org.apache.log4j.Logger;
 
@@ -87,7 +84,6 @@ public class MechanicsModel implements ModelImagePainter {
     LinkedList<Node> nodes = new LinkedList<Node>();
     LinkedList<BoundaryNode> boundaryNodes = new LinkedList<BoundaryNode>();
     LinkedList<double[]> triangleQuadratureDomains = new LinkedList<double[]>();
-    LayeredDomainTree<Node> nodesDomainTree = null;
     FlexCompRowMatrix kMat = null;
     DenseMatrix constitutiveLaw = null;
 
@@ -142,7 +138,7 @@ public class MechanicsModel implements ModelImagePainter {
                 boundaryNodes.add((BoundaryNode) n);
             }
         }
-        nodesDomainTree = new LayeredDomainTree<Node>(nodes, Point.compX, Point.compY, true);
+        
         triJni = triangleJni;
         log.info(String.format("End of generateNodesByTriangle%n nodes.size()=%d boundaryNodes.size()=%d", nodes.size(), boundaryNodes.size()));
     }
@@ -175,7 +171,7 @@ public class MechanicsModel implements ModelImagePainter {
         double nodesAverDistance;
         ArrayList<Node> supportNodes = new ArrayList<Node>(100);
         Vector[] partialValues;
-        kMat = new FlexCompRowMatrix(nodes.size() * 2,nodes.size() * 2);
+        kMat = new FlexCompRowMatrix(nodes.size() * 2, nodes.size() * 2);
 
         double[] weights = null;
         double[] points = null;
@@ -240,10 +236,10 @@ public class MechanicsModel implements ModelImagePainter {
                             kMat.add(mIndex, nIndex + 1, w * td);
                             td = my * d11 * ny + mx * d22 * nx;
                             kMat.add(mIndex + 1, nIndex + 1, w * td);
-
-                            td = my * d10 * nx + mx * d22 * ny;
-                            kMat.add(mIndex + 1, nIndex, w * td);
-
+                            if (mIndex != nIndex) {
+                                td = my * d10 * nx + mx * d22 * ny;
+                                kMat.add(mIndex + 1, nIndex, w * td);
+                            }
                         }
                     }
                 }
@@ -258,7 +254,7 @@ public class MechanicsModel implements ModelImagePainter {
         double nodesAverDistance;
         ArrayList<Node> supportNodes = new ArrayList<Node>(100);
         Vector[] partialValues;
-        kMat = new FlexCompRowMatrix(nodes.size() * 2,nodes.size() * 2);
+        kMat = new FlexCompRowMatrix(nodes.size() * 2, nodes.size() * 2);
         DenseMatrix bk = new DenseMatrix(3, 2);
         DenseMatrix bl = new DenseMatrix(3, 2);
         DenseMatrix kkl = new DenseMatrix(2, 2);
@@ -509,7 +505,8 @@ public class MechanicsModel implements ModelImagePainter {
     }
 
     public void applyEssentialBoundaryConditions() {
-        applyEssentialBoundaryConditionsByPenalty();
+//        applyEssentialBoundaryConditionsByPenalty();
+        applyAccurateEssentialBoundaryConditions();
     }
 
     public void applyEssentialBoundaryConditionsByPenalty() {
@@ -596,6 +593,7 @@ public class MechanicsModel implements ModelImagePainter {
         double ux, uy;
         int i;
         byte tb;
+//        SparseVector rowVector;
         for (BoundaryNode bNode : boundaryNodes) {
             segment = bNode.getSegment();
             segmentParm = bNode.getSegmentParm();
@@ -632,37 +630,47 @@ public class MechanicsModel implements ModelImagePainter {
                 }
 
                 rowcol = bNode.getMatrixIndex() * 2;
+
                 if ((BoundaryCondition.X & tb) == BoundaryCondition.X) {
                     ux = txy[0];
+                    double kk = 0;
+
                     for (i = 0; i < rowcol; i++) {
-                        bVector.add(i, -kMat.get(i, rowcol) * ux);
-                        kMat.set(i, rowcol, 0);
+                        kk = kMat.get(i, rowcol);
+                        if (0 != kk) {
+                            bVector.add(i, -kk * ux);
+                            kMat.set(i, rowcol, 0);
+                        }
                     }
-                    for (i = rowcol+1; i < kMat.numColumns(); i++) {
-                        bVector.add(i, -kMat.get(rowcol,i) * ux);
-                        kMat.set(rowcol, i, 0);
+                    for (VectorEntry vn : kMat.getRow(rowcol)) {
+                        bVector.add(vn.index(), -vn.get() * ux);
                     }
-                    bVector.set(rowcol, ux);
+                    kMat.setRow(rowcol, new SparseVector(kMat.numColumns()));
                     kMat.set(rowcol, rowcol, 1);
+                    bVector.set(rowcol, ux);
                 }
 
                 if ((BoundaryCondition.Y & tb) == BoundaryCondition.Y) {
                     uy = txy[1];
-                    for (i = 0; i < rowcol+1; i++) {
-                        bVector.add(i, -kMat.get(i, rowcol + 1) * uy);
-                        kMat.set(i, rowcol + 1, 0);
+                    double kk = 0;
+                    for (i = 0; i < rowcol + 1; i++) {
+                        kk = kMat.get(rowcol + 1, i);
+                        if (kk != 0) {
+                            bVector.add(i, -kk * uy);
+                            kMat.set(i, rowcol + 1, 0);
+                        }
                     }
-                    for (i =rowcol+2; i < kMat.numColumns(); i++) {
-                        bVector.add(i, -kMat.get(rowcol + 1, i) * uy);
-                        kMat.set(rowcol + 1, i, 0);
+                    for (VectorEntry vn : kMat.getRow(rowcol)) {
+                        bVector.add(vn.index(), -vn.get() * uy);
                     }
-
+                    kMat.setRow(rowcol + 1, new SparseVector(kMat.numColumns()));
                     kMat.set(rowcol + 1, rowcol + 1, 1);
                     bVector.set(rowcol + 1, uy);
                 }
 
             }
         }
+
 
         log.info("End of applyAccurateEssentialBoundaryConditions");
     }
@@ -696,7 +704,7 @@ public class MechanicsModel implements ModelImagePainter {
         Object[] results = rcmJni.compile(kMat, bVector);
         log.info("solve the Ax=b now");
         xVector = new DenseVector(bVector.size());
-        ((UpperSymmBandMatrix)results[0]).solve((DenseVector)results[1], xVector);
+        ((UpperSymmBandMatrix) results[0]).solve((DenseVector) results[1], xVector);
 
 
         log.info("Finished: solve the Ax=b");
@@ -798,81 +806,7 @@ public class MechanicsModel implements ModelImagePainter {
     }
 //
 
-    public class SimpleRoundSupportDomain implements SupportDomain {
-
-        double rMin;
-        Node nodeFrom = Node.tempNode(0, 0);
-        Node nodeTo = Node.tempNode(0, 0);
-        private double rMax;
-        private double maxStep;
-        private int min;
-
-        public SimpleRoundSupportDomain(double rMin, double rMax, double maxStep, int min) {
-            this.rMin = rMin;
-            this.rMax = rMax;
-            this.maxStep = maxStep;
-            this.min = min;
-        }
-
-        @Override
-        public double supportNodes(double x, double y, List<Node> output) {
-            output.clear();
-            LinkedList<Node> nodes = new LinkedList<Node>();
-            double r = rMin;
-            double nodesAverageDistance;
-            do {
-                nodeFrom.setXY(x - r, y - r);
-                nodeTo.setXY(x + r, y + r);
-                nodesDomainTree.domainSearch(nodes, nodeFrom, nodeTo);
-                nodesAverageDistance = r / (Math.sqrt(nodes.size()) - 1);
-                LinkedList<ApproximatePoint> aps = new LinkedList<ApproximatePoint>();
-                gm.pointDomainSearch(ApproximatePoint.tempApproximatePoint(x, y), r + gm.getSegmentApproximateSize(), aps);
-
-                GeometryUtils.insightNodes(x, y, r, null, 0, aps, nodes);
-                r += (rMax - rMin) / maxStep;
-            } while (nodes.size() < min && r < rMax + (rMax - rMin) / maxStep);
-            if (nodes.size() < 0) {
-                log.warn(String.format("SimpleRoundSupportDomain.supportNodes(%5.2f,%5.2f,output) (r=%5.3f) get less nodes than expected (%d<%d) ", x, y, r - (rMax - rMin) / maxStep, nodes.size(), min));
-            }
-
-            output.addAll(nodes);
-            if (log.isDebugEnabled()) {
-                log.debug(String.format("SimpleRoundSupportDomain.supportNodes(%5.2f,%5.2f,output)%nnodesAverageDistance=%5.2f (r=%5.3f) output.size()=%d", x, y, nodesAverageDistance, r - (rMax - rMin) / maxStep, nodes.size()));
-            }
-            return nodesAverageDistance;
-        }
-
-        @Override
-        public double boundarySupportNodes(Segment bSegment, double parm, List<Node> output) {
-            output.clear();
-            LinkedList<Node> nodes = new LinkedList<Node>();
-            double[] pt = new double[2];
-            bSegment.parameterPoint(parm, pt);
-            double x = pt[0];
-            double y = pt[1];
-            double nodesAverageDistance;
-            double r = rMin;
-            do {
-                nodeFrom.setXY(x - r, y - r);
-                nodeTo.setXY(x + r, y + r);
-                nodesDomainTree.domainSearch(nodes, nodeFrom, nodeTo);
-                nodesAverageDistance = r / (Math.sqrt(nodes.size()) - 1);
-                LinkedList<ApproximatePoint> aps = new LinkedList<ApproximatePoint>();
-                gm.pointDomainSearch(ApproximatePoint.tempApproximatePoint(x, y), r + gm.getSegmentApproximateSize(), aps);
-                GeometryUtils.insightNodes(x, y, r, bSegment, parm, aps, nodes);
-                r += (rMax - rMin) / maxStep;
-            } while (nodes.size() < min && r < rMax + (rMax - rMin) / maxStep);
-            output.addAll(nodes);
-            if (nodes.size() < min) {
-                log.warn(String.format("SimpleRoundSupportDomain.boundarySupportNodes(%s,%5.4f,output) (r=%5.3f) get less nodes than expected (%d<%d) ", bSegment, parm, r - (rMax - rMin) / maxStep, nodes.size(), min));
-            }
-            if (log.isDebugEnabled()) {
-                log.debug(String.format("SimpleRoundSupportDomain.boundarySupportNodes(%s,%5.4f,output)%nnodesAverageDistance=%5.2f (r=%5.3f) output.size()=%d", bSegment, parm, nodesAverageDistance, r - (rMax - rMin) / maxStep, output.size()));
-            }
-
-            return nodesAverageDistance;
-        }
-    }
+   
 
     public static void main(String[] args) {
         UpperSymmPackMatrix mat = new UpperSymmPackMatrix(3);

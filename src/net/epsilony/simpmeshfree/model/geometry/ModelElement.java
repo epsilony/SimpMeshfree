@@ -4,6 +4,7 @@
  */
 package net.epsilony.simpmeshfree.model.geometry;
 
+import java.awt.Color;
 import java.util.Comparator;
 import java.util.LinkedList;
 import net.epsilony.simpmeshfree.utils.ModelElementIndexManager;
@@ -40,7 +41,16 @@ public abstract class ModelElement {
         this.index = index;
     }
 
+    Color color=null;
 
+    public Color getColor() {
+        return color;
+    }
+
+    public void setColor(Color color) {
+        this.color = color;
+    }
+    
     protected ModelElement() {
     }
 
