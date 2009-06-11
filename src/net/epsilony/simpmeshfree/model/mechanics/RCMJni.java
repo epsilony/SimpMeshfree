@@ -45,10 +45,11 @@ public class RCMJni {
         for(int i=0;i<n;i++){
             row=m.getRow(i);
             int[] index=row.getIndex();
+            double[] data=row.getData();
             int col;
             for(int j=0;j<index.length;j++){
                 col=index[j];
-                if(col<=i){
+                if(col<=i||data[j]==0){
                     continue;
                 }else{
                     indes[i].add(col+1);
@@ -116,6 +117,7 @@ public class RCMJni {
         for (int i = 0; i < m.numRows(); i++) {
             rowVect = m.getRow(i);
             row = PInv[i]-1;
+
             for (VectorEntry ve : rowVect) {
                 if(0==ve.get()){
                         continue;
@@ -192,6 +194,18 @@ public class RCMJni {
         UpperSymmBandMatrix mm = new UpperSymmBandMatrix(4, 2);
         mm.set(0, 2, 1);
 
+        FlexCompRowMatrix test=new FlexCompRowMatrix(4, 4);
+        test.set(0,0,1);
+        test.set(0,1,1);
+        test.set(0,2,1);
+        test.set(0,0,0);
+        test.compact();
+        System.out.println(Arrays.toString(test.getRow(0).getIndex()));
+        System.out.println(Arrays.toString(test.getRow(0).getData()));
+        for(VectorEntry ve:test.getRow(0)){
+            System.out.println("ve.index() = " + ve.index());
+            System.out.println("ve.get() = " + ve.get());
+        }
 
     }
 

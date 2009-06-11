@@ -127,8 +127,8 @@ public class ModelTestFrame extends javax.swing.JFrame {
         mpm = new ModelPanelManager(panel, gm.getLeftDown().getX(), gm.getLeftDown().getY(), gm.getRightUp().getX(), gm.getRightUp().getY());
         mpm.addModelImagePainter(gm);
 
-        mm.generateNodesByTriangle(0.5, 0.05, "pqa0.125nQ", true, true);
-        mm.generateQuadratureDomainsByTriangle(0.4, 0.08, "pqa1nQ");
+        mm.generateNodesByTriangle(2, 0.05, "pqa2nQ", true, true);
+        mm.generateQuadratureDomainsByTriangle(1.5, 0.08, "pqa1.125nQ");
 //        mm.generateQuadratureDomainsByTriangle();
         mm.setQuadN(3);
         mpm.addModelImagePainter(mm);
