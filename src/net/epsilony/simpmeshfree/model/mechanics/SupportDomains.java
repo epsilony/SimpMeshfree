@@ -59,7 +59,7 @@ public class SupportDomains {
                 GeometryUtils.insightNodes(x, y, r, null, 0, aps, nodes);
                 r += (rMax - rMin) / maxStep;
             } while (nodes.size() < minNode && r < rMax + (rMax - rMin) / maxStep);
-            if (nodes.size() < 0) {
+            if (nodes.size() < minNode) {
                 log.warn(String.format("SimpleRoundSupportDomain.supportNodes(%5.2f,%5.2f,output) (r=%5.3f) get less nodes than expected (%d<%d) ", x, y, r - (rMax - rMin) / maxStep, nodes.size(), minNode));
             }
 
@@ -101,48 +101,4 @@ public class SupportDomains {
             return nodesAverageDistance;
         }
     }
-
-//    public static class NeighborRoundSupportDomain implements SupportDomain {
-//
-//        Logger log = Logger.getLogger(this.getClass());
-//        double rMin;
-//        Node nodeFrom = Node.tempNode(0, 0);
-//        Node nodeTo = Node.tempNode(0, 0);
-//        private int minNode;
-//        LayeredDomainTree<Node> nodesDomainTree = null;
-//        private GeometryModel gm;
-//
-//        @Override
-//        public double supportNodes(double x, double y, List<Node> output) {
-//             output.clear();
-//            LinkedList<Node> nodes = new LinkedList<Node>();
-//            double r = rMin;
-//            double nodesAverageDistance;
-//            do {
-//                nodeFrom.setXY(x - r, y - r);
-//                nodeTo.setXY(x + r, y + r);
-//                nodesDomainTree.domainSearch(nodes, nodeFrom, nodeTo);
-//                nodesAverageDistance = r / (Math.sqrt(nodes.size()) - 1);
-//                LinkedList<ApproximatePoint> aps = new LinkedList<ApproximatePoint>();
-//                gm.pointDomainSearch(ApproximatePoint.tempApproximatePoint(x, y), r + gm.getSegmentApproximateSize(), aps);
-//
-//                GeometryUtils.insightNodes(x, y, r, null, 0, aps, nodes);
-//                r += (rMax - rMin) / maxStep;
-//            } while (nodes.size() < minNode && r < rMax + (rMax - rMin) / maxStep);
-//            if (nodes.size() < 0) {
-//                log.warn(String.format("SimpleRoundSupportDomain.supportNodes(%5.2f,%5.2f,output) (r=%5.3f) get less nodes than expected (%d<%d) ", x, y, r - (rMax - rMin) / maxStep, nodes.size(), minNode));
-//            }
-//
-//            output.addAll(nodes);
-//            if (log.isDebugEnabled()) {
-//                log.debug(String.format("SimpleRoundSupportDomain.supportNodes(%5.2f,%5.2f,output)%nnodesAverageDistance=%5.2f (r=%5.3f) output.size()=%d", x, y, nodesAverageDistance, r - (rMax - rMin) / maxStep, nodes.size()));
-//            }
-//            return nodesAverageDistance;
-//        }
-//
-//        @Override
-//        public double boundarySupportNodes(Segment segment, double parm, List<Node> list) {
-//            throw new UnsupportedOperationException("Not supported yet.");
-//        }
-//    }
 }

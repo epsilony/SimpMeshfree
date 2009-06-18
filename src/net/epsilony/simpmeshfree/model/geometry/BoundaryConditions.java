@@ -11,7 +11,8 @@ import java.util.List;
  * @author epsilon
  */
 public class BoundaryConditions {
-    public static BoundaryCondition getStretchNatural(final double tx){
+
+    public static BoundaryCondition getStretchNatural(final double tx) {
         return new BoundaryCondition() {
 
             @Override
@@ -22,8 +23,8 @@ public class BoundaryConditions {
             @Override
             public byte getValues(double t, double[] output) {
 
-                output[0]=0;
-                output[1]=tx;
+                output[0] = tx;
+                output[1] = 0;
                 return BoundaryCondition.XY;
             }
 
@@ -34,7 +35,7 @@ public class BoundaryConditions {
         };
     }
 
-    public static BoundaryCondition getStretchEssential(final double ux){
+    public static BoundaryCondition getStretchEssential(final double ux) {
         return new BoundaryCondition() {
 
             @Override
@@ -44,9 +45,13 @@ public class BoundaryConditions {
 
             @Override
             public byte getValues(double t, double[] output) {
-                output[0]=ux;
-                output[1]=0;
-                return BoundaryCondition.XY;
+                output[0] = ux;
+                output[1] = 0;
+                if (t == 0.5&&ux==0) {
+                    return BoundaryCondition.XY;
+                } else {
+                    return BoundaryCondition.X;
+                }
             }
 
             @Override
@@ -99,7 +104,7 @@ public class BoundaryConditions {
             public byte getValues(double t, double[] output) {
                 line.parameterPoint(t, tds);
                 double y = tds[1];
-                output[0] = -P / (6 * E * I) * (2 + v) * (y * y - D * D / 4);
+                output[0] = -P * y / (6 * E * I) * (2 + v) * (y * y - D * D / 4);
                 output[1] = P * v * L / (2 * E * I) * y * y;
                 return BoundaryCondition.XY;
 
@@ -112,7 +117,7 @@ public class BoundaryConditions {
         };
     }
 
-    public static BoundaryCondition getConstantEssentialBoundaryConditions(final double ux,final boolean bx,final double uy,final boolean by){
+    public static BoundaryCondition getConstantEssentialBoundaryConditions(final double ux, final boolean bx, final double uy, final boolean by) {
         return new BoundaryCondition() {
 
             @Override
@@ -122,14 +127,14 @@ public class BoundaryConditions {
 
             @Override
             public byte getValues(double t, double[] output) {
-                output[0]=ux;
-                output[1]=uy;
+                output[0] = ux;
+                output[1] = uy;
                 byte result = 0;
-                if(bx){
-                    result|=X;
+                if (bx) {
+                    result |= X;
                 }
-                if(by){
-                    result|=Y;
+                if (by) {
+                    result |= Y;
                 }
                 return result;
             }
@@ -140,7 +145,8 @@ public class BoundaryConditions {
             }
         };
     }
-    public static void main(String[] args){
-        System.out.println((BoundaryCondition.XY&BoundaryCondition.X)==BoundaryCondition.X);
+
+    public static void main(String[] args) {
+        System.out.println((BoundaryCondition.XY & BoundaryCondition.X) == BoundaryCondition.X);
     }
 }

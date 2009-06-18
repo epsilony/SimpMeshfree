@@ -13,11 +13,13 @@ package net.epsilony.simpmeshfree.model;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.RenderingHints;
 import java.awt.Shape;
+import java.awt.event.MouseEvent;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
-import java.awt.geom.Path2D;
+import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.PathIterator;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.Enumeration;
@@ -50,7 +52,7 @@ import org.apache.log4j.PatternLayout;
  */
 public class ModelTestFrame extends javax.swing.JFrame {
 
-    double P = -1000;
+    double P = 1000;
     double E = 3e7;
     double nu = 0.3;
     double D = 12;
@@ -95,11 +97,6 @@ public class ModelTestFrame extends javax.swing.JFrame {
         Area area = new Area(rect);
         System.out.println(ShapeUtils.toString(area));
 
-////        area.subtract(new Area(new Ellipse2D.Double(21, -3, 6, 6)));
-////        area.subtract(new Area(new Ellipse2D.Double(3, -2, 4, 4)));
-//
-//        area.subtract(new Area(new Rectangle2D.Double(3, -0.5, 42,1)));
-        System.out.println(ShapeUtils.toString(area));
         gm.addShape(area);
 
         gm.compile(0.1, 0.1);
@@ -124,16 +121,37 @@ public class ModelTestFrame extends javax.swing.JFrame {
         LineSegment lineSegment2 = (LineSegment) segs.getFirst();
         lineSegment2.addBoundaryCondition(BoundaryConditions.getTimoshenkoNatural(E, nu, P, L, D, lineSegment));
 //        lineSegment2.addBoundaryCondition(BoundaryConditions.getStretchEssential(1e-3));
+//        lineSegment2.addBoundaryCondition(BoundaryConditions.getStretchNatural(1e3));
         mpm = new ModelPanelManager(panel, gm.getLeftDown().getX(), gm.getLeftDown().getY(), gm.getRightUp().getX(), gm.getRightUp().getY());
         mpm.addModelImagePainter(gm);
 
-        mm.generateNodesByTriangle(2, 0.05, "pqa2nQ", true, true);
-        mm.generateQuadratureDomainsByTriangle(1.5, 0.08, "pqa1.125nQ");
+        LinkedList<Node> nodes = new LinkedList<Node>();
+        for (int i = 0; i < 23; i++) {
+            for (int j = 0; j < 5; j++) {
+                nodes.add(new Node(i * 2 + 2.0, j * 2 - 4));
+            }
+        }
+        mm.getNodes().addAll(nodes);
+        for (int i = 0; i < 10; i++) {
+            for (int j = 0; j < 4; j++) {
+                double[] tds = new double[4];
+                tds[0] = i * 4.8;
+                tds[1] = j * 3 - 6;
+                tds[2] = (i + 1) * 4.8;
+                tds[3] = (j + 1) * 3 - 6;
+                mm.getRectangleQuadratureDomains().add(tds);
+            }
+        }
+
+        mm.generateBoundaryNodeByApproximatePoints(2, 0.1);
+
+//        mm.generateNodesByTriangle(1, 0.05, "pqa0.5nQ", true, true);
+//        mm.generateQuadratureDomainsByTriangle(0.75, 0.25, "pqa0.25nQ");
 //        mm.generateQuadratureDomainsByTriangle();
-        mm.setQuadN(3);
+        mm.setQuadratureNum(3);
         mpm.addModelImagePainter(mm);
-        mm.setSupportDomain(new SimpleRoundSupportDomain(2, 4, 3, 12, gm, mm.getNodes()));
-        RadialBasisFunction rbf = new MultiQuadRadial(5, 1.03);
+        mm.setSupportDomain(new SimpleRoundSupportDomain(6, 9, 3, 20, gm, mm.getNodes()));
+        RadialBasisFunction rbf = new MultiQuadRadial(1.5, 1.03);
         mm.setRadialBasisFunction(rbf);
         mm.setShapeFunction(new RadialPolynomialShapeFunction(rbf, 1));
         mm.setConstitutiveLaw(Constitutives.planeStressMatrix(E, nu));
@@ -148,22 +166,25 @@ public class ModelTestFrame extends javax.swing.JFrame {
         } catch (ArgumentOutsideDomainException ex) {
             java.util.logging.Logger.getLogger(ModelTestFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
-//
+
         mpm.addModelImagePainter(new ModelImagePainter() {
 
             @Override
             public void paintModel(BufferedImage modelImage, ModelPanelManager manager) {
                 Graphics2D g2 = (Graphics2D) modelImage.getGraphics();
-                long t3 = System.nanoTime();
+//                long t3 = System.nanoTime();
 //            g2.setRenderingHint(RenderingHints., rootPane)
                 g2.setColor(Color.BLUE);
                 double I = D * D * D / 12;
 //            Path2D path=new Path2D.Double();
-                long tt = System.nanoTime();
+//                long tt = System.nanoTime();
                 double[] posts = new double[mm.getNodes().size() * 2];
-                tt = System.nanoTime() - tt;
-                System.out.println("new double[] time:" + tt);
+//                tt = System.nanoTime() - tt;
+//                System.out.println("new double[] time:" + tt);
                 int i = 0;
+                AffineTransform tx = mpm.getViewTransform();
+                Point2D ptSrc = new Point2D.Double();
+                Point2D ptDst = new Point2D.Double();
                 for (Node node : mm.getNodes()) {
                     double x = node.getX();
                     double y = node.getY();
@@ -172,21 +193,33 @@ public class ModelTestFrame extends javax.swing.JFrame {
                     posts[i] = x + u * 500;
                     posts[i + 1] = y + v * 500;
                     i = i + 2;
+                    ptSrc.setLocation(x, y);
+                    tx.transform(ptSrc, ptDst);
+                    double esux = u - node.getUx();
+                    double esuy = v - node.getUy();
+                    double es = Math.sqrt((esux * esux + esuy * esuy) / (u * u + v * v));
+                    if (es > 0.001) {
+//                        System.out.println(String.format("%%%3.1f x=%3.1f y=%3.1f u=%5e v=%5e uh=%5e vh=%5e", es * 100,x,y,u,v,node.getUx(),node.getUy()));
+                        g2.drawString(String.format("%%%3.1f", es * 100), (int) ptDst.getX(), (int) ptDst.getY());
+                    }
+//                    if(x==0){
+//                        System.out.println(String.format("y=%5e u=%5e v=%5e", y,u,v));
+//                    }
                 //path.append(mpm.viewMarker(x+u*500, y+v*500, 10, ModelPanelManager.ViewMarkerType.DownTriangle), false);
 
 //                g2.draw(mpm.viewMarker(x+u*500, y+v*500, 10, ModelPanelManager.ViewMarkerType.DownTriangle));
                 }
-                long ttshape = System.nanoTime();
-                Shape tshape = mpm.viewMarker(posts, 10, ModelPanelManager.ViewMarkerType.X);
-                ttshape = System.nanoTime() - ttshape;
-                System.out.println("generateTime+" + ttshape);
-                long ttt = System.nanoTime();
+//                long ttshape = System.nanoTime();
+                Shape tshape = mpm.viewMarker(posts, 10, ModelPanelManager.ViewMarkerType.Rectangle);
+//                ttshape = System.nanoTime() - ttshape;
+////                System.out.println("generateTime+" + ttshape);
+//                long ttt = System.nanoTime();
 
                 g2.draw(tshape);
-                ttt = System.nanoTime() - ttt;
-                System.out.println("draw time:" + ttt);
-                long t4 = System.nanoTime();
-                System.out.println("t4-t3=" + (t4 - t3));
+//                ttt = System.nanoTime() - ttt;
+//                System.out.println("draw time:" + ttt);
+//                long t4 = System.nanoTime();
+//                System.out.println("t4-t3=" + (t4 - t3));
             }
         });
 
@@ -207,6 +240,11 @@ public class ModelTestFrame extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         jPanel1.setBackground(java.awt.Color.white);
+        jPanel1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jPanel1MouseClicked(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -235,7 +273,7 @@ public class ModelTestFrame extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addComponent(jButton1)
-                .addContainerGap(731, Short.MAX_VALUE))
+                .addContainerGap(732, Short.MAX_VALUE))
             .addGroup(layout.createSequentialGroup()
                 .addGap(12, 12, 12)
                 .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -243,6 +281,35 @@ public class ModelTestFrame extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void jPanel1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jPanel1MouseClicked
+        // TODO add your handling code here:
+        if (evt.getButton() == MouseEvent.BUTTON1) {
+            LinkedList<Node> list = new LinkedList<Node>();
+            Point2D pt = new Point2D.Double();
+            try {
+                mpm.inverseTransform(evt.getX(), evt.getY(), pt);
+            } catch (NoninvertibleTransformException ex) {
+                java.util.logging.Logger.getLogger(ModelTestFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            }
+            mm.getSupportDomain().supportNodes(pt.getX(), pt.getY(), list);
+            double min=Math.pow(list.getFirst().getX()-pt.getX(),2)+Math.pow(list.getFirst().getY()-pt.getY(),2);
+            Node minNode=list.getFirst();
+            for(Node node:list){
+                double td=Math.pow(node.getX()-pt.getX(), 2)+Math.pow(node.getY()-pt.getY(),2);
+                if(td<min){
+                    min=td;
+                    minNode=node;
+                }
+            }
+            double x=pt.getX();
+            double y=pt.getY();
+             double I = D * D * D / 12;
+              double u = -P * y / (6 * E * I) * ((6 * L - 3 * x) * x + (2 + nu) * (y * y - D * D / 4));
+                    double v = P / (6 * E * I) * (3 * nu * y * y * (L - x) + (4 + 5 * nu) * D * D * x / 4 + (3 * L - x) * x * x);
+            System.out.println(minNode.getX()+" "+minNode.getY()+" "+minNode.getUx()+" "+minNode.getUy()+" "+u+" "+v);
+        }
+    }//GEN-LAST:event_jPanel1MouseClicked
 
     /**
      * @param args the command line arguments

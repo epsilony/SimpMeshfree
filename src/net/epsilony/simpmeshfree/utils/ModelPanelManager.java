@@ -41,10 +41,13 @@ import net.epsilony.simpmeshfree.model.geometry.Point;
  * @author epsilon
  */
 public class ModelPanelManager implements MouseMotionListener, MouseListener, MouseWheelListener, HierarchyBoundsListener {
-    public static org.apache.log4j.Logger log=org.apache.log4j.Logger.getLogger(ModelPanelManager.class);
-    static{
-        log.setLevel(org.apache.log4j.Level.DEBUG);
-    }
+
+    public static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(ModelPanelManager.class);
+    
+
+//    static {
+//        log.setLevel(org.apache.log4j.Level.DEBUG);
+//    }
     //从模型空间到显示空间的2维坐标变换
     private AffineTransform viewTransform = new AffineTransform();
     public static int SLECECT_MIN_TIME_SCAPE = 200;
@@ -713,7 +716,7 @@ public class ModelPanelManager implements MouseMotionListener, MouseListener, Mo
             case MouseEvent.BUTTON2:
                 if (viewMoveOperation == ViewMoveOperationStatus.MoveFirstPointSet) {
                     panel.setCursor(preCursor);
-                    if(e.getX()-viewFirstX==0&&e.getY()-viewFirstY==0){
+                    if (e.getX() - viewFirstX == 0 && e.getY() - viewFirstY == 0) {
                         break;
                     }
                     viewMove(e.getX() - viewFirstX, e.getY() - viewFirstY);
@@ -902,7 +905,7 @@ public class ModelPanelManager implements MouseMotionListener, MouseListener, Mo
         g2.setComposite(AlphaComposite.SrcAtop);
 
 //        if (modelImageLock.tryLock()) {
-        long t1 = System.nanoTime();
+//        long t1 = System.nanoTime();
         try {
             modelImageLock.lock();
             g2.drawImage(modelImage, null, panel);
@@ -910,15 +913,15 @@ public class ModelPanelManager implements MouseMotionListener, MouseListener, Mo
         } finally {
             modelImageLock.unlock();
         }
-       
+
         selectLock.lock();
         try {
             g2.drawImage(rubberImage, null, panel);
         } finally {
             selectLock.unlock();
         }
-         long t2 = System.nanoTime();
-        System.out.println("Nano time:" + (t2 - t1));
+//        long t2 = System.nanoTime();
+//        System.out.println("Nano time:" + (t2 - t1));
 //        }
     }
     private int repaintModelOnly;
@@ -990,7 +993,7 @@ public class ModelPanelManager implements MouseMotionListener, MouseListener, Mo
 //                            modelPaintingCanceled = false;
 //                            continue;
 //                        }
-                    long time=System.nanoTime();
+                    long time = System.nanoTime();
                     Graphics2D g2 = modelImage.createGraphics();
                     g2.setComposite(AlphaComposite.Clear);
                     g2.fillRect(0, 0, modelImage.getWidth(), modelImage.getHeight());
@@ -1009,12 +1012,12 @@ public class ModelPanelManager implements MouseMotionListener, MouseListener, Mo
                         modelImageNeedsRegeneration = false;
                     }
                     modelPaintingCanceled = false;
-                    time=System.nanoTime()-time;
-                    if(log.isDebugEnabled()){
-                        if(modelPaintingCanceled){
+                    time = System.nanoTime() - time;
+                    if (log.isDebugEnabled()) {
+                        if (modelPaintingCanceled) {
                             log.debug("Model Image Generation canceled");
                         }
-                    log.debug("Generating Model Image costs "+time+" nano secs");
+                        log.debug("Generating Model Image costs " + time + " nano secs");
                     }
                 }
             } finally {
@@ -1423,22 +1426,22 @@ public class ModelPanelManager implements MouseMotionListener, MouseListener, Mo
         return pathMarker.createTransformedShape(null);
     }
 
-    public Shape viewMarker(double[] posts,double size, ViewMarkerType type){
-         viewOperationLock.lock();
+    public Shape viewMarker(double[] posts, double size, ViewMarkerType type) {
+        viewOperationLock.lock();
         try {
             pathMarker.reset();
             switch (type) {
                 case Rectangle:
-                    for (int i=0;i<posts.length;i+=2) {
-                        modelPtMarker.setLocation(posts[i], posts[i+1]);
+                    for (int i = 0; i < posts.length; i += 2) {
+                        modelPtMarker.setLocation(posts[i], posts[i + 1]);
                         viewTransform.transform(modelPtMarker, screenPtMarker);
                         rectMarker.setRect(screenPtMarker.getX() - size / 2, screenPtMarker.getY() - size / 2, size, size);
                         pathMarker.append(rectMarker, false);
                     }
                     break;
                 case X:
-                     for (int i=0;i<posts.length;i+=2) {
-                        modelPtMarker.setLocation(posts[i], posts[i+1]);
+                    for (int i = 0; i < posts.length; i += 2) {
+                        modelPtMarker.setLocation(posts[i], posts[i + 1]);
                         viewTransform.transform(modelPtMarker, screenPtMarker);
                         pathMarker.moveTo(screenPtMarker.getX() - size / 2, screenPtMarker.getY() - size / 2);
                         pathMarker.lineTo(screenPtMarker.getX() + size / 2, screenPtMarker.getY() + size / 2);
@@ -1447,16 +1450,16 @@ public class ModelPanelManager implements MouseMotionListener, MouseListener, Mo
                     }
                     break;
                 case Round:
-                    for (int i=0;i<posts.length;i+=2) {
-                        modelPtMarker.setLocation(posts[i], posts[i+1]);
+                    for (int i = 0; i < posts.length; i += 2) {
+                        modelPtMarker.setLocation(posts[i], posts[i + 1]);
                         viewTransform.transform(modelPtMarker, screenPtMarker);
                         ellMarker.setFrame(screenPtMarker.getX() - size / 2, screenPtMarker.getY() - size / 2, size, size);
                         pathMarker.append(ellMarker, false);
                     }
                     break;
                 case DownTriangle:
-                    for (int i=0;i<posts.length;i+=2) {
-                        modelPtMarker.setLocation(posts[i], posts[i+1]);
+                    for (int i = 0; i < posts.length; i += 2) {
+                        modelPtMarker.setLocation(posts[i], posts[i + 1]);
                         viewTransform.transform(modelPtMarker, screenPtMarker);
                         pathMarker.moveTo(screenPtMarker.getX() - size * sqrt(3) / 4, screenPtMarker.getY() - size / 4);
                         pathMarker.lineTo(screenPtMarker.getX() + size * sqrt(3) / 4, screenPtMarker.getY() - size / 4);
@@ -1465,8 +1468,8 @@ public class ModelPanelManager implements MouseMotionListener, MouseListener, Mo
                     }
                     break;
                 case UpTriangle:
-                    for (int i=0;i<posts.length;i+=2) {
-                        modelPtMarker.setLocation(posts[i], posts[i+1]);
+                    for (int i = 0; i < posts.length; i += 2) {
+                        modelPtMarker.setLocation(posts[i], posts[i + 1]);
                         viewTransform.transform(modelPtMarker, screenPtMarker);
                         pathMarker.moveTo(screenPtMarker.getX() - size * sqrt(3) / 4, screenPtMarker.getY() + size / 4);
                         pathMarker.lineTo(screenPtMarker.getX() + size * sqrt(3) / 4, screenPtMarker.getY() + size / 4);

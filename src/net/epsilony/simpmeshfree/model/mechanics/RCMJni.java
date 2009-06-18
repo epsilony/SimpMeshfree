@@ -209,17 +209,7 @@ public class RCMJni {
 
     }
 
-    public void fillDisplacement(DenseVector xVector,LinkedList<Node> nodes){
-                int index1,index2;
-        log.info("edit the nodes ux uy data");
-        for (Node node : nodes) {
-            index1 = PInv[node.getMatrixIndex()*2] -1;
-            index2 = PInv[node.getMatrixIndex()*2+1] -1;
-            node.setUx(xVector.get(index1));
-            node.setUy(xVector.get(index2));
-        }
 
-    }
 
     static {
         //for debuging the native method

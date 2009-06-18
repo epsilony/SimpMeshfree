@@ -43,7 +43,6 @@ public class GeometryUtils {
                 nodeIt.remove();
             }
         }
-
         //如果搜索中心在一个线段上，那么新增一个临时的ApproximatePoint，使得解符合要求
         if (null != segment) {
             for (ApproximatePoint ap : aps) {
@@ -51,7 +50,7 @@ public class GeometryUtils {
                 start = ap.back;
                 end = ap;
 
-                if (start.segment == segment && start.segmentParm <= t && (end.segmentParm >= t || end.segmentParm == 0)) {
+                if (start.segment == segment && start.segmentParm < t && (end.segmentParm > t || end.segmentParm == 0)) {
                     tempNodeAp = ApproximatePoint.tempApproximatePoint(x, y);
                     tempNodeAp.segment = segment;
                     tempNodeAp.back = start;
@@ -63,7 +62,7 @@ public class GeometryUtils {
                 }
                 start = ap;
                 end = ap.front;
-                if (start.segment == segment && start.segmentParm <= t && end.segmentParm >= t || end.segmentParm == 0) {
+                if (start.segment == segment && start.segmentParm < t && (end.segmentParm > t || end.segmentParm == 0)) {
                     tempNodeAp = ApproximatePoint.tempApproximatePoint(x, y);
                     tempNodeAp.segment = segment;
                     tempNodeAp.back = start;
@@ -126,26 +125,9 @@ public class GeometryUtils {
         v3x = end.x - x;
         v3y = end.y - y;
         double outProduct;
-        BoundaryNode tbNode;
         while (nodeIt.hasNext()) {
             Node tNode = nodeIt.next();
             outProduct = vectorProduct(v1x, v1y, tNode.x - start.x, tNode.y - start.y);
-//            if (outProduct >=0) {
-//                v4x = tNode.x - x;
-//                v4y = tNode.y - y;
-//                if (vectorProduct(v2x, v2y, v4x, v4y) <= 0 && vectorProduct(v3x, v3y, v4x, v4y) >= 0) {//如果结点在线段(start)-(end)的背面或线段上
-//                    if (tNode.type() == ModelElement.ModelElementType.BoundaryNode) {
-//                        tbNode = (BoundaryNode) tNode;
-//                        if (!(start.segment == tbNode.segment && (tbNode.segmentParm <= end.segmentParm || end.segmentParm == 0) && (tbNode.segmentParm >= start.segmentParm))) {//如tNode是边界上的结点且不在(start,end)曲线段上则去除tNode
-//                            nodeIt.remove();
-//                        }
-//                    } else {
-//                        if (outProduct > 0) {//如tNode在(start)-(end)的背面且不在(start)-(end)上，且其不是边界上的点
-//                            nodeIt.remove();
-//                        }
-//                    }
-//                }
-//            }
             if (outProduct > 0) {
                 v4x = tNode.x - x;
                 v4y = tNode.y - y;
