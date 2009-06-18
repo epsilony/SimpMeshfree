@@ -23,7 +23,7 @@ public class SupportDomains {
 
     public static class SimpleRoundSupportDomain implements SupportDomain {
 
-        Logger log = Logger.getLogger(this.getClass());
+        Logger log = Logger.getLogger(SimpleRoundSupportDomain.class);
         double rMin;
         Node nodeFrom = Node.tempNode(0, 0);
         Node nodeTo = Node.tempNode(0, 0);
@@ -53,10 +53,11 @@ public class SupportDomains {
                 nodeTo.setXY(x + r, y + r);
                 nodesDomainTree.domainSearch(nodes, nodeFrom, nodeTo);
                 nodesAverageDistance = r / (Math.sqrt(nodes.size()) - 1);
-                LinkedList<ApproximatePoint> aps = new LinkedList<ApproximatePoint>();
-                gm.pointDomainSearch(ApproximatePoint.tempApproximatePoint(x, y), r + gm.getSegmentApproximateSize(), aps);
-
-                GeometryUtils.insightNodes(x, y, r, null, 0, aps, nodes);
+                if (null != gm) {
+                    LinkedList<ApproximatePoint> aps = new LinkedList<ApproximatePoint>();
+                    gm.pointDomainSearch(ApproximatePoint.tempApproximatePoint(x, y), r + gm.getSegmentApproximateSize(), aps);
+                    GeometryUtils.insightNodes(x, y, r, null, 0, aps, nodes);
+                }
                 r += (rMax - rMin) / maxStep;
             } while (nodes.size() < minNode && r < rMax + (rMax - rMin) / maxStep);
             if (nodes.size() < minNode) {
@@ -85,6 +86,7 @@ public class SupportDomains {
                 nodeTo.setXY(x + r, y + r);
                 nodesDomainTree.domainSearch(nodes, nodeFrom, nodeTo);
                 nodesAverageDistance = r / (Math.sqrt(nodes.size()) - 1);
+
                 LinkedList<ApproximatePoint> aps = new LinkedList<ApproximatePoint>();
                 gm.pointDomainSearch(ApproximatePoint.tempApproximatePoint(x, y), r + gm.getSegmentApproximateSize(), aps);
                 GeometryUtils.insightNodes(x, y, r, bSegment, parm, aps, nodes);

@@ -46,10 +46,11 @@ public class RadialPolynomialShapeFunction implements ShapeFunction {
      */
     @Override
     public Vector shapeValues(List<Node> nodes, double x, double y) {
-        UpperSymmDenseMatrix gMat = new UpperSymmDenseMatrix((power * power + 3 * power + 2) / 2 + nodes.size());
+        int m = (power * power + 3 * power + 2) / 2;
+        UpperSymmDenseMatrix gMat = new UpperSymmDenseMatrix(m + nodes.size());
         int i, j;
-        double[] binomials = new double[(power * power + 3 * power + 2) / 2];
-        Vector resultVec = new DenseVector((power * power + 3 * power + 2) / 2 + nodes.size());
+        double[] binomials = new double[m];
+        Vector resultVec = new DenseVector(m + nodes.size());
         double nodex, nodey;
         for (i = 0; i < nodes.size(); i++) {
             nodex = nodes.get(i).getX();
@@ -59,7 +60,7 @@ public class RadialPolynomialShapeFunction implements ShapeFunction {
                 gMat.set(i, j, radialFun.value(nodes.get(j).getX(), nodes.get(j).getY()));
             }
             BivariateBinomials.getBinomials(power, nodex, nodey, binomials);
-            for (j = 0; j < (power * power + 3 * power + 2) / 2; j++) {
+            for (j = 0; j < m; j++) {
                 gMat.set(i, j + nodes.size(), binomials[j]);
             }
         }
@@ -93,7 +94,7 @@ public class RadialPolynomialShapeFunction implements ShapeFunction {
      */
     @Override
     public Vector[] shapePartialValues(List<Node> nodes, double x, double y) {
-        int m=(power * power + 3 * power + 2) / 2;
+        int m = (power * power + 3 * power + 2) / 2;
         Vector resultVecPx = new DenseVector(m + nodes.size());
         Vector resultVecPy = new DenseVector(m + nodes.size());
         double[] partResults = new double[2];
@@ -150,10 +151,11 @@ public class RadialPolynomialShapeFunction implements ShapeFunction {
      * <br> &part;&sup2;&phi;<sub>1</sub>/&part;y&sup2;,&part;&sup2;&phi;<sub>2</sub>/&part;y&sup2;,...,&part;&sup2;&phi;<sub>k</sub>/&part;y&sup2;}</br>
      */
     @Override
-    public Vector[] shapeQuadPartialValues(List<Node> nodes, double x, double y) {       
+    public Vector[] shapeQuadPartialValues(List<Node> nodes, double x, double y) {
+        int m = (power * power + 3 * power + 2) / 2;
         UpperSymmDenseMatrix gMat = new UpperSymmDenseMatrix((power * power + 3 * power + 2) / 2 + nodes.size());
         int i, j;
-        double[] binomials = new double[(power * power + 3 * power + 2) / 2];
+        double[] binomials = new double[m];
         double nodex, nodey;
         for (i = 0; i < nodes.size(); i++) {
             nodex = nodes.get(i).getX();
@@ -163,18 +165,18 @@ public class RadialPolynomialShapeFunction implements ShapeFunction {
                 gMat.set(i, j, radialFun.value(nodes.get(j).getX(), nodes.get(j).getY()));
             }
             BivariateBinomials.getBinomials(power, nodex, nodey, binomials);
-            for (j = 0; j < (power * power + 3 * power + 2) / 2; j++) {
+            for (j = 0; j < m; j++) {
                 gMat.set(i, j + nodes.size(), binomials[j]);
             }
-        }        
-        Vector resultVecPxx = new DenseVector((power * power + 3 * power + 2) / 2 + nodes.size());
-        Vector resultVecPxy = new DenseVector((power * power + 3 * power + 2) / 2 + nodes.size());
-        Vector resultVecPyy = new DenseVector((power * power + 3 * power + 2) / 2 + nodes.size());
-        
+        }
+        Vector resultVecPxx = new DenseVector(m + nodes.size());
+        Vector resultVecPxy = new DenseVector(m + nodes.size());
+        Vector resultVecPyy = new DenseVector(m + nodes.size());
+
         Vector bPxx = new DenseVector(resultVecPxx.size());
         Vector bPxy = new DenseVector(resultVecPxy.size());
         Vector bPyy = new DenseVector(resultVecPyy.size());
-       double[] partResults = new double[3];
+        double[] partResults = new double[3];
         for (i = 0; i < nodes.size(); i++) {
             radialFun.setCenter(nodes.get(i).getX(), nodes.get(i).getY());
             radialFun.quadPartialDifferential(x, y, partResults);
@@ -182,9 +184,9 @@ public class RadialPolynomialShapeFunction implements ShapeFunction {
             bPxy.set(i, partResults[1]);
             bPyy.set(i, partResults[2]);
         }
-        double[] pxxBinomials = new double[(power * power + 3 * power + 2) / 2];
-        double[] pxyBinomials = new double[(power * power + 3 * power + 2) / 2];
-        double[] pyyBinomials = new double[(power * power + 3 * power + 2) / 2];
+        double[] pxxBinomials = new double[m];
+        double[] pxyBinomials = new double[m];
+        double[] pyyBinomials = new double[m];
 
         BivariateBinomials.getPxxBinomials(power, x, y, pxxBinomials);
         BivariateBinomials.getPxyBinomials(power, x, y, pxyBinomials);

@@ -209,6 +209,14 @@ public class RCMJni {
 
     }
 
+    public int[] getP() {
+        return P;
+    }
+
+    public int[] getPInv() {
+        return PInv;
+    }
+
 
 
     static {
