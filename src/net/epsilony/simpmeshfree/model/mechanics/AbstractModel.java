@@ -12,8 +12,14 @@ import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.LinkedList;
+import java.util.ListIterator;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 import net.epsilony.math.analysis.GaussLegendreQuadrature;
 import net.epsilony.math.radialbasis.RadialBasisFunction;
 import net.epsilony.simpmeshfree.model.geometry.ApproximatePoint;
@@ -41,11 +47,16 @@ import org.apache.log4j.Logger;
  *
  * @author epsilon
  */
- abstract class AbstractModel implements ModelImagePainter{
+public abstract class AbstractModel implements ModelImagePainter {
+
+    public void setTaskDivision(int taskDivision) {
+        this.taskDivision = taskDivision;
+    }
+    private int taskDivision = 10;
 
     @Override
     public void paintModel(BufferedImage modelImage, ModelPanelManager manager) {
-                Graphics2D g2 = modelImage.createGraphics();
+        Graphics2D g2 = modelImage.createGraphics();
 
 
         g2.setComposite(AlphaComposite.Clear);
@@ -80,7 +91,6 @@ import org.apache.log4j.Logger;
 
         }
     }
-
     static Logger log = Logger.getLogger(AbstractModel.class);
     DenseVector bVector;
     LinkedList<BoundaryNode> boundaryNodes = new LinkedList<BoundaryNode>();
@@ -107,11 +117,153 @@ import org.apache.log4j.Logger;
     public LinkedList<double[]> getRectangleQuadratureDomains() {
         return rectangleQuadratureDomains;
     }
-
-    
     DenseVector xVector = new DenseVector(nodes.size() * 2);
+    ReentrantLock quadrateDomainsLock = new ReentrantLock();
+    int submitEnd;
+    boolean forceSingleCore = false;
 
-    public AbstractModel() {
+    public void setForceSingleCore(boolean forceSingleCore) {
+        this.forceSingleCore = forceSingleCore;
+    }
+
+    public void quadrateDomains() throws ArgumentOutsideDomainException {
+        int sumProcess = Runtime.getRuntime().availableProcessors();
+        taskDivision = sumProcess * 5;
+        sumQuadrated.set(0);
+        initialKMatrix();
+        int sumDomains = rectangleQuadratureDomains.size() + triangleQuadratureDomains.size();
+        if (forceSingleCore || sumProcess <= 1 || sumDomains < 10) {
+            log.info("Start quadrateDomains with single threads");
+            long t1 = System.nanoTime();
+            ExecutorService es = Executors.newFixedThreadPool(1);
+            es.submit(new Runnable() {
+
+                @Override
+                public void run() {
+                    try {
+                        quadrateRectangleDomains();
+                        quadrateTriangleDomainsByGrid();
+                    } catch (ArgumentOutsideDomainException ex) {
+                        java.util.logging.Logger.getLogger(AbstractModel.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+            es.shutdown();
+            boolean allDone = false;
+            while (!allDone) {
+                log.info(String.format("Quadrating %d/%d %%%.0f", sumQuadrated.get(), sumDomains, sumQuadrated.get() / (double) sumDomains * 100));
+                try {
+                    allDone = es.awaitTermination(1, TimeUnit.SECONDS);
+                } catch (InterruptedException ex) {
+                    java.util.logging.Logger.getLogger(AbstractModel.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            t1 = System.nanoTime() - t1;
+            log.info("Single Thread Cost:" + t1);
+            return;
+        }
+        initialKMatrix();
+        log.info("Start quadrateDomains with multi threads");
+        long time = System.nanoTime();
+        FlexCompRowMatrix[] kMats = new FlexCompRowMatrix[sumProcess];
+        for (int i = 0; i < sumProcess; i++) {
+            kMats[i] = new FlexCompRowMatrix(kMat.numRows(), kMat.numColumns());
+        }
+        submitEnd = 0;
+        ExecutorService es = Executors.newFixedThreadPool(sumProcess);
+        int gap = (sumDomains) / taskDivision;
+        if (gap < 10) {
+            gap = 10;
+        }
+        for (int i = 0; i < sumProcess; i++) {
+            es.submit(new QuadrateDomainTask(kMats[i], gap));
+        }
+        es.shutdown();
+        boolean allDone = false;
+
+        while (!allDone) {
+            log.info(String.format("Quadrating %d/%d %%%.0f", sumQuadrated.get(), sumDomains, sumQuadrated.get() / (double) sumDomains * 100));
+            try {
+                allDone = es.awaitTermination(1, TimeUnit.SECONDS);
+            } catch (InterruptedException ex) {
+                java.util.logging.Logger.getLogger(AbstractModel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        log.info("All tasks' done! Assembling");
+        for (int i = 0; i < sumProcess; i++) {
+            kMat.add(kMats[i]);
+        }
+        time = System.nanoTime() - time;
+        log.info("Multi Thread quadrateDomains finished, time costs:" + time);
+    }
+
+    class QuadrateDomainTask implements Runnable {
+
+        int gap;
+        FlexCompRowMatrix matrix;
+
+        public QuadrateDomainTask(FlexCompRowMatrix matrix, int gap) {
+            this.matrix = matrix;
+            this.gap = gap;
+        }
+
+        @Override
+        public void run() {
+            int start;
+            int end;
+            int sumDomains = rectangleQuadratureDomains.size() + triangleQuadratureDomains.size();
+            quadrateDomainsLock.lock();
+            try {
+                start = submitEnd;
+                if (start >= sumDomains) {
+                    return;
+                }
+                submitEnd += gap;
+                end = submitEnd;
+            } finally {
+                quadrateDomainsLock.unlock();
+            }
+            SupportDomain localSupportDomain = supportDomain.CopyOf(false);
+            ShapeFunction localShapeFunction = shapeFunction.CopyOf(false);
+            RadialBasisFunction localRadialBasisFunction = radialBasisFunction.CopyOf(false);
+            localShapeFunction.setRadialBasisFunction(localRadialBasisFunction);
+//             System.out.println("1start="+start+", end="+end+",sumDomains"+sumDomains);
+            while (start < sumDomains) {
+
+                if (start < rectangleQuadratureDomains.size()) {
+                    try {
+                        quadrateRectangleDomains(start, end, matrix, localSupportDomain, localShapeFunction, localRadialBasisFunction);
+                    } catch (ArgumentOutsideDomainException ex) {
+                        java.util.logging.Logger.getLogger(AbstractModel.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                if (end > rectangleQuadratureDomains.size() && !triangleQuadratureDomains.isEmpty()) {
+                    int triStart;
+                    if (start < rectangleQuadratureDomains.size()) {
+                        triStart = 0;
+                    } else {
+                        triStart = start - rectangleQuadratureDomains.size();
+                    }
+                    int triEnd = end - rectangleQuadratureDomains.size();
+
+                    try {
+                        quadrateTriangleDomainsByGrid(triStart, triEnd, matrix, localSupportDomain, localShapeFunction, localRadialBasisFunction);
+                    } catch (ArgumentOutsideDomainException ex) {
+                        java.util.logging.Logger.getLogger(AbstractModel.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                quadrateDomainsLock.lock();
+                try {
+                    start = submitEnd;
+                    submitEnd += gap;
+                    end = submitEnd;
+                } finally {
+                    quadrateDomainsLock.unlock();
+                }
+//                System.out.println("start="+start+", end="+end+",sumDomains"+sumDomains);
+            }
+
+        }
     }
 
     public void generateBoundaryNodeByApproximatePoints(double size, double flatness) {
@@ -122,6 +274,7 @@ import org.apache.log4j.Logger;
                 nodes.add(bn);
                 boundaryNodes.add(bn);
             }
+
         }
     }
 
@@ -131,6 +284,7 @@ import org.apache.log4j.Logger;
             Node n = Node.tempNode(0, 0);
             n.getIndexManager().reset();
         }
+
         nodes.clear();
         boundaryNodes.clear();
         TriangleJni triangleJni = new TriangleJni();
@@ -141,6 +295,7 @@ import org.apache.log4j.Logger;
             if (n.type() == ModelElementType.BoundaryNode) {
                 boundaryNodes.add((BoundaryNode) n);
             }
+
         }
         triJni = triangleJni;
         log.info(String.format("End of generateNodesByTriangle%n nodes.size()=%d boundaryNodes.size()=%d", nodes.size(), boundaryNodes.size()));
@@ -157,7 +312,8 @@ import org.apache.log4j.Logger;
         TriangleJni triangleJni = new TriangleJni();
         gm.compile(size, flatness);
         triangleJni.complie(gm, s);
-        triangleQuadratureDomains = triangleJni.getTriangleXYsList();
+        triangleQuadratureDomains =
+                triangleJni.getTriangleXYsList();
         log.info("End of generateQuadratureDomainsByTriangle()");
     }
 
@@ -179,23 +335,36 @@ import org.apache.log4j.Logger;
 
     abstract public void initialKMatrix();
 
-    public void quadrateRectangleDomains(int qn) throws ArgumentOutsideDomainException{
-        log.info(String.format("Start quadrateRectangleDomains(%d)", qn));
+    public void quadrateRectangleDomains() throws ArgumentOutsideDomainException {
+        quadrateRectangleDomains(0, rectangleQuadratureDomains.size(), kMat, supportDomain, shapeFunction, radialBasisFunction);
+    }
+    AtomicInteger sumQuadrated = new AtomicInteger();
+
+    public void quadrateRectangleDomains(int start, int end, FlexCompRowMatrix matrix, SupportDomain supportDomain, ShapeFunction shapeFunction, RadialBasisFunction radialBasisFunction) throws ArgumentOutsideDomainException {
+//        System.out.println(Thread.currentThread());
+//        log.info(String.format("Start quadrateRectangleDomains(%d)", quadratureNum));
         double nodesAverDistance;
         ArrayList<Node> supportNodes = new ArrayList<Node>(100);
         Vector[] partialValues;
-        initialKMatrix();
 
         double[] weights = null;
         double[] points = null;
-        weights = GaussLegendreQuadrature.getGaussLegendreQuadratureCoefficients(qn);
-        points = GaussLegendreQuadrature.getGaussLegendreQuadraturePoints(qn);
+        weights = GaussLegendreQuadrature.getGaussLegendreQuadratureCoefficients(quadratureNum);
+        points = GaussLegendreQuadrature.getGaussLegendreQuadraturePoints(quadratureNum);
         if (log.isDebugEnabled()) {
             log.debug("weights:" + Arrays.toString(weights));
             log.debug("area Coordinates: " + Arrays.toString(points));
         }
 
-        for (double[] rects:rectangleQuadratureDomains) {
+        ListIterator<double[]> iterator = rectangleQuadratureDomains.listIterator(start);
+        int counter = start;
+        while (iterator.hasNext() && counter < end) {
+            double[] rects = iterator.next();
+            counter++;
+            if (counter % 10 == 0) {
+                sumQuadrated.getAndAdd(10);
+            }
+
             double x1 = rects[0];
             double y1 = rects[1];
             double x2 = rects[2];
@@ -204,14 +373,14 @@ import org.apache.log4j.Logger;
             double v;
             double x;
             double y;
-            double J=0.25*Math.abs((x2-x1)*(y2-y1));
+            double J = 0.25 * Math.abs((x2 - x1) * (y2 - y1));
             double w;
             for (int k = 0; k < weights.length; k++) {
                 for (int l = 0; l < weights.length; l++) {
                     u = (points[k] + 1) / 2;
                     v = (points[l] + 1) / 2;
-                    x =x1+(x2-x1)*u;
-                    y =y1+(y2-y1)*v;
+                    x = x1 + (x2 - x1) * u;
+                    y = y1 + (y2 - y1) * v;
                     w = weights[k] * weights[l] * J;
                     nodesAverDistance = supportDomain.supportNodes(x, y, supportNodes);
                     radialBasisFunction.setNodesAverageDistance(nodesAverDistance);
@@ -225,34 +394,47 @@ import org.apache.log4j.Logger;
                             if (mIndex > nIndex) {
                                 continue;
                             }
+
                             double nx = partialValues[0].get(n);
                             double ny = partialValues[1].get(n);
-                            quadrateCore(mIndex, mx, my, nIndex, nx, ny, w);
+                            quadrateCore(mIndex, mx, my, nIndex, nx, ny, w, matrix);
                         }
+
                     }
                 }
             }
         }
-        log.info("End of quadrateTriangleDomainsByGrid");
+//        log.info("End of quadrateRectangleDomains");
     }
 
-    public void quadrateTriangleDomainsByGrid(int qn) throws ArgumentOutsideDomainException {
-        log.info(String.format("Start quadrateTriangleDomainsByGrid(%d)", qn));
+    public void quadrateTriangleDomainsByGrid() throws ArgumentOutsideDomainException {
+        quadrateTriangleDomainsByGrid(0, triangleQuadratureDomains.size(), kMat, supportDomain, shapeFunction, radialBasisFunction);
+    }
+
+    public void quadrateTriangleDomainsByGrid(int start, int end, FlexCompRowMatrix matrix, SupportDomain supportDomain, ShapeFunction shapeFunction, RadialBasisFunction radialBasisFunction) throws ArgumentOutsideDomainException {
+//        log.info(String.format("Start quadrateTriangleDomainsByGrid(%d)", quadratureNum));
         double nodesAverDistance;
         ArrayList<Node> supportNodes = new ArrayList<Node>(100);
         Vector[] partialValues;
-        initialKMatrix();
 
         double[] weights = null;
         double[] points = null;
-        weights = GaussLegendreQuadrature.getGaussLegendreQuadratureCoefficients(qn);
-        points = GaussLegendreQuadrature.getGaussLegendreQuadraturePoints(qn);
+        weights = GaussLegendreQuadrature.getGaussLegendreQuadratureCoefficients(quadratureNum);
+        points = GaussLegendreQuadrature.getGaussLegendreQuadraturePoints(quadratureNum);
         if (log.isDebugEnabled()) {
             log.debug("weights:" + Arrays.toString(weights));
             log.debug("area Coordinates: " + Arrays.toString(points));
         }
 
-        for (double[] triangleDomain : triangleQuadratureDomains) {
+        ListIterator<double[]> iterator = triangleQuadratureDomains.listIterator(start);
+        int counter = start;
+        while (iterator.hasNext() && counter < end) {
+            double[] triangleDomain = iterator.next();
+            counter++;
+            if (counter % 10 == 0) {
+                sumQuadrated.getAndAdd(10);
+            }
+
             double x1 = triangleDomain[0];
             double y1 = triangleDomain[1];
             double x2 = triangleDomain[2];
@@ -285,22 +467,25 @@ import org.apache.log4j.Logger;
                             if (mIndex > nIndex) {
                                 continue;
                             }
+
                             double nx = partialValues[0].get(n);
                             double ny = partialValues[1].get(n);
-                            quadrateCore(mIndex, mx, my, nIndex, nx, ny, w);
+                            quadrateCore(mIndex, mx, my, nIndex, nx, ny, w, matrix);
                         }
+
                     }
                 }
             }
         }
-        log.info("End of quadrateTriangleDomainsByGrid");
+//        log.info("End of quadrateTriangleDomainsByGrid");
     }
 
-    abstract public void quadrateCore(int mIndex, double dphim_dx, double dphim_dy, int nIndex, double dphin_dx, double dphin_dy, double coefs);
+    abstract public void quadrateCore(int mIndex, double dphim_dx, double dphim_dy, int nIndex, double dphin_dx, double dphin_dy, double coefs, FlexCompRowMatrix matrix);
 
     public void applyEssentialBoundaryConditionsByPenalty() {
         log.info("Start applyEssentialBoundaryConditionsByPenalty");
         Segment segment;
+
         double segmentParm;
 
         LinkedList<BoundaryCondition> tempBCs;
@@ -314,6 +499,7 @@ import org.apache.log4j.Logger;
             if (kMax < kMat.get(i, i)) {
                 kMax = kMat.get(i, i);
             }
+
         }
         double alpha = 1e8 * kMax;
         for (BoundaryNode bNode : boundaryNodes) {
@@ -328,15 +514,19 @@ import org.apache.log4j.Logger;
                     if (bc1 != null) {
                         tempBCs.addAll(segment.getBoundaryConditions());
                     }
+
                     if (bc2 != null) {
                         tempBCs.addAll(segment.getBack().getBoundaryConditions());
                     }
+
                 } else {
                     tempBCs = null;
                 }
+
             } else {
                 tempBCs = segment.getBoundaryConditions();
             }
+
             if (null == tempBCs) {
                 continue;
             }
@@ -365,6 +555,7 @@ import org.apache.log4j.Logger;
                     kMat.set(rowcol + 1, rowcol + 1, alpha * kii);
                     bVector.set(rowcol + 1, alpha * kii * uy);
                 }
+
             }
         }
         log.info("End of applyEssentialBoundaryConditionsByPenalty");
@@ -373,6 +564,7 @@ import org.apache.log4j.Logger;
     public void applyAccurateEssentialBoundaryConditions() {
         log.info("Start applyAccurateEssentialBoundaryConditions");
         Segment segment;
+
         double segmentParm;
 
         LinkedList<BoundaryCondition> tempBCs;
@@ -392,15 +584,19 @@ import org.apache.log4j.Logger;
                     if (bc1 != null) {
                         tempBCs.addAll(segment.getBoundaryConditions());
                     }
+
                     if (bc2 != null) {
                         tempBCs.addAll(segment.getBack().getBoundaryConditions());
                     }
+
                 } else {
                     tempBCs = null;
                 }
+
             } else {
                 tempBCs = segment.getBoundaryConditions();
             }
+
             if (null == tempBCs) {
                 continue;
             }
@@ -418,6 +614,7 @@ import org.apache.log4j.Logger;
                 rowcol = bNode.getMatrixIndex();
                 accurateEssentialCore(txy, rowcol, tb);
             }
+
         }
         log.info("End of applyAccurateEssentialBoundaryConditions");
     }
@@ -450,10 +647,14 @@ import org.apache.log4j.Logger;
         LinkedList<BoundaryCondition> conNaturalBCs = new LinkedList<BoundaryCondition>();
         LinkedList<double[]> conNaturalValues = new LinkedList<double[]>();
         ApproximatePoint aprxStart;
+
         ApproximatePoint aprx;
+
         ApproximatePoint aprxFront;
+
         Segment segment = null;
         Vector shapeVector;
+
         double t;
         double w;
         double t1;
@@ -464,6 +665,7 @@ import org.apache.log4j.Logger;
         double parmStart;
         double parmEnd;
         BoundaryCondition tempBC;
+
         double[] txy = new double[2];
         double[] quadratePoints = GaussLegendreQuadrature.getGaussLegendreQuadraturePoints(n);
         double[] quadrateCoefs = GaussLegendreQuadrature.getGaussLegendreQuadratureCoefficients(n);
@@ -479,12 +681,14 @@ import org.apache.log4j.Logger;
                 log.debug(route);
                 log.debug("route Approximate Point size=" + aprxPts.size());
             }
+
             do {
                 if (aprx.getSegmentParm() == 0) {
                     segment = aprx.getSegment();
                     if (log.isDebugEnabled()) {
                         log.debug(segment);
                     }
+
                     tempBCs = segment.getBoundaryConditions();
                     naturalBCs.clear();
                     conNaturalBCs.clear();
@@ -495,12 +699,14 @@ import org.apache.log4j.Logger;
                             } else if (bc.getType() == BoundaryConditionType.ConNatural) {
                                 conNaturalBCs.add(bc);
                             }
+
                         }
                     }
                     if (log.isDebugEnabled()) {
                         log.debug("conNaturalBCs.size() =" + conNaturalBCs.size());
                         log.debug("naturalBCs.size()=" + naturalBCs.size());
                     }
+
                     for (BoundaryCondition bc : conNaturalBCs) {
                         bc.getConNaturalValues(conNaturalValues);
                         for (double[] values : conNaturalValues) {

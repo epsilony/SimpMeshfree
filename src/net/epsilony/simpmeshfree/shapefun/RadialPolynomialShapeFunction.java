@@ -23,16 +23,16 @@ import no.uib.cipr.matrix.Vector;
  */
 public class RadialPolynomialShapeFunction implements ShapeFunction {
 
-    RadialBasisFunction radialFun;
+    RadialBasisFunction radialBasisFunction;
     int power;
 
     /**
      * 构造一个RPIM函数
-     * @param radialFun 径向基函数
+     * @param radialBasisFunction 径向基函数
      * @param power 多项式的最高阶数
      */
     public RadialPolynomialShapeFunction(RadialBasisFunction radialFun, int power) {
-        this.radialFun = radialFun;
+        this.radialBasisFunction = radialFun;
         this.power = power;
     }
 
@@ -55,9 +55,9 @@ public class RadialPolynomialShapeFunction implements ShapeFunction {
         for (i = 0; i < nodes.size(); i++) {
             nodex = nodes.get(i).getX();
             nodey = nodes.get(i).getY();
-            radialFun.setCenter(nodex, nodey);
+            radialBasisFunction.setCenter(nodex, nodey);
             for (j = i; j < nodes.size(); j++) {
-                gMat.set(i, j, radialFun.value(nodes.get(j).getX(), nodes.get(j).getY()));
+                gMat.set(i, j, radialBasisFunction.value(nodes.get(j).getX(), nodes.get(j).getY()));
             }
             BivariateBinomials.getBinomials(power, nodex, nodey, binomials);
             for (j = 0; j < m; j++) {
@@ -66,8 +66,8 @@ public class RadialPolynomialShapeFunction implements ShapeFunction {
         }
         Vector b = new DenseVector(resultVec.size());
         for (i = 0; i < nodes.size(); i++) {
-            radialFun.setCenter(nodes.get(i).getX(), nodes.get(i).getY());
-            b.set(i, radialFun.value(x, y));
+            radialBasisFunction.setCenter(nodes.get(i).getX(), nodes.get(i).getY());
+            b.set(i, radialBasisFunction.value(x, y));
         }
         BivariateBinomials.getBinomials(power, x, y, binomials);
         for (i = nodes.size(); i < b.size(); i++) {
@@ -106,9 +106,9 @@ public class RadialPolynomialShapeFunction implements ShapeFunction {
         for (i = 0; i < nodes.size(); i++) {
             nodex = nodes.get(i).getX();
             nodey = nodes.get(i).getY();
-            radialFun.setCenter(nodex, nodey);
+            radialBasisFunction.setCenter(nodex, nodey);
             for (j = i; j < nodes.size(); j++) {
-                gMat.set(i, j, radialFun.value(nodes.get(j).getX(), nodes.get(j).getY()));
+                gMat.set(i, j, radialBasisFunction.value(nodes.get(j).getX(), nodes.get(j).getY()));
             }
             BivariateBinomials.getBinomials(power, nodex, nodey, binomials);
             for (j = 0; j < m; j++) {
@@ -118,8 +118,8 @@ public class RadialPolynomialShapeFunction implements ShapeFunction {
         Vector bPx = new DenseVector(resultVecPx.size());
         Vector bPy = new DenseVector(resultVecPy.size());
         for (i = 0; i < nodes.size(); i++) {
-            radialFun.setCenter(nodes.get(i).getX(), nodes.get(i).getY());
-            radialFun.partialDifferential(x, y, partResults);
+            radialBasisFunction.setCenter(nodes.get(i).getX(), nodes.get(i).getY());
+            radialBasisFunction.partialDifferential(x, y, partResults);
             bPx.set(i, partResults[0]);
             bPy.set(i, partResults[1]);
         }
@@ -160,9 +160,9 @@ public class RadialPolynomialShapeFunction implements ShapeFunction {
         for (i = 0; i < nodes.size(); i++) {
             nodex = nodes.get(i).getX();
             nodey = nodes.get(i).getY();
-            radialFun.setCenter(nodex, nodey);
+            radialBasisFunction.setCenter(nodex, nodey);
             for (j = i; j < nodes.size(); j++) {
-                gMat.set(i, j, radialFun.value(nodes.get(j).getX(), nodes.get(j).getY()));
+                gMat.set(i, j, radialBasisFunction.value(nodes.get(j).getX(), nodes.get(j).getY()));
             }
             BivariateBinomials.getBinomials(power, nodex, nodey, binomials);
             for (j = 0; j < m; j++) {
@@ -178,8 +178,8 @@ public class RadialPolynomialShapeFunction implements ShapeFunction {
         Vector bPyy = new DenseVector(resultVecPyy.size());
         double[] partResults = new double[3];
         for (i = 0; i < nodes.size(); i++) {
-            radialFun.setCenter(nodes.get(i).getX(), nodes.get(i).getY());
-            radialFun.quadPartialDifferential(x, y, partResults);
+            radialBasisFunction.setCenter(nodes.get(i).getX(), nodes.get(i).getY());
+            radialBasisFunction.quadPartialDifferential(x, y, partResults);
             bPxx.set(i, partResults[0]);
             bPxy.set(i, partResults[1]);
             bPyy.set(i, partResults[2]);
@@ -201,5 +201,24 @@ public class RadialPolynomialShapeFunction implements ShapeFunction {
         result[1] = gMat.solve(bPxy, resultVecPxy);
         result[2] = gMat.solve(bPyy, resultVecPyy);
         return result;
+    }
+
+    @Override
+    public ShapeFunction CopyOf(boolean deep) {
+        if (deep) {
+            return new RadialPolynomialShapeFunction(radialBasisFunction.CopyOf(deep), power);
+        } else {
+            return new RadialPolynomialShapeFunction(null, power);
+        }
+    }
+
+    @Override
+    public RadialBasisFunction getRadialBasisFunction() {
+        return radialBasisFunction;
+    }
+
+    @Override
+    public void setRadialBasisFunction(RadialBasisFunction radialBasisFunction) {
+        this.radialBasisFunction = radialBasisFunction;
     }
 }

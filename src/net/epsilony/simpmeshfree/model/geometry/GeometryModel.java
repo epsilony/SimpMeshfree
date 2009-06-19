@@ -168,84 +168,66 @@ public class GeometryModel implements ModelImagePainter {
         log.info(String.format("End of complile, compileCounter=%d", compileCounter));
     }
     //用于加速搜索的临时变量
-    private final ApproximatePoint searchApproximatePointFrom = ApproximatePoint.tempApproximatePoint(0, 0),  searchApproximatePointTo = ApproximatePoint.tempApproximatePoint(0, 0);
+//    private final ApproximatePoint searchApproximatePointFrom = ApproximatePoint.tempApproximatePoint(0, 0),  searchApproximatePointTo = ApproximatePoint.tempApproximatePoint(0, 0);
 
-//    public List<Node> nodeDomainSearch(double x1, double y1, double x2, double y2, List<Node> outPts) {
-//        double t;
-//        if (x1 > x2) {
-//            t = x1;
-//            x1 = x2;
-//            x2 = t;
-//        }
-//        if (y1 > y2) {
-//            t = y1;
-//            y1 = y2;
-//            y2 = t;
-//        }
-//        searchNodeFrom.setXY(x1, y1);
-//        searchNodeTo.setXY(x2, y2);
+//    /**
+//     *
+//     * @param <E>
+//     * @param center
+//     * @param size half length of the square edge
+//     * @param outPts
+//     * @return
+//     */
+//    public <E extends Point> List<E> pointDomainSearch(E center, double size, List<E> outPts) {
+//        size = size > 0 ? size : -size;
+//        double x1 = center.x - size,
+//                x2 = center.x + size,
+//                y1 = center.y - size,
+//                y2 = center.y + size;
 //        outPts.clear();
-//        return nodesSearchTree.domainSearch(outPts, searchNodeFrom, searchNodeTo);
+//        switch (center.type()) {
+//            case ApproximatPoint:
+//                searchApproximatePointFrom.setXY(x1, y1);
+//                searchApproximatePointTo.setXY(x2, y2);
+//                approximatePointsSearchTree.domainSearch((List<ApproximatePoint>) outPts, searchApproximatePointFrom, searchApproximatePointTo);
+//                break;
+//            default:
+//                throw new UnsupportedOperationException();
+//        }
+//        return outPts;
 //    }
-    /**
-     * 
-     * @param <E>
-     * @param center
-     * @param size half length of the square edge
-     * @param outPts
-     * @return
-     */
-    public <E extends Point> List<E> pointDomainSearch(E center, double size, List<E> outPts) {
-        size = size > 0 ? size : -size;
-        double x1 = center.x - size,
-                x2 = center.x + size,
-                y1 = center.y - size,
-                y2 = center.y + size;
-        outPts.clear();
-        switch (center.type()) {
-            case ApproximatPoint:
-                searchApproximatePointFrom.setXY(x1, y1);
-                searchApproximatePointTo.setXY(x2, y2);
-                approximatePointsSearchTree.domainSearch((List<ApproximatePoint>) outPts, searchApproximatePointFrom, searchApproximatePointTo);
-                break;
-            default:
-                throw new UnsupportedOperationException();
-        }
-        return outPts;
-    }
 
-    /**
-     * search the Point link geometry elements in the domain that has corner1 and corner2
-     * corner1 and corner2 maybe changed  during the search!!!
-     * @param <E>
-     * @param corner1
-     * @param corner2
-     * @param outPts
-     * @return
-     */
-    public <E extends Point> List<E> pointDomainSearch(E corner1, E corner2, List<E> outPts) {
-        if (corner1.x > corner2.x) {
-            double t = corner2.x;
-            corner2.x = corner1.x;
-            corner1.x = t;
-        }
-        if (corner2.y > corner2.y) {
-            double t = corner2.y;
-            corner2.y = corner1.y;
-            corner1.y = t;
-        }
-        switch (corner1.type()) {
-            case ApproximatPoint:
-                approximatePointsSearchTree.domainSearch((List<ApproximatePoint>) outPts, (ApproximatePoint) corner1, (ApproximatePoint) corner2);
-                break;
-            default:
-                throw new UnsupportedOperationException();
-        }
-        return outPts;
-    }
-    private final LinkedList<ApproximatePoint> segmentSearchApproximatePointList = new LinkedList<ApproximatePoint>();
-    private final TreeSet<Segment> segmentSearchSet = new TreeSet<Segment>(ModelElement.indexComparator);
-
+//    /**
+//     * search the Point link geometry elements in the domain that has corner1 and corner2
+//     * corner1 and corner2 maybe changed  during the search!!!
+//     * @param <E>
+//     * @param corner1
+//     * @param corner2
+//     * @param outPts
+//     * @return
+//     */
+//    public <E extends Point> List<E> pointDomainSearch(E corner1, E corner2, List<E> outPts) {
+//        if (corner1.x > corner2.x) {
+//            double t = corner2.x;
+//            corner2.x = corner1.x;
+//            corner1.x = t;
+//        }
+//        if (corner2.y > corner2.y) {
+//            double t = corner2.y;
+//            corner2.y = corner1.y;
+//            corner1.y = t;
+//        }
+//        switch (corner1.type()) {
+//            case ApproximatPoint:
+//                approximatePointsSearchTree.domainSearch((List<ApproximatePoint>) outPts, (ApproximatePoint) corner1, (ApproximatePoint) corner2);
+//                break;
+//            default:
+//                throw new UnsupportedOperationException();
+//        }
+//        return outPts;
+//    }
+//    private final LinkedList<ApproximatePoint> segmentSearchApproximatePointList = new LinkedList<ApproximatePoint>();
+//    private final TreeSet<Segment> segmentSearchSet = new TreeSet<Segment>(ModelElement.indexComparator);
     /**
      * 搜索与直线(x1,y1)-(x2,y2)有可能相交的LineSegment
      * @param x1
@@ -267,16 +249,20 @@ public class GeometryModel implements ModelImagePainter {
             y1 = y2;
             y2 = t;
         }
+        LinkedList<ApproximatePoint> segmentSearchApproximatePointList = new LinkedList<ApproximatePoint>();
+        TreeSet<Segment> segmentSearchSet = new TreeSet<Segment>(ModelElement.indexComparator);
+        ApproximatePoint searchApproximatePointFrom = ApproximatePoint.tempApproximatePoint(0, 0), searchApproximatePointTo = ApproximatePoint.tempApproximatePoint(0, 0);
+
         searchApproximatePointFrom.setXY(x1 - segmentApproximateSize, y1 - segmentApproximateSize);
         searchApproximatePointTo.setXY(x2 + segmentApproximateSize, y2 + segmentApproximateSize);
         approximatePointsSearchTree.domainSearch(segmentSearchApproximatePointList, searchApproximatePointFrom, searchApproximatePointTo);
         segmentSearchSet.clear();
-        if(log.isDebugEnabled()){
-            log.debug(String.format("from:%s to:%s", searchApproximatePointFrom,searchApproximatePointTo));
+        if (log.isDebugEnabled()) {
+            log.debug(String.format("from:%s to:%s", searchApproximatePointFrom, searchApproximatePointTo));
         }
         for (ApproximatePoint p : segmentSearchApproximatePointList) {
             segmentSearchSet.add(p.segment);
-            if(p.segmentParm==0){
+            if (p.segmentParm == 0) {
                 segmentSearchSet.add(p.back.segment);
             }
 //            if (p.x <= x2 && p.x >= x1 || p.y <= y2 && p.y >= y1) {
@@ -314,6 +300,9 @@ public class GeometryModel implements ModelImagePainter {
             y1 = y2;
             y2 = t;
         }
+        LinkedList<ApproximatePoint> segmentSearchApproximatePointList = new LinkedList<ApproximatePoint>();
+        ApproximatePoint searchApproximatePointFrom = ApproximatePoint.tempApproximatePoint(0, 0), searchApproximatePointTo = ApproximatePoint.tempApproximatePoint(0, 0);
+
         searchApproximatePointFrom.setXY(x1 - segmentApproximateSize, y1 - segmentApproximateSize);
         searchApproximatePointTo.setXY(x2 + segmentApproximateSize, y2 + segmentApproximateSize);
         approximatePointsSearchTree.domainSearch(segmentSearchApproximatePointList, searchApproximatePointFrom, searchApproximatePointTo);
@@ -373,7 +362,7 @@ public class GeometryModel implements ModelImagePainter {
         for (Route route : routes) {
             if (!route.isCounterClockwise()) {
                 Point holePoint = route.getHolePoint();
-                if(log.isDebugEnabled()){
+                if (log.isDebugEnabled()) {
                     log.debug("Hole:");
                     log.debug(route);
                     log.debug(holePoint);
@@ -404,14 +393,16 @@ public class GeometryModel implements ModelImagePainter {
 //            System.out.println("sr.type"+sr.type());
             approximatePoints.addAll(sr.GenerateApproximatePoints(size, flatness));
         }
-        log.info("End of GenerateApproximatePoints, size="+approximatePoints.size());
+        log.info("End of GenerateApproximatePoints, size=" + approximatePoints.size());
 //        System.out.println("GenerateApproximatePoints.size() = " + GenerateApproximatePoints.size());
         return approximatePoints;
     }
-    private final ApproximatePoint tempApproximatePointSearchAp1 = ApproximatePoint.tempApproximatePoint(0, 0);
-    private final ApproximatePoint tempApproximatePointSearchAp2 = ApproximatePoint.tempApproximatePoint(0, 0);
+//    private final ApproximatePoint tempApproximatePointSearchAp1 = ApproximatePoint.tempApproximatePoint(0, 0);
+//    private final ApproximatePoint tempApproximatePointSearchAp2 = ApproximatePoint.tempApproximatePoint(0, 0);
 
     public List<ApproximatePoint> approximatePointSearch(List<ApproximatePoint> list, ApproximatePoint from, ApproximatePoint to) {
+        ApproximatePoint tempApproximatePointSearchAp1 = ApproximatePoint.tempApproximatePoint(0, 0);
+        ApproximatePoint tempApproximatePointSearchAp2 = ApproximatePoint.tempApproximatePoint(0, 0);
         if (from.x > to.x) {
             tempApproximatePointSearchAp1.x = to.x;
             tempApproximatePointSearchAp2.x = from.x;
@@ -430,6 +421,8 @@ public class GeometryModel implements ModelImagePainter {
     }
 
     public List<ApproximatePoint> approximatePointSearch(List<ApproximatePoint> list, double x1, double y1, double x2, double y2) {
+         ApproximatePoint tempApproximatePointSearchAp1 = ApproximatePoint.tempApproximatePoint(0, 0);
+        ApproximatePoint tempApproximatePointSearchAp2 = ApproximatePoint.tempApproximatePoint(0, 0);
         if (x1 < x2) {
             tempApproximatePointSearchAp1.x = x1;
             tempApproximatePointSearchAp2.x = x2;
@@ -524,7 +517,6 @@ public class GeometryModel implements ModelImagePainter {
     public void setShowModelShape(boolean showModelShape) {
         this.showModelShape = showModelShape;
     }
-
     ModelPanelManager.ViewMarkerType approximatePointScreenType = ModelPanelManager.ViewMarkerType.Rectangle;
 
     public ViewMarkerType getApproximatePointScreenType() {
@@ -535,10 +527,10 @@ public class GeometryModel implements ModelImagePainter {
         this.approximatePointScreenType = approximatePointScreenType;
     }
 
-    public void addApproximateRouteToPath(Path2D path){
+    public void addApproximateRouteToPath(Path2D path) {
         for (Route route : routes) {
-                route.addApproximateRouteToPath(path);
-            }
+            route.addApproximateRouteToPath(path);
+        }
     }
 
     @Override

@@ -24,6 +24,8 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.Enumeration;
 import java.util.LinkedList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.swing.JPanel;
 import net.epsilony.math.radialbasis.MultiQuadRadial;
 import net.epsilony.math.radialbasis.RadialBasisFunction;
@@ -125,32 +127,32 @@ public class ModelTestFrame extends javax.swing.JFrame {
         mpm = new ModelPanelManager(panel, gm.getLeftDown().getX(), gm.getLeftDown().getY(), gm.getRightUp().getX(), gm.getRightUp().getY());
         mpm.addModelImagePainter(gm);
 
-        LinkedList<Node> nodes = new LinkedList<Node>();
-        for (int i = 0; i < 23; i++) {
-            for (int j = 0; j < 5; j++) {
-                nodes.add(new Node(i * 2 + 2.0, j * 2 - 4));
-            }
-        }
-        mm.getNodes().addAll(nodes);
-        for (int i = 0; i < 10; i++) {
-            for (int j = 0; j < 4; j++) {
-                double[] tds = new double[4];
-                tds[0] = i * 4.8;
-                tds[1] = j * 3 - 6;
-                tds[2] = (i + 1) * 4.8;
-                tds[3] = (j + 1) * 3 - 6;
-                mm.getRectangleQuadratureDomains().add(tds);
-            }
-        }
+//        LinkedList<Node> nodes = new LinkedList<Node>();
+//        for (int i = 0; i < 23; i++) {
+//            for (int j = 0; j < 5; j++) {
+//                nodes.add(new Node(i * 2 + 2.0, j * 2 - 4));
+//            }
+//        }
+//        mm.getNodes().addAll(nodes);
+//        for (int i = 0; i < 10; i++) {
+//            for (int j = 0; j < 4; j++) {
+//                double[] tds = new double[4];
+//                tds[0] = i * 4.8;
+//                tds[1] = j * 3 - 6;
+//                tds[2] = (i + 1) * 4.8;
+//                tds[3] = (j + 1) * 3 - 6;
+//                mm.getRectangleQuadratureDomains().add(tds);
+//            }
+//        }
 
-        mm.generateBoundaryNodeByApproximatePoints(2, 0.1);
+//        mm.generateBoundaryNodeByApproximatePoints(2, 0.1);
 
-//        mm.generateNodesByTriangle(1, 0.05, "pqa0.5nQ", true, true);
-//        mm.generateQuadratureDomainsByTriangle(0.75, 0.25, "pqa0.25nQ");
-//        mm.generateQuadratureDomainsByTriangle();
+        mm.generateNodesByTriangle(1, 0.05, "pqa0.5nQ", true, true);
+        mm.generateQuadratureDomainsByTriangle(0.75, 0.25, "pqa0.25nQ");
+        mm.generateQuadratureDomainsByTriangle();
         mm.setQuadratureNum(3);
         mpm.addModelImagePainter(mm);
-        mm.setSupportDomain(new SimpleRoundSupportDomain(6, 9, 3, 20, gm, mm.getNodes()));
+        mm.setSupportDomain(new SimpleRoundSupportDomain(3, 9, 3, 20, gm, mm.getNodes()));
         RadialBasisFunction rbf = new MultiQuadRadial(1.5, 1.03);
         mm.setRadialBasisFunction(rbf);
         mm.setShapeFunction(new RadialPolynomialShapeFunction(rbf, 1));
@@ -161,11 +163,7 @@ public class ModelTestFrame extends javax.swing.JFrame {
 //        for(Node nd:outputs){
 //            System.out.println(nd.getX()+"  "+nd.getY());
 //        }
-        try {
-            mm.solve();
-        } catch (ArgumentOutsideDomainException ex) {
-            java.util.logging.Logger.getLogger(ModelTestFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
+
 
         mpm.addModelImagePainter(new ModelImagePainter() {
 
@@ -236,6 +234,7 @@ public class ModelTestFrame extends javax.swing.JFrame {
 
         jPanel1 = panel;
         jButton1 = new javax.swing.JButton();
+        jCheckBox1 = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -258,6 +257,13 @@ public class ModelTestFrame extends javax.swing.JFrame {
         );
 
         jButton1.setText("jButton1");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
+        jCheckBox1.setText("jCheckBox1");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -267,13 +273,19 @@ public class ModelTestFrame extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 128, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(12, 12, 12)
+                        .addComponent(jCheckBox1))
+                    .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 128, javax.swing.GroupLayout.PREFERRED_SIZE)))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addComponent(jButton1)
-                .addContainerGap(732, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jCheckBox1)
+                .addContainerGap(706, Short.MAX_VALUE))
             .addGroup(layout.createSequentialGroup()
                 .addGap(12, 12, 12)
                 .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -293,23 +305,54 @@ public class ModelTestFrame extends javax.swing.JFrame {
                 java.util.logging.Logger.getLogger(ModelTestFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
             }
             mm.getSupportDomain().supportNodes(pt.getX(), pt.getY(), list);
-            double min=Math.pow(list.getFirst().getX()-pt.getX(),2)+Math.pow(list.getFirst().getY()-pt.getY(),2);
-            Node minNode=list.getFirst();
-            for(Node node:list){
-                double td=Math.pow(node.getX()-pt.getX(), 2)+Math.pow(node.getY()-pt.getY(),2);
-                if(td<min){
-                    min=td;
-                    minNode=node;
+            double min = Math.pow(list.getFirst().getX() - pt.getX(), 2) + Math.pow(list.getFirst().getY() - pt.getY(), 2);
+            Node minNode = list.getFirst();
+            for (Node node : list) {
+                double td = Math.pow(node.getX() - pt.getX(), 2) + Math.pow(node.getY() - pt.getY(), 2);
+                if (td < min) {
+                    min = td;
+                    minNode = node;
                 }
             }
-            double x=pt.getX();
-            double y=pt.getY();
-             double I = D * D * D / 12;
-              double u = -P * y / (6 * E * I) * ((6 * L - 3 * x) * x + (2 + nu) * (y * y - D * D / 4));
-                    double v = P / (6 * E * I) * (3 * nu * y * y * (L - x) + (4 + 5 * nu) * D * D * x / 4 + (3 * L - x) * x * x);
-            System.out.println(minNode.getX()+" "+minNode.getY()+" "+minNode.getUx()+" "+minNode.getUy()+" "+u+" "+v);
+            double x = pt.getX();
+            double y = pt.getY();
+            double I = D * D * D / 12;
+            double u = -P * y / (6 * E * I) * ((6 * L - 3 * x) * x + (2 + nu) * (y * y - D * D / 4));
+            double v = P / (6 * E * I) * (3 * nu * y * y * (L - x) + (4 + 5 * nu) * D * D * x / 4 + (3 * L - x) * x * x);
+            System.out.println(minNode.getX() + " " + minNode.getY() + " " + minNode.getUx() + " " + minNode.getUy() + " " + u + " " + v);
         }
     }//GEN-LAST:event_jPanel1MouseClicked
+    Runnable task = new Runnable() {
+
+        @Override
+        public void run() {
+//            Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+            try {
+                mm.solve();
+            } catch (ArgumentOutsideDomainException ex) {
+                java.util.logging.Logger.getLogger(ModelTestFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            }
+            mpm.viewWhole();
+            mpm.repaintModel();
+        }
+    };
+    ExecutorService es;
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        mm.setForceSingleCore(jCheckBox1.isSelected());
+        if (null == es) {
+            es = Executors.newSingleThreadExecutor();
+            es.submit(task);
+            es.shutdown();
+        } else {
+            if (es.isTerminated()) {
+                es = Executors.newSingleThreadExecutor();
+                es.submit(task);
+                es.shutdown();
+            } else {
+                System.out.println("busy!");
+            }
+        }
+    }//GEN-LAST:event_jButton1ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -326,6 +369,7 @@ public class ModelTestFrame extends javax.swing.JFrame {
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
+    private javax.swing.JCheckBox jCheckBox1;
     private javax.swing.JPanel jPanel1;
     // End of variables declaration//GEN-END:variables
 }

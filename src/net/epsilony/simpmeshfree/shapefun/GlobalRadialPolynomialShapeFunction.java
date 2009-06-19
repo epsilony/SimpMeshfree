@@ -5,7 +5,6 @@
 package net.epsilony.simpmeshfree.shapefun;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import net.epsilony.math.polynomial.BivariateBinomials;
 import net.epsilony.math.radialbasis.RadialBasisFunction;
@@ -24,21 +23,47 @@ import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
  */
 public class GlobalRadialPolynomialShapeFunction implements ShapeFunction {
 
-    RCMJni rcmJni = new RCMJni();
+//    RCMJni rcmJni = new RCMJni();
+    int[] PInv, P;
     RadialBasisFunction radialBasisFunction;
     LayeredDomainTree<Node> nodeSearchTree;
     double supportDomainSize;
     int nomialPower;
     int m;
-    ArrayList<Node> nodes = new ArrayList<Node>();
+    ArrayList<Node> nodes;
     ArrayList<Node> supportNodes;
     UpperSymmBandMatrix gMat;
-    DenseVector transVector;
 
-    public GlobalRadialPolynomialShapeFunction(RadialBasisFunction radialBasisFunction, double supportDomainSize, Collection<Node> nodes, int nomialPower) {
+    private GlobalRadialPolynomialShapeFunction(GlobalRadialPolynomialShapeFunction ori) {
+        this.radialBasisFunction = ori.radialBasisFunction.CopyOf(false);
+        this.supportDomainSize = ori.supportDomainSize;
+        this.nodes = ori.nodes;
+
+        nodeSearchTree = ori.nodeSearchTree;
+
+        this.nomialPower = ori.nomialPower;
+        m = ori.m;
+        P = ori.P;
+        PInv = ori.PInv;
+        if (supportDomainSize > 0) {
+            supportNodes = new ArrayList<Node>(100);
+        } else {
+            supportNodes = nodes;
+        }
+        gMat=ori.gMat.copy();
+        values = new DenseVector(nodes.size() + m);
+        pxValues = new DenseVector(nodes.size() + m);
+        pyValues = new DenseVector(nodes.size() + m);
+        pxxValues = new DenseVector(nodes.size() + m);
+        pxyValues = new DenseVector(nodes.size() + m);
+        pyyValues = new DenseVector(nodes.size() + m);
+        tVector = new DenseVector(nodes.size() + m);
+    }
+
+    public GlobalRadialPolynomialShapeFunction(RadialBasisFunction radialBasisFunction, double supportDomainSize, int nomialPower) {
         this.radialBasisFunction = radialBasisFunction;
         this.supportDomainSize = supportDomainSize;
-        this.nodes.addAll(nodes);
+        this.nodes = new ArrayList<Node>(nodes);
         if (supportDomainSize > 0) {
             nodeSearchTree = new LayeredDomainTree<Node>(this.nodes, Point.compX, Point.compY, true);
         }
@@ -92,6 +117,7 @@ public class GlobalRadialPolynomialShapeFunction implements ShapeFunction {
         for (int i = 0; i < b.size(); i++) {
             b.set(i, i);
         }
+        RCMJni rcmJni = new RCMJni();
         Object[] results = rcmJni.compile(tempMat, b);
         gMat = (UpperSymmBandMatrix) results[0];
 
@@ -104,7 +130,6 @@ public class GlobalRadialPolynomialShapeFunction implements ShapeFunction {
 //        }
 //        System.out.println(sb);
 
-        transVector = (DenseVector) results[1];
         values = new DenseVector(nodes.size() + m);
         pxValues = new DenseVector(nodes.size() + m);
         pyValues = new DenseVector(nodes.size() + m);
@@ -122,7 +147,6 @@ public class GlobalRadialPolynomialShapeFunction implements ShapeFunction {
             Node to = Node.tempNode(x + supportDomainSize, y + supportDomainSize);
             nodeSearchTree.domainSearch(supportNodes, from, to);
         }
-        int[] PInv = rcmJni.getPInv();
         values.zero();
         double[] tds = new double[2];
         for (Node node : supportNodes) {
@@ -131,7 +155,7 @@ public class GlobalRadialPolynomialShapeFunction implements ShapeFunction {
             pxValues.set(PInv[node.getMatrixIndex()] - 1, tds[0]);
             pyValues.set(PInv[node.getMatrixIndex()] - 1, tds[1]);
         }
-        int[] P = rcmJni.getP();
+
         gMat.solve(pxValues, tVector);
 
         for (int i = 0; i < nodes.size(); i++) {
@@ -151,7 +175,7 @@ public class GlobalRadialPolynomialShapeFunction implements ShapeFunction {
             Node to = Node.tempNode(x + supportDomainSize, y + supportDomainSize);
             nodeSearchTree.domainSearch(supportNodes, from, to);
         }
-        int[] PInv = rcmJni.getPInv();
+
         values.zero();
         double[] tds = new double[3];
         for (Node node : supportNodes) {
@@ -161,7 +185,7 @@ public class GlobalRadialPolynomialShapeFunction implements ShapeFunction {
             pxyValues.set(PInv[node.getMatrixIndex()] - 1, tds[1]);
             pyyValues.set(PInv[node.getMatrixIndex()] - 1, tds[2]);
         }
-        int[] P = rcmJni.getP();
+
         gMat.solve(pxxValues, tVector);
 
         for (int i = 0; i < nodes.size(); i++) {
@@ -187,7 +211,7 @@ public class GlobalRadialPolynomialShapeFunction implements ShapeFunction {
             Node to = Node.tempNode(x + supportDomainSize, y + supportDomainSize);
             nodeSearchTree.domainSearch(supportNodes, from, to);
         }
-        int[] PInv = rcmJni.getPInv();
+
         values.zero();
         for (Node node : supportNodes) {
             radialBasisFunction.setCenter(node.getX(), node.getY());
@@ -211,10 +235,29 @@ public class GlobalRadialPolynomialShapeFunction implements ShapeFunction {
 //            }
 //        }
         gMat.solve(values, tVector);
-        int[] P = rcmJni.getP();
+
         for (int i = 0; i < this.nodes.size(); i++) {
             values.set(P[i] - 1, tVector.get(i));
         }
         return values;
+    }
+
+    @Override
+    public ShapeFunction CopyOf(boolean deep) {
+        if (deep) {
+            return new GlobalRadialPolynomialShapeFunction(radialBasisFunction.CopyOf(deep), supportDomainSize, nomialPower);
+        } else {
+           return new GlobalRadialPolynomialShapeFunction(null, supportDomainSize, nomialPower);
+        }
+    }
+
+    @Override
+    public RadialBasisFunction getRadialBasisFunction() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void setRadialBasisFunction(RadialBasisFunction radialBasisFunction) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

@@ -6,6 +6,7 @@
 package net.epsilony.simpmeshfree.shapefun;
 
 import java.util.List;
+import net.epsilony.math.radialbasis.RadialBasisFunction;
 import net.epsilony.simpmeshfree.model.geometry.Node;
 import no.uib.cipr.matrix.Vector;
 
@@ -56,5 +57,9 @@ public interface ShapeFunction {
      */
     Vector shapeValues(List<Node> nodes, double x, double y);
 
-  
+    RadialBasisFunction getRadialBasisFunction();
+
+   void setRadialBasisFunction(RadialBasisFunction radialBasisFunction);
+
+    ShapeFunction CopyOf(boolean deep);
 }

@@ -19,4 +19,6 @@ public interface SupportDomain {
     public double supportNodes(double x,double y,List<Node> list);
 
     public double boundarySupportNodes(Segment segment,double parm,List<Node> list);
+
+    public SupportDomain CopyOf(boolean deep);
 }

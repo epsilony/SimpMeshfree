@@ -10,21 +10,15 @@
  */
 package net.epsilony.simpmeshfree.model;
 
-import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Shape;
-import java.awt.geom.Area;
 import java.awt.geom.Path2D;
-import java.awt.geom.PathIterator;
-import java.awt.geom.Rectangle2D;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.LinkedList;
-import java.util.List;
 import javax.swing.JPanel;
 import net.epsilony.math.radialbasis.MultiQuadRadial;
 import net.epsilony.math.radialbasis.RadialBasisFunction;

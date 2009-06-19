@@ -24,7 +24,6 @@ import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.UpperSymmBandMatrix;
-import no.uib.cipr.matrix.UpperSymmPackMatrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.VectorEntry;
 import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
@@ -215,16 +214,19 @@ public class MechanicsModel extends AbstractModel implements ModelImagePainter {
 
 
     }
-private RCMJni rcmJni;
+    private RCMJni rcmJni;
+
     public void solve() throws ArgumentOutsideDomainException {
         log.info("Start solve()");
         initNodesMatrixIndex();
 //        quadrateTriangleDomainsByGrid(quadratureNum);
-        quadrateRectangleDomains(quadratureNum);
+//        initialKMatrix();
+//        quadrateRectangleDomains();
+        quadrateDomains();
         bVector = new DenseVector(nodes.size() * 2);
         natureBoundaryQuadrate(quadratureNum);
         applyAccurateEssentialBoundaryConditions();
-         rcmJni= new RCMJni();
+        rcmJni = new RCMJni();
         Object[] results = rcmJni.compile(kMat, bVector);
         log.info("solve the Ax=b now");
         xVector = new DenseVector(bVector.size());
@@ -233,12 +235,13 @@ private RCMJni rcmJni;
         fillDisplacement();
         log.info("End of solve()");
     }
-    public void fillDisplacement(){
-                int index1,index2;
+
+    public void fillDisplacement() {
+        int index1, index2;
         log.info("edit the nodes ux uy data");
         for (Node node : nodes) {
-            index1 = rcmJni.PInv[node.getMatrixIndex()*2] -1;
-            index2 = rcmJni.PInv[node.getMatrixIndex()*2+1] -1;
+            index1 = rcmJni.PInv[node.getMatrixIndex() * 2] - 1;
+            index2 = rcmJni.PInv[node.getMatrixIndex() * 2 + 1] - 1;
             node.setUx(xVector.get(index1));
             node.setUy(xVector.get(index2));
         }
@@ -256,11 +259,10 @@ private RCMJni rcmJni;
     public Matrix getConstitutiveLaw() {
         return constitutiveLaw;
     }
-
     DenseMatrix constitutiveLaw = null;
 
     @Override
-    public void quadrateCore(int mIndex, double dphim_dx, double dphim_dy, int nIndex, double dphin_dx, double dphin_dy, double coefs) {
+    public void quadrateCore(int mIndex, double dphim_dx, double dphim_dy, int nIndex, double dphin_dx, double dphin_dy, double coefs,FlexCompRowMatrix matrix) {
         double td;
         mIndex *= 2;
         nIndex *= 2;
@@ -271,14 +273,14 @@ private RCMJni rcmJni;
         double d22 = constitutiveLaw.get(2, 2);
         td = dphim_dx * d00 * dphin_dx + dphim_dy * d22 * dphin_dy;
 
-        kMat.add(mIndex, nIndex, coefs * td);
+        matrix.add(mIndex, nIndex, coefs * td);
         td = dphim_dx * d01 * dphin_dy + dphim_dy * d22 * dphin_dx;
-        kMat.add(mIndex, nIndex + 1, coefs * td);
+        matrix.add(mIndex, nIndex + 1, coefs * td);
         td = dphim_dy * d11 * dphin_dy + dphim_dx * d22 * dphin_dx;
-        kMat.add(mIndex + 1, nIndex + 1, coefs * td);
+        matrix.add(mIndex + 1, nIndex + 1, coefs * td);
         if (mIndex != nIndex) {
             td = dphim_dy * d10 * dphin_dx + dphim_dx * d22 * dphin_dy;
-            kMat.add(mIndex + 1, nIndex, coefs * td);
+            matrix.add(mIndex + 1, nIndex, coefs * td);
         }
     }
 
@@ -300,43 +302,43 @@ private RCMJni rcmJni;
     }
 
     @Override
-    public void accurateEssentialCore(double[] values,int index, byte flag) {
-        int rowcol=index*2;
+    public void accurateEssentialCore(double[] values, int index, byte flag) {
+        int rowcol = index * 2;
         if ((BoundaryCondition.X & flag) == BoundaryCondition.X) {
-                    double ux = values[0];
-                    double kk = 0;
+            double ux = values[0];
+            double kk = 0;
 
-                    for (int i = 0; i < rowcol; i++) {
-                        kk = kMat.get(i, rowcol);
-                        if (0 != kk) {
-                            bVector.add(i, -kk * ux);
-                            kMat.set(i, rowcol, 0);
-                        }
-                    }
-                    for (VectorEntry vn : kMat.getRow(rowcol)) {
-                        bVector.add(vn.index(), -vn.get() * ux);
-                    }
-                    kMat.setRow(rowcol, new SparseVector(kMat.numColumns()));
-                    kMat.set(rowcol, rowcol, 1);
-                    bVector.set(rowcol, ux);
+            for (int i = 0; i < rowcol; i++) {
+                kk = kMat.get(i, rowcol);
+                if (0 != kk) {
+                    bVector.add(i, -kk * ux);
+                    kMat.set(i, rowcol, 0);
                 }
+            }
+            for (VectorEntry vn : kMat.getRow(rowcol)) {
+                bVector.add(vn.index(), -vn.get() * ux);
+            }
+            kMat.setRow(rowcol, new SparseVector(kMat.numColumns()));
+            kMat.set(rowcol, rowcol, 1);
+            bVector.set(rowcol, ux);
+        }
 
-                if ((BoundaryCondition.Y & flag) == BoundaryCondition.Y) {
-                    double uy = values[1];
-                    double kk = 0;
-                    for (int i = 0; i < rowcol+1; i++) {
-                        kk = kMat.get(i, rowcol + 1);
-                        if (kk != 0) {
-                            bVector.add(i, -kk * uy);
-                            kMat.set(i, rowcol + 1, 0);
-                        }
-                    }
-                    for (VectorEntry vn : kMat.getRow(rowcol + 1)) {
-                        bVector.add(vn.index(), -vn.get() * uy);
-                    }
-                    kMat.setRow(rowcol + 1, new SparseVector(kMat.numColumns()));
-                    kMat.set(rowcol + 1, rowcol + 1, 1);
-                    bVector.set(rowcol + 1, uy);
+        if ((BoundaryCondition.Y & flag) == BoundaryCondition.Y) {
+            double uy = values[1];
+            double kk = 0;
+            for (int i = 0; i < rowcol + 1; i++) {
+                kk = kMat.get(i, rowcol + 1);
+                if (kk != 0) {
+                    bVector.add(i, -kk * uy);
+                    kMat.set(i, rowcol + 1, 0);
                 }
+            }
+            for (VectorEntry vn : kMat.getRow(rowcol + 1)) {
+                bVector.add(vn.index(), -vn.get() * uy);
+            }
+            kMat.setRow(rowcol + 1, new SparseVector(kMat.numColumns()));
+            kMat.set(rowcol + 1, rowcol + 1, 1);
+            bVector.set(rowcol + 1, uy);
+        }
     }
 }
