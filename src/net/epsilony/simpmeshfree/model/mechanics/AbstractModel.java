@@ -4,14 +4,18 @@
  */
 package net.epsilony.simpmeshfree.model.mechanics;
 
+import com.sun.jndi.toolkit.ctx.AtomicDirContext;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
@@ -24,11 +28,13 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import net.epsilony.math.analysis.GaussLegendreQuadrature;
@@ -211,10 +217,99 @@ public abstract class AbstractModel implements ModelImagePainter {
 //        log.info("Multi Thread quadrateDomains finished, time costs:" + time);
     }
 
-    public class QuadrateDomainServer {
-        public final byte NEED_NEW_PROCESS_RANGE=0x01;
+    public class QuadrateDomainServer implements Runnable {
 
+        public static final int DEFAULT_PROCESS_NUM = 10;
+        public static final int NEW_PROCESS_RANGE = 0x00000001;  //in->id,quadrated out->range[2]
+        public static final int PROCESS_QUADRATED = 0x00000002;  //in->id,quadrated,
+        public static final int PROCESS_FINISHED = 0x00000004;   //in->id,quadrated,FlexCompRowMatrix
         ServerSocket serverSocket;
+        ArrayList<FlexCompRowMatrix> processMatris = new ArrayList<FlexCompRowMatrix>(DEFAULT_PROCESS_NUM);
+        ArrayList<Integer> processQuadrated = new ArrayList<Integer>(DEFAULT_PROCESS_NUM);
+        ArrayList<Long> processTime = new ArrayList<Long>(DEFAULT_PROCESS_NUM);
+        LinkedList<Integer> candidateRanges = new LinkedList<Integer>();
+        ReentrantLock processInfoLock = new ReentrantLock();
+        double ratio;//range/speed ratio
+
+        public double[] generateProcessRange(int id) {
+            Integer quadrated = processQuadrated.get(id);
+            Long time = processTime.get(id);
+            try {
+                processInfoLock.lock();
+                if (!candidateRanges.isEmpty()) {
+                    Integer rangeStart = candidateRanges.getFirst();
+                    Integer rangeEnd = candidateRanges.get(1);
+                    double speed=quadrated.intValue()/time.doubleValue();
+                    int gap=Math.ceil(speed*ratio);
+                    
+                    
+                }else{
+                    return null;
+                }
+            } finally {
+                processInfoLock.unlock();
+            }
+            return null;
+        }
+
+        @Override
+        public void run() {
+            while (!Thread.interrupted()) {
+                try {
+                    Socket socket = serverSocket.accept();
+                    ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
+                    while (true) {
+                        int s = in.readInt();
+                        if ((s & NEW_PROCESS_RANGE) != 0) {
+                            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+                            int id = in.readInt();
+                            int processQuadrated = in.readInt();
+                            setProcessQuadrated(id, processQuadrated);
+                            double[] range = generateProcessRange(id);
+                            if (null == range) {
+                                out.writeInt(PROCESS_FINISHED);
+                            } else {
+                                out.writeInt(NEW_PROCESS_RANGE);
+                                out.writeObject(range);
+                            }
+                            out.flush();
+                            socket.close();
+                            break;
+                        } else if ((s & PROCESS_QUADRATED) != 0) {
+                            int id = in.readInt();
+                            int processQuadrated = in.readInt();
+                            socket.close();
+                            setProcessQuadrated(id, processQuadrated);
+                            break;
+                        } else if ((s & PROCESS_FINISHED) != 0) {
+                            int id = in.readInt();
+                            int processQuadrated = in.readInt();
+                            try {
+                                FlexCompRowMatrix processMatrix = (FlexCompRowMatrix) in.readObject();
+                                setProcessQuadrated(id, processQuadrated);
+                                setProcessFinished(id, processMatrix);
+                            } catch (ClassNotFoundException ex) {
+                                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+                                java.util.logging.Logger.getLogger(AbstractModel.class.getName()).log(Level.SEVERE, null, ex);
+                            } finally {
+                                socket.close();
+                            }
+                        }
+                    }
+                } catch (IOException ex) {
+                    log.error(ex);
+                }
+
+            }
+        }
+
+        private void setProcessFinished(int id, FlexCompRowMatrix processMatrix) {
+            throw new UnsupportedOperationException("Not yet implemented");
+        }
+
+        private void setProcessQuadrated(int id, int processQuadrated) {
+            throw new UnsupportedOperationException("Not yet implemented");
+        }
     }
 
     public class QuadrateDomainProcess implements ModelMessage, Serializable {
@@ -228,24 +323,29 @@ public abstract class AbstractModel implements ModelImagePainter {
         InetAddress rootServerAddress;
         int rootServerPort;
         boolean reachEnd;
-
+        ReentrantLock processRangeLock = new ReentrantLock();
         LinkedList<int[]> processRangeBuffer = new LinkedList<int[]>();
 
         private boolean freshProcessRange() {
-            if (processRangeBuffer.isEmpty()) {
-                int[] newRange = waitNewRangeFromRootServer();
-                if (newRange == null) {
-                    reachEnd = true;
-                    return false;
+            try {
+                processRangeLock.lock();
+                if (processRangeBuffer.isEmpty()) {
+                    int[] newRange = waitNewRangeFromRootServer();
+                    if (newRange == null) {
+                        reachEnd = true;
+                        return false;
+                    } else {
+                        processRangeBuffer.add(newRange);
+                        return true;
+                    }
                 } else {
-                    processRangeBuffer.add(newRange);
+                    int[] range = processRangeBuffer.getFirst();
+                    processEnd = range[1];
+                    processStart = range[0];
                     return true;
                 }
-            } else {
-                int[] range = processRangeBuffer.getFirst();
-                processEnd = range[1];
-                processStart = range[0];
-                return true;
+            } finally {
+                processRangeLock.unlock();
             }
         }
 
@@ -272,7 +372,7 @@ public abstract class AbstractModel implements ModelImagePainter {
                             taskStart = taskStart > processEnd ? processEnd : taskStart;
                             range[1] = taskStart;
                             return true;
-                        }else{
+                        } else {
                             return false;
                         }
                     }
@@ -891,45 +991,4 @@ public abstract class AbstractModel implements ModelImagePainter {
     abstract public void natureConBoundaryQuadrateCore(double[] values, int index, double phi);
 
     abstract public void natureBoundaryQudarateCore(double[] values, int index, double phi, double coef);
-
-    public static void main(String[] args) throws InterruptedException {
-
-        final LinkedList<Integer> ints=new LinkedList<Integer>();
-        final List<Integer> sints=Collections.synchronizedList(ints);
-        ExecutorService es=Executors.newFixedThreadPool(2);
-        final AtomicBoolean finish=new AtomicBoolean();
-        es.submit(new Runnable() {
-
-            @Override
-            public void run() {
-                while(!finish.get()||!sints.isEmpty()){
-                    System.out.println(sints.get(0).intValue());
-                    try {
-                        Thread.sleep(1);
-                    } catch (InterruptedException ex) {
-                        java.util.logging.Logger.getLogger(AbstractModel.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-            }
-        });
-        es.submit(new Runnable() {
-
-            @Override
-            public void run() {
-                for(int i=0;i<1000;i++){
-                    sints.add(new Integer(i));
-//                    try {
-////                        Thread.sleep(5);
-//                    } catch (InterruptedException ex) {
-//                        java.util.logging.Logger.getLogger(AbstractModel.class.getName()).log(Level.SEVERE, null, ex);
-//                    }
-                }
-//                finish.set(true);
-            }
-        });
-        es.shutdown();
-        while(true){
-            es.awaitTermination(10, TimeUnit.MICROSECONDS);
-        }
-    }
 }
