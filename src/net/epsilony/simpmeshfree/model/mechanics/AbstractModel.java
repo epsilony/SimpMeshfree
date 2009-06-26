@@ -217,262 +217,49 @@ public abstract class AbstractModel implements ModelImagePainter {
 //        log.info("Multi Thread quadrateDomains finished, time costs:" + time);
     }
 
-    public class QuadrateDomainServer implements Runnable {
+    public class QuadrateDomainsTask implements Runnable {
 
-        public static final int DEFAULT_PROCESS_NUM = 10;
-        public static final int NEW_PROCESS_RANGE = 0x00000001;  //in->id,quadrated out->range[2]
-        public static final int PROCESS_QUADRATED = 0x00000002;  //in->id,quadrated,
-        public static final int PROCESS_FINISHED = 0x00000004;   //in->id,quadrated,FlexCompRowMatrix
-        ServerSocket serverSocket;
-        ArrayList<FlexCompRowMatrix> processMatris = new ArrayList<FlexCompRowMatrix>(DEFAULT_PROCESS_NUM);
-        ArrayList<Integer> processQuadrated = new ArrayList<Integer>(DEFAULT_PROCESS_NUM);
-        ArrayList<Long> processTime = new ArrayList<Long>(DEFAULT_PROCESS_NUM);
-        LinkedList<Integer> candidateRanges = new LinkedList<Integer>();
-        ReentrantLock processInfoLock = new ReentrantLock();
-        double ratio;//range/speed ratio
+        private FlexCompRowMatrix taskMatrix;
 
-        public double[] generateProcessRange(int id) {
-            Integer quadrated = processQuadrated.get(id);
-            Long time = processTime.get(id);
-            try {
-                processInfoLock.lock();
-                if (!candidateRanges.isEmpty()) {
-                    Integer rangeStart = candidateRanges.getFirst();
-                    Integer rangeEnd = candidateRanges.get(1);
-                    double speed=quadrated.intValue()/time.doubleValue();
-                    int gap=Math.ceil(speed*ratio);
-                    
-                    
-                }else{
-                    return null;
-                }
-            } finally {
-                processInfoLock.unlock();
-            }
-            return null;
+        public QuadrateDomainsTask(FlexCompRowMatrix matrix) {
+            this.taskMatrix = matrix;
         }
 
         @Override
         public void run() {
-            while (!Thread.interrupted()) {
+            int start;
+            int end;
+            int[] range = new int[2];
+            SupportDomain localSupportDomain = supportDomain.CopyOf(false);
+            ShapeFunction localShapeFunction = shapeFunction.CopyOf(false);
+            RadialBasisFunction localRadialBasisFunction = radialBasisFunction.CopyOf(false);
+            localShapeFunction.setRadialBasisFunction(localRadialBasisFunction);
+//             System.out.println("1start="+start+", end="+end+",sumDomains"+sumDomains);
+
+            start = range[0];
+            end = range[1];
+
+            if (start < rectangleQuadratureDomains.size()) {
                 try {
-                    Socket socket = serverSocket.accept();
-                    ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
-                    while (true) {
-                        int s = in.readInt();
-                        if ((s & NEW_PROCESS_RANGE) != 0) {
-                            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-                            int id = in.readInt();
-                            int processQuadrated = in.readInt();
-                            setProcessQuadrated(id, processQuadrated);
-                            double[] range = generateProcessRange(id);
-                            if (null == range) {
-                                out.writeInt(PROCESS_FINISHED);
-                            } else {
-                                out.writeInt(NEW_PROCESS_RANGE);
-                                out.writeObject(range);
-                            }
-                            out.flush();
-                            socket.close();
-                            break;
-                        } else if ((s & PROCESS_QUADRATED) != 0) {
-                            int id = in.readInt();
-                            int processQuadrated = in.readInt();
-                            socket.close();
-                            setProcessQuadrated(id, processQuadrated);
-                            break;
-                        } else if ((s & PROCESS_FINISHED) != 0) {
-                            int id = in.readInt();
-                            int processQuadrated = in.readInt();
-                            try {
-                                FlexCompRowMatrix processMatrix = (FlexCompRowMatrix) in.readObject();
-                                setProcessQuadrated(id, processQuadrated);
-                                setProcessFinished(id, processMatrix);
-                            } catch (ClassNotFoundException ex) {
-                                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-                                java.util.logging.Logger.getLogger(AbstractModel.class.getName()).log(Level.SEVERE, null, ex);
-                            } finally {
-                                socket.close();
-                            }
-                        }
-                    }
-                } catch (IOException ex) {
-                    log.error(ex);
-                }
-
-            }
-        }
-
-        private void setProcessFinished(int id, FlexCompRowMatrix processMatrix) {
-            throw new UnsupportedOperationException("Not yet implemented");
-        }
-
-        private void setProcessQuadrated(int id, int processQuadrated) {
-            throw new UnsupportedOperationException("Not yet implemented");
-        }
-    }
-
-    public class QuadrateDomainProcess implements ModelMessage, Serializable {
-
-        AtomicInteger sumProcessQuadratedDomains = new AtomicInteger();
-        int id;
-        int processStart;
-        int processEnd;
-        int taskStart;
-        ReentrantLock taskRangeLock = new ReentrantLock();
-        InetAddress rootServerAddress;
-        int rootServerPort;
-        boolean reachEnd;
-        ReentrantLock processRangeLock = new ReentrantLock();
-        LinkedList<int[]> processRangeBuffer = new LinkedList<int[]>();
-
-        private boolean freshProcessRange() {
-            try {
-                processRangeLock.lock();
-                if (processRangeBuffer.isEmpty()) {
-                    int[] newRange = waitNewRangeFromRootServer();
-                    if (newRange == null) {
-                        reachEnd = true;
-                        return false;
-                    } else {
-                        processRangeBuffer.add(newRange);
-                        return true;
-                    }
-                } else {
-                    int[] range = processRangeBuffer.getFirst();
-                    processEnd = range[1];
-                    processStart = range[0];
-                    return true;
-                }
-            } finally {
-                processRangeLock.unlock();
-            }
-        }
-
-        private int[] waitNewRangeFromRootServer() {
-
-            return null;
-        }
-
-        private boolean newTaskRange(int[] range) {
-            try {
-                taskRangeLock.lock();
-                if (reachEnd) {
-                    return false;
-                }
-                if (taskStart >= processEnd) {
-                    if (forceLocalCore) {
-                        reachEnd = true;
-                        return false;
-                    } else {
-                        if (freshProcessRange()) {
-                            taskStart = processStart;
-                            range[0] = taskStart;
-                            taskStart += gap;
-                            taskStart = taskStart > processEnd ? processEnd : taskStart;
-                            range[1] = taskStart;
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    }
-                } else {
-                    range[0] = taskStart;
-                    taskStart += gap;
-                    taskStart = taskStart > processEnd ? processEnd : taskStart;
-                    range[1] = taskStart;
-                    return true;
-                }
-            } finally {
-                taskRangeLock.unlock();
-            }
-        }
-        int gap;
-        FlexCompRowMatrix processMatrix;
-        int sumRootDomains = rectangleQuadratureDomains.size() + triangleQuadratureDomains.size();
-
-        @Override
-        public void action() {
-            int sumTasks = Runtime.getRuntime().availableProcessors();
-            sumProcessQuadratedDomains.set(0);
-
-            log.info("Start quadrateDomains with multi threads");
-            FlexCompRowMatrix[] kMats = new FlexCompRowMatrix[sumTasks];
-            kMats[0] = processMatrix;
-            for (int i = 1; i < sumTasks; i++) {
-                kMats[i] = new FlexCompRowMatrix(processMatrix.numRows(), processMatrix.numColumns());
-            }
-
-            ExecutorService es = Executors.newFixedThreadPool(sumTasks);
-
-            if (gap < 10) {
-                gap = 10;
-            }
-            for (int i = 0; i < sumTasks; i++) {
-                es.submit(new QuadrateDomainsTask(kMats[i]));
-            }
-            es.shutdown();
-            boolean allDone = false;
-            while (!allDone) {
-                log.info(String.format("Quadrating %d/%d %%%.0f", sumProcessQuadratedDomains.get(), sumRootDomains, sumProcessQuadratedDomains.get() / (double) sumRootDomains * 100));
-                try {
-                    allDone = es.awaitTermination(1, TimeUnit.SECONDS);
-                } catch (InterruptedException ex) {
+                    quadrateRectangleDomains(start, end, taskMatrix, localSupportDomain, localShapeFunction, localRadialBasisFunction);
+                } catch (ArgumentOutsideDomainException ex) {
                     java.util.logging.Logger.getLogger(AbstractModel.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-            log.info("All tasks' done! Assembling");
-            for (int i = 1; i < sumTasks; i++) {
-                processMatrix.add(kMats[i]);
-            }
-        }
-
-        public class QuadrateDomainsTask implements Runnable {
-
-            private FlexCompRowMatrix taskMatrix;
-
-            public QuadrateDomainsTask(FlexCompRowMatrix matrix) {
-                this.taskMatrix = matrix;
-            }
-
-            @Override
-            public void run() {
-                int start;
-                int end;
-                int[] range = new int[2];
-                SupportDomain localSupportDomain = supportDomain.CopyOf(false);
-                ShapeFunction localShapeFunction = shapeFunction.CopyOf(false);
-                RadialBasisFunction localRadialBasisFunction = radialBasisFunction.CopyOf(false);
-                localShapeFunction.setRadialBasisFunction(localRadialBasisFunction);
-//             System.out.println("1start="+start+", end="+end+",sumDomains"+sumDomains);
-                while (newTaskRange(range)) {
-                    start = range[0];
-                    end = range[1];
-
-                    if (start < rectangleQuadratureDomains.size()) {
-                        try {
-                            quadrateRectangleDomains(start, end, taskMatrix, localSupportDomain, localShapeFunction, localRadialBasisFunction);
-                        } catch (ArgumentOutsideDomainException ex) {
-                            java.util.logging.Logger.getLogger(AbstractModel.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    }
-                    if (end > rectangleQuadratureDomains.size() && !triangleQuadratureDomains.isEmpty()) {
-                        int triStart;
-                        if (start < rectangleQuadratureDomains.size()) {
-                            triStart = 0;
-                        } else {
-                            triStart = start - rectangleQuadratureDomains.size();
-                        }
-                        int triEnd = end - rectangleQuadratureDomains.size();
-
-                        try {
-                            quadrateTriangleDomainsByGrid(triStart, triEnd, taskMatrix, localSupportDomain, localShapeFunction, localRadialBasisFunction);
-                        } catch (ArgumentOutsideDomainException ex) {
-                            java.util.logging.Logger.getLogger(AbstractModel.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    }
+            if (end > rectangleQuadratureDomains.size() && !triangleQuadratureDomains.isEmpty()) {
+                int triStart;
+                if (start < rectangleQuadratureDomains.size()) {
+                    triStart = 0;
+                } else {
+                    triStart = start - rectangleQuadratureDomains.size();
                 }
+                int triEnd = end - rectangleQuadratureDomains.size();
 
+                try {
+                    quadrateTriangleDomainsByGrid(triStart, triEnd, taskMatrix, localSupportDomain, localShapeFunction, localRadialBasisFunction);
+                } catch (ArgumentOutsideDomainException ex) {
+                    java.util.logging.Logger.getLogger(AbstractModel.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         }
     }
