@@ -5,6 +5,7 @@
 package net.epsilony.simpmeshfree.shapefun;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import net.epsilony.math.polynomial.BivariateBinomials;
 import net.epsilony.math.radialbasis.RadialBasisFunction;
@@ -60,7 +61,7 @@ public class GlobalRadialPolynomialShapeFunction implements ShapeFunction {
         tVector = new DenseVector(nodes.size() + m);
     }
 
-    public GlobalRadialPolynomialShapeFunction(RadialBasisFunction radialBasisFunction, double supportDomainSize, int nomialPower) {
+    public GlobalRadialPolynomialShapeFunction(RadialBasisFunction radialBasisFunction, double supportDomainSize, Collection<Node> nodes,int nomialPower) {
         this.radialBasisFunction = radialBasisFunction;
         this.supportDomainSize = supportDomainSize;
         this.nodes = new ArrayList<Node>(nodes);
@@ -120,6 +121,8 @@ public class GlobalRadialPolynomialShapeFunction implements ShapeFunction {
         RCMJni rcmJni = new RCMJni();
         Object[] results = rcmJni.compile(tempMat, b);
         gMat = (UpperSymmBandMatrix) results[0];
+        PInv=rcmJni.getPInv();
+        P=rcmJni.getP();
 
 //        sb = new StringBuilder();
 //        for(int i=0;i<gMat.numRows();i++){
@@ -245,9 +248,9 @@ public class GlobalRadialPolynomialShapeFunction implements ShapeFunction {
     @Override
     public ShapeFunction CopyOf(boolean deep) {
         if (deep) {
-            return new GlobalRadialPolynomialShapeFunction(radialBasisFunction.CopyOf(deep), supportDomainSize, nomialPower);
+            return new GlobalRadialPolynomialShapeFunction(radialBasisFunction.CopyOf(deep), supportDomainSize, nodes,nomialPower);
         } else {
-           return new GlobalRadialPolynomialShapeFunction(null, supportDomainSize, nomialPower);
+           return new GlobalRadialPolynomialShapeFunction(null, supportDomainSize, nodes,nomialPower);
         }
     }
 

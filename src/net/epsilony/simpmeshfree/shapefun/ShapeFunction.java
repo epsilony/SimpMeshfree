@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.util.List;
 import net.epsilony.math.radialbasis.RadialBasisFunction;
 import net.epsilony.simpmeshfree.model.geometry.Node;
+import net.epsilony.simpmeshfree.model.mechanics.SupportDomain;
 import no.uib.cipr.matrix.Vector;
 
 /**
@@ -61,6 +62,8 @@ public interface ShapeFunction extends Serializable{
     RadialBasisFunction getRadialBasisFunction();
 
    void setRadialBasisFunction(RadialBasisFunction radialBasisFunction);
+
+   SupportDomain getSupportDomain();
 
     ShapeFunction CopyOf(boolean deep);
 }

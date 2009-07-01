@@ -8,6 +8,7 @@ import java.util.List;
 import net.epsilony.math.polynomial.BivariateBinomials;
 import net.epsilony.math.radialbasis.RadialBasisFunction;
 import net.epsilony.simpmeshfree.model.geometry.Node;
+import net.epsilony.simpmeshfree.model.mechanics.SupportDomain;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.UpperSymmDenseMatrix;
 import no.uib.cipr.matrix.Vector;
@@ -24,6 +25,7 @@ import no.uib.cipr.matrix.Vector;
 public class RadialPolynomialShapeFunction implements ShapeFunction {
 
     RadialBasisFunction radialBasisFunction;
+    SupportDomain supportDomain;
     int power;
 
     /**
@@ -31,8 +33,9 @@ public class RadialPolynomialShapeFunction implements ShapeFunction {
      * @param radialBasisFunction 径向基函数
      * @param power 多项式的最高阶数
      */
-    public RadialPolynomialShapeFunction(RadialBasisFunction radialFun, int power) {
+    public RadialPolynomialShapeFunction(RadialBasisFunction radialFun, SupportDomain supportDomain,int power) {
         this.radialBasisFunction = radialFun;
+        this.supportDomain = supportDomain;
         this.power = power;
     }
 
@@ -220,5 +223,10 @@ public class RadialPolynomialShapeFunction implements ShapeFunction {
     @Override
     public void setRadialBasisFunction(RadialBasisFunction radialBasisFunction) {
         this.radialBasisFunction = radialBasisFunction;
+    }
+
+    @Override
+    public SupportDomain getSupportDomain() {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
