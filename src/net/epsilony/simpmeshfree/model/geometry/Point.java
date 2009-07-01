@@ -5,6 +5,7 @@
 package net.epsilony.simpmeshfree.model.geometry;
 
 import java.awt.geom.Point2D;
+import java.io.Serializable;
 import java.util.Comparator;
 import net.epsilony.simpmeshfree.utils.ModelElementIndexManager;
 
@@ -17,41 +18,45 @@ public class Point extends ModelElement {
     public static Comparator<Point> compX;
     public static Comparator<Point> compY;
 
+    static class CompX implements Comparator<Point>, Serializable {
+
+        @Override
+        public int compare(Point o1, Point o2) {
+            double t = o1.x - o2.x;
+            if (t > 0) {
+                return 1;
+            } else {
+                if (t < 0) {
+                    return -1;
+                } else {
+                    return 0;
+                }
+            }
+        }
+    };
+
+    static class CompY implements Comparator<Point>, Serializable {
+
+        @Override
+        public int compare(Point o1, Point o2) {
+            double t = o1.y - o2.y;
+            if (t > 0) {
+                return 1;
+            } else {
+                if (t < 0) {
+                    return -1;
+                } else {
+                    return 0;
+                }
+            }
+        }
+    };
+
 
     static {
-        compX = new Comparator<Point>() {
+        compX = new CompX();
 
-            @Override
-            public int compare(Point o1, Point o2) {
-                double t = o1.x - o2.x;
-                if (t > 0) {
-                    return 1;
-                } else {
-                    if (t < 0) {
-                        return -1;
-                    } else {
-                        return 0;
-                    }
-                }
-            }
-        };
-
-        compY = new Comparator<Point>() {
-
-            @Override
-            public int compare(Point o1, Point o2) {
-                double t = o1.y - o2.y;
-                if (t > 0) {
-                    return 1;
-                } else {
-                    if (t < 0) {
-                        return -1;
-                    } else {
-                        return 0;
-                    }
-                }
-            }
-        };
+        compY = new CompY();
     }
 
     public static Point tempPoint(double x, double y) {
@@ -114,13 +119,11 @@ public class Point extends ModelElement {
         this.x = p.x;
         this.y = p.y;
     }
-    
-    public void setXY(double x,double y){
-        this.x=x;
-        this.y=y;
+
+    public void setXY(double x, double y) {
+        this.x = x;
+        this.y = y;
     }
-
-
 
     @Override
     public ModelElementType type() {
@@ -139,6 +142,6 @@ public class Point extends ModelElement {
 
     @Override
     public String toString() {
-        return String.format("%s:%d-(%.2f, %.2f)", type(),index, x, y);
+        return String.format("%s:%d-(%.2f, %.2f)", type(), index, x, y);
     }
 }

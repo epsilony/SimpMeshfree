@@ -5,6 +5,7 @@
 package net.epsilony.simpmeshfree.model.geometry;
 
 import java.awt.Color;
+import java.io.Serializable;
 import java.util.Comparator;
 import java.util.LinkedList;
 import net.epsilony.simpmeshfree.utils.ModelElementIndexManager;
@@ -13,13 +14,14 @@ import net.epsilony.simpmeshfree.utils.ModelElementIndexManager;
  *
  * @author epsilon
  */
-public abstract class ModelElement {
+public abstract class ModelElement implements Serializable{
 
     public enum ModelElementType {
         Point, LineSegment, Node,RegularizeNode, Triangle, BoundaryNode, QuadBezierSegment, CubicBezierSegment, Vertex, ApproximatPoint, Segment,SegmentRoute;
     }
 
-    public static final Comparator<ModelElement> indexComparator=new Comparator<ModelElement>() {
+    public static final Comparator<ModelElement> indexComparator=new IndexComparator();
+    static class IndexComparator implements Comparator<ModelElement>,Serializable{
 
         @Override
         public int compare(ModelElement o1, ModelElement o2) {

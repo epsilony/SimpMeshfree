@@ -19,7 +19,7 @@ import org.apache.log4j.Logger;
  */
 public class AmdJni {
 
-    static Logger log = Logger.getLogger(AmdJni.class);
+    transient static Logger log = Logger.getLogger(AmdJni.class);
     int n;
     int[] Ap;
     int[] Ai;

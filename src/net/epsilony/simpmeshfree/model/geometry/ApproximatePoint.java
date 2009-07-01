@@ -4,6 +4,7 @@
  */
 package net.epsilony.simpmeshfree.model.geometry;
 
+import java.io.Serializable;
 import net.epsilony.simpmeshfree.model.geometry.ModelElement.ModelElementType;
 import net.epsilony.simpmeshfree.utils.ModelElementIndexManager;
 
@@ -11,7 +12,7 @@ import net.epsilony.simpmeshfree.utils.ModelElementIndexManager;
  *
  * @author epsilon
  */
-public class ApproximatePoint extends Point {
+public class ApproximatePoint extends Point implements Serializable {
 
     public static ApproximatePoint tempApproximatePoint(double x, double y) {
         ApproximatePoint ap = new ApproximatePoint();

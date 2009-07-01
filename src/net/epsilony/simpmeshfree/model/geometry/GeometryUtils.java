@@ -18,7 +18,7 @@ import static net.epsilony.math.util.EYMath.*;
  */
 public class GeometryUtils {
 
-    static Logger log = Logger.getLogger(GeometryUtils.class);
+    transient static Logger log = Logger.getLogger(GeometryUtils.class);
 
     /**
      * 过滤nodes，使其只含有半径为r的，以x,y为中心的闭区域内的与(x,y)之间没有曲段遮挡的结点

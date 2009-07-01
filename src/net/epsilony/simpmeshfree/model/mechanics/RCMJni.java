@@ -22,7 +22,7 @@ import org.apache.log4j.Logger;
  */
 public class RCMJni {
 
-    static Logger log = Logger.getLogger(RCMJni.class);
+    transient static Logger log = Logger.getLogger(RCMJni.class);
     int n;
     int[] Ap;
     int[] Ai;

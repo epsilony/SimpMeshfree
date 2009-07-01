@@ -5,13 +5,14 @@
 
 package net.epsilony.simpmeshfree.model.geometry;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
  *
  * @author epsilon
  */
-public interface BoundaryCondition {
+public interface BoundaryCondition extends Serializable{
     public enum BoundaryConditionType{
         Natural,Essential,ConNatural;
     }

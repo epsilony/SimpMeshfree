@@ -42,7 +42,7 @@ import net.epsilony.simpmeshfree.model.geometry.Point;
  */
 public class ModelPanelManager implements MouseMotionListener, MouseListener, MouseWheelListener, HierarchyBoundsListener {
 
-    public static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(ModelPanelManager.class);
+    transient public static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(ModelPanelManager.class);
     
 
 //    static {

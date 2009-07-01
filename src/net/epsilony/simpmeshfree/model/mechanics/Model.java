@@ -4,39 +4,26 @@
  */
 package net.epsilony.simpmeshfree.model.mechanics;
 
-import com.sun.jndi.toolkit.ctx.AtomicDirContext;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.io.Serializable;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Level;
 import net.epsilony.math.analysis.GaussLegendreQuadrature;
 import net.epsilony.math.radialbasis.RadialBasisFunction;
 import net.epsilony.simpmeshfree.model.geometry.ApproximatePoint;
@@ -53,19 +40,35 @@ import net.epsilony.simpmeshfree.shapefun.ShapeFunction;
 import net.epsilony.simpmeshfree.utils.ModelImagePainter;
 import net.epsilony.simpmeshfree.utils.ModelPanelManager;
 import net.epsilony.simpmeshfree.utils.ModelPanelManager.ViewMarkerType;
+import net.epsilony.util.FlexCompRowMatrixSerializable;
 import no.uib.cipr.matrix.DenseVector;
-import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.UpperSymmBandMatrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
 import org.apache.commons.math.ArgumentOutsideDomainException;
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.jppf.client.JPPFClient;
+import org.jppf.client.JPPFJob;
+import org.jppf.client.JPPFResultCollector;
+import org.jppf.client.event.TaskResultEvent;
+import org.jppf.server.protocol.JPPFTask;
+import org.jppf.task.storage.DataProvider;
+import org.jppf.task.storage.MemoryMapDataProvider;
 
 /**
  *
  * @author epsilon
  */
-public abstract class AbstractModel implements ModelImagePainter {
+public class Model implements ModelImagePainter, Serializable {
+
+    ModelCore modelCore;
+
+    public Model(ModelCore modelCore, GeometryModel gm) {
+        this.modelCore = modelCore;
+        this.gm = gm;
+    }
 
     public void setTaskDivision(int taskDivision) {
         this.taskDivision = taskDivision;
@@ -109,157 +112,260 @@ public abstract class AbstractModel implements ModelImagePainter {
 
         }
     }
-    static Logger log = Logger.getLogger(AbstractModel.class);
-    DenseVector bVector;
+    transient static Logger log = Logger.getLogger(Model.class);
+    transient DenseVector bVector;
     LinkedList<BoundaryNode> boundaryNodes = new LinkedList<BoundaryNode>();
     double boundaryNodesScreenSize = 3;
-    ViewMarkerType boundaryNodesScreenType = ViewMarkerType.X;
+    transient ViewMarkerType boundaryNodesScreenType = ViewMarkerType.X;
     GeometryModel gm;
-    FlexCompRowMatrix kMat = null;
-    UpperSymmBandMatrix matA;
+    transient FlexCompRowMatrix kMat = null;
+    transient UpperSymmBandMatrix matA;
     LinkedList<Node> nodes = new LinkedList<Node>();
-    Color nodesColor = Color.RED;
-    double nodesScreenSize = 4;
-    ViewMarkerType nodesScreenType = ViewMarkerType.Round;
+    transient Color nodesColor = Color.RED;
+    transient double nodesScreenSize = 4;
+    transient ViewMarkerType nodesScreenType = ViewMarkerType.Round;
     int quadratureNum;
     RadialBasisFunction radialBasisFunction;
     ShapeFunction shapeFunction;
-    boolean showNodes = true;
-    boolean showTriangleDomain = true;
+    transient boolean showNodes = true;
+    transient boolean showTriangleDomain = true;
     SupportDomain supportDomain;
-    TriangleJni triJni;
-    Color triangleDomainColor = Color.lightGray;
+    transient TriangleJni triJni;
+    transient Color triangleDomainColor = Color.lightGray;
     LinkedList<double[]> triangleQuadratureDomains = new LinkedList<double[]>();
     LinkedList<double[]> rectangleQuadratureDomains = new LinkedList<double[]>();
 
     public LinkedList<double[]> getRectangleQuadratureDomains() {
         return rectangleQuadratureDomains;
     }
-    DenseVector xVector = new DenseVector(nodes.size() * 2);
+    transient DenseVector xVector = new DenseVector(nodes.size() * 2);
 //    ReentrantLock quadrateDomainsLock = new ReentrantLock();
 //    int submitEnd;
-    boolean forceSingleCore = false;
-    boolean forceLocalCore = false;
+    transient boolean forceSingleCore = false;
+    transient boolean forceLocalCore = false;
 
     public void setForceSingleCore(boolean forceSingleCore) {
         this.forceSingleCore = forceSingleCore;
     }
+    int kMatRow;
+    int kMatCol;
 
-    public void quadrateDomains() throws ArgumentOutsideDomainException {
+    public void quadrateDomains() throws ArgumentOutsideDomainException, Exception {
         int sumProcess = Runtime.getRuntime().availableProcessors();
-        taskDivision = sumProcess * 5;
-        sumQuadrated.set(0);
         int sumDomains = rectangleQuadratureDomains.size() + triangleQuadratureDomains.size();
-        if (forceSingleCore || sumProcess <= 1 || sumDomains < 10) {
+        if (forceLocalCore || forceSingleCore) {
             initialKMatrix();
-            log.info("Start quadrateDomains with single threads");
-            long t1 = System.nanoTime();
-            ExecutorService es = Executors.newFixedThreadPool(1);
-            es.submit(new Runnable() {
+            log.info("Start quadrateDomains with multi threads");
+            long time = System.nanoTime();
+            taskDivision = sumProcess * 10;
+            ExecutorService es;
+            if (forceSingleCore) {
+                es = Executors.newFixedThreadPool(1);
+            } else {
+                es = Executors.newFixedThreadPool(sumProcess);
+            }
 
-                @Override
-                public void run() {
-                    try {
-                        quadrateRectangleDomains();
-                        quadrateTriangleDomainsByGrid();
-                    } catch (ArgumentOutsideDomainException ex) {
-                        java.util.logging.Logger.getLogger(AbstractModel.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+            int gap = (sumDomains) / taskDivision;
+            if (gap < 10) {
+                gap = 10;
+            }
+            LinkedList<QuadrateDomainsTask> tasks = new LinkedList<QuadrateDomainsTask>();
+            int start = 0;
+            int end = start + gap;
+             DataProvider dataProvider = new MemoryMapDataProvider();
+            dataProvider.setValue("model", this);
+
+            while (start < sumDomains) {
+                QuadrateDomainsTask task = new QuadrateDomainsTask(start, end,this);
+                tasks.add(task);
+                es.submit(task);
+
+                start = end;
+                end += gap;
+                if (end > sumDomains) {
+                    end = sumDomains;
                 }
-            });
+            }
             es.shutdown();
             boolean allDone = false;
+
             while (!allDone) {
-                log.info(String.format("Quadrating %d/%d %%%.0f", sumQuadrated.get(), sumDomains, sumQuadrated.get() / (double) sumDomains * 100));
+                int sumQuadrated = 0;
+                for (QuadrateDomainsTask task : tasks) {
+                    if (task.finished.get()) {
+                        sumQuadrated += -task.start + task.end;
+                    }
+                }
+                log.info(String.format("Quadrating %d/%d %%%.0f", sumQuadrated, sumDomains, sumQuadrated / (double) sumDomains * 100));
                 try {
                     allDone = es.awaitTermination(1, TimeUnit.SECONDS);
                 } catch (InterruptedException ex) {
-                    java.util.logging.Logger.getLogger(AbstractModel.class.getName()).log(Level.SEVERE, null, ex);
+                    log.error (ex);
                 }
             }
-            t1 = System.nanoTime() - t1;
-            log.info("Single Thread Cost:" + t1);
+            log.info("All tasks' done! Assembling");
+
+            for (QuadrateDomainsTask task : tasks) {
+                kMat.add(task.taskMatrix);
+            }
+            time = System.nanoTime() - time;
+            log.info("Multi Thread quadrateDomains finished, time costs:" + time);
             return;
+        } else {
+            initialKMatrix();
+            log.info("Start quadrateDomains with net grid!");
+            long time=System.nanoTime();
+            taskDivision = 5;
+
+            int gap = sumDomains / taskDivision + 1;
+            if (gap < 10) {
+                gap = 10;
+            }
+            JPPFJob job=new JPPFJob();
+            int start = 0;
+            int end = start + gap;
+            if (end > sumDomains) {
+                end = sumDomains;
+            }
+            DataProvider dataProvider = new MemoryMapDataProvider();
+            dataProvider.setValue("model", this);
+            while (start < sumDomains) {
+                QuadrateDomainsJPPFTask task = new QuadrateDomainsJPPFTask(start, end);
+                job.addTask(task);
+                start = end;
+                end += gap;
+                if (end > sumDomains) {
+                    end = sumDomains;
+                }
+            }
+
+           
+           DomainQuadratureResultListerner domainQuadratureResultListerner = new DomainQuadratureResultListerner(job.getTasks().size(),kMat);
+           job.setDataProvider(dataProvider);
+           job.setResultListener(domainQuadratureResultListerner);
+            JPPFClient client = new JPPFClient();
+            client.submit(job);
+            domainQuadratureResultListerner.waitForResults();
+            time=System.nanoTime()-time;
+            log.info("Grid net quadrateDomains finished, time costs:" + time);
         }
-        initialKMatrix();
-//        log.info("Start quadrateDomains with multi threads");
-//        long time = System.nanoTime();
-//        FlexCompRowMatrix[] kMats = new FlexCompRowMatrix[sumProcess];
-//        for (int i = 0; i < sumProcess; i++) {
-//            kMats[i] = new FlexCompRowMatrix(kMat.numRows(), kMat.numColumns());
-//        }
-//        taskDivision = sumProcess * 5;
-//        submitEnd = 0;
-//        ExecutorService es = Executors.newFixedThreadPool(sumProcess);
-//        int gap = (sumDomains) / taskDivision;
-//        if (gap < 10) {
-//            gap = 10;
-//        }
-//        for (int i = 0; i < sumProcess; i++) {
-//            es.submit(new QuadrateDomainTask(kMats[i], gap));
-//        }
-//        es.shutdown();
-//        boolean allDone = false;
-//
-//        while (!allDone) {
-//            log.info(String.format("Quadrating %d/%d %%%.0f", sumQuadrated.get(), sumDomains, sumQuadrated.get() / (double) sumDomains * 100));
-//            try {
-//                allDone = es.awaitTermination(1, TimeUnit.SECONDS);
-//            } catch (InterruptedException ex) {
-//                java.util.logging.Logger.getLogger(AbstractModel.class.getName()).log(Level.SEVERE, null, ex);
-//            }
-//        }
-//        log.info("All tasks' done! Assembling");
-//        for (int i = 0; i < sumProcess; i++) {
-//            kMat.add(kMats[i]);
-//        }
-//        time = System.nanoTime() - time;
-//        log.info("Multi Thread quadrateDomains finished, time costs:" + time);
     }
 
-    public class QuadrateDomainsTask implements Runnable {
+//    DomainQuadratureResultListerner domainQuadratureResultListerner;
+    static class DomainQuadratureResultListerner extends JPPFResultCollector {
+        transient private FlexCompRowMatrix matrix;
 
-        private FlexCompRowMatrix taskMatrix;
-
-        public QuadrateDomainsTask(FlexCompRowMatrix matrix) {
-            this.taskMatrix = matrix;
+        public DomainQuadratureResultListerner(int count, FlexCompRowMatrix matrix) {
+            super(count);
+            this.count = count;
+            this.matrix = matrix;
         }
+        int count;
+        int sum = 0;
+
+        @Override
+        public void resultsReceived(TaskResultEvent event) {
+            super.resultsReceived(event);
+            sum += event.getResults().size();
+            log.info(String.format("Recieved results: %d/%d %%%.0f", sum, count, sum / (double) count * 100));
+            List<JPPFTask> results = event.getTaskList();
+            Exception ex;
+            for (JPPFTask result : results) {
+                ex = result.getException();
+                if (ex != null) {
+                    log.error(ex);
+                }
+                ((FlexCompRowMatrixSerializable) result.getResult()).addTo(matrix);
+            }
+        }
+    }
+
+    public void setForceLocalCore(boolean forceLocalCore) {
+        this.forceLocalCore = forceLocalCore;
+    }
+
+    static class QuadrateDomainsJPPFTask extends JPPFTask {
+
+        QuadrateDomainsTask task;
 
         @Override
         public void run() {
-            int start;
-            int end;
-            int[] range = new int[2];
-            SupportDomain localSupportDomain = supportDomain.CopyOf(false);
-            ShapeFunction localShapeFunction = shapeFunction.CopyOf(false);
-            RadialBasisFunction localRadialBasisFunction = radialBasisFunction.CopyOf(false);
-            localShapeFunction.setRadialBasisFunction(localRadialBasisFunction);
-//             System.out.println("1start="+start+", end="+end+",sumDomains"+sumDomains);
-
-            start = range[0];
-            end = range[1];
-
-            if (start < rectangleQuadratureDomains.size()) {
+            try {
+//            Thread.setDefaultUncaughtExceptionHandler(eh);
+                DataProvider dp = getDataProvider();
                 try {
-                    quadrateRectangleDomains(start, end, taskMatrix, localSupportDomain, localShapeFunction, localRadialBasisFunction);
+                    task.model = (Model) dp.getValue("model");
+                } catch (Exception ex) {
+                    if(null==log){
+                        log=Logger.getLogger(Model.class);
+                    }
+                    log.error(ex);
+                    this.setException(ex);
+                    return;
+                }
+                task.run();
+                setResult(new FlexCompRowMatrixSerializable(task.taskMatrix));
+            } catch (Throwable ex) {
+                setException(new Exception(ex));
+            }
+        }
+
+        QuadrateDomainsJPPFTask(int start, int end) {
+            task = new QuadrateDomainsTask(start, end);
+        }
+    }
+
+    static class QuadrateDomainsTask implements Runnable, Serializable {
+
+        int start;
+        int end;
+        AtomicBoolean finished = new AtomicBoolean();
+        transient FlexCompRowMatrix taskMatrix;
+
+        QuadrateDomainsTask(int start, int end, Model model) {
+            this.start = start;
+            this.end = end;
+            this.model = model;
+
+        }
+
+        QuadrateDomainsTask(int start, int end) {
+            this.start = start;
+            this.end = end;
+        }
+        Model model;
+
+        @Override
+        public void run() {
+            if (null == log) {
+                        Logger.getLogger(Model.class);
+                    }
+            taskMatrix = new FlexCompRowMatrix(model.kMatRow, model.kMatCol);
+
+            if (start < model.rectangleQuadratureDomains.size()) {
+                try {
+                    Model.quadrateRectangleDomains(start, end, taskMatrix, model);
                 } catch (ArgumentOutsideDomainException ex) {
-                    java.util.logging.Logger.getLogger(AbstractModel.class.getName()).log(Level.SEVERE, null, ex);
+                    
+                    log.error(ex);
                 }
             }
-            if (end > rectangleQuadratureDomains.size() && !triangleQuadratureDomains.isEmpty()) {
+            if (end > model.rectangleQuadratureDomains.size() && !model.triangleQuadratureDomains.isEmpty()) {
                 int triStart;
-                if (start < rectangleQuadratureDomains.size()) {
+                if (start < model.rectangleQuadratureDomains.size()) {
                     triStart = 0;
                 } else {
-                    triStart = start - rectangleQuadratureDomains.size();
+                    triStart = start - model.rectangleQuadratureDomains.size();
                 }
-                int triEnd = end - rectangleQuadratureDomains.size();
+                int triEnd = end - model.rectangleQuadratureDomains.size();
 
                 try {
-                    quadrateTriangleDomainsByGrid(triStart, triEnd, taskMatrix, localSupportDomain, localShapeFunction, localRadialBasisFunction);
+                    Model.quadrateTriangleDomainsByGrid(triStart, triEnd, taskMatrix, model);
                 } catch (ArgumentOutsideDomainException ex) {
-                    java.util.logging.Logger.getLogger(AbstractModel.class.getName()).log(Level.SEVERE, null, ex);
+                    log.error(ex);
                 }
+
+                finished.set(true);
             }
         }
     }
@@ -331,38 +437,44 @@ public abstract class AbstractModel implements ModelImagePainter {
         return supportDomain;
     }
 
-    abstract public void initialKMatrix();
+    public void initialKMatrix() {
+        kMat = modelCore.initialKMatrix(nodes.size());
+        kMatCol = kMat.numColumns();
+        kMatRow = kMat.numRows();
+    }
 
     public void quadrateRectangleDomains() throws ArgumentOutsideDomainException {
-        quadrateRectangleDomains(0, rectangleQuadratureDomains.size(), kMat, supportDomain, shapeFunction, radialBasisFunction);
+        quadrateRectangleDomains(0, rectangleQuadratureDomains.size(), kMat, this);
     }
-    AtomicInteger sumQuadrated = new AtomicInteger();
 
-    public void quadrateRectangleDomains(int start, int end, FlexCompRowMatrix matrix, SupportDomain supportDomain, ShapeFunction shapeFunction, RadialBasisFunction radialBasisFunction) throws ArgumentOutsideDomainException {
+    public static void quadrateRectangleDomains(int start, int end, FlexCompRowMatrix taskMatrix, Model model) throws ArgumentOutsideDomainException {
 //        System.out.println(Thread.currentThread());
 //        log.info(String.format("Start quadrateRectangleDomains(%d)", quadratureNum));
+        if(null==log){
+            log=Logger.getLogger(Model.class);
+        }
+        SupportDomain localSupportDomain = model.supportDomain.CopyOf(false);
+        ShapeFunction localShapeFunction = model.shapeFunction.CopyOf(false);
+        RadialBasisFunction localRadialBasisFunction = model.radialBasisFunction.CopyOf(false);
+        localShapeFunction.setRadialBasisFunction(localRadialBasisFunction);
         double nodesAverDistance;
         ArrayList<Node> supportNodes = new ArrayList<Node>(100);
         Vector[] partialValues;
 
         double[] weights = null;
         double[] points = null;
-        weights = GaussLegendreQuadrature.getGaussLegendreQuadratureCoefficients(quadratureNum);
-        points = GaussLegendreQuadrature.getGaussLegendreQuadraturePoints(quadratureNum);
+        weights = GaussLegendreQuadrature.getGaussLegendreQuadratureCoefficients(model.quadratureNum);
+        points = GaussLegendreQuadrature.getGaussLegendreQuadraturePoints(model.quadratureNum);
         if (log.isDebugEnabled()) {
             log.debug("weights:" + Arrays.toString(weights));
             log.debug("area Coordinates: " + Arrays.toString(points));
         }
 
-        ListIterator<double[]> iterator = rectangleQuadratureDomains.listIterator(start);
+        ListIterator<double[]> iterator = model.rectangleQuadratureDomains.listIterator(start);
         int counter = start;
         while (iterator.hasNext() && counter < end) {
             double[] rects = iterator.next();
             counter++;
-            if (counter % 10 == 0) {
-                sumQuadrated.getAndAdd(10);
-            }
-
             double x1 = rects[0];
             double y1 = rects[1];
             double x2 = rects[2];
@@ -380,9 +492,9 @@ public abstract class AbstractModel implements ModelImagePainter {
                     x = x1 + (x2 - x1) * u;
                     y = y1 + (y2 - y1) * v;
                     w = weights[k] * weights[l] * J;
-                    nodesAverDistance = supportDomain.supportNodes(x, y, supportNodes);
-                    radialBasisFunction.setNodesAverageDistance(nodesAverDistance);
-                    partialValues = shapeFunction.shapePartialValues(supportNodes, x, y);
+                    nodesAverDistance = localSupportDomain.supportNodes(x, y, supportNodes);
+                    localRadialBasisFunction.setNodesAverageDistance(nodesAverDistance);
+                    partialValues = localShapeFunction.shapePartialValues(supportNodes, x, y);
                     for (int m = 0; m < supportNodes.size(); m++) {
                         double mx = partialValues[0].get(m);
                         double my = partialValues[1].get(m);
@@ -395,7 +507,7 @@ public abstract class AbstractModel implements ModelImagePainter {
 
                             double nx = partialValues[0].get(n);
                             double ny = partialValues[1].get(n);
-                            quadrateCore(mIndex, mx, my, nIndex, nx, ny, w, matrix);
+                            model.modelCore.quadrateCore(mIndex, mx, my, nIndex, nx, ny, w, taskMatrix);
                         }
 
                     }
@@ -406,32 +518,36 @@ public abstract class AbstractModel implements ModelImagePainter {
     }
 
     public void quadrateTriangleDomainsByGrid() throws ArgumentOutsideDomainException {
-        quadrateTriangleDomainsByGrid(0, triangleQuadratureDomains.size(), kMat, supportDomain, shapeFunction, radialBasisFunction);
+        quadrateTriangleDomainsByGrid(0, triangleQuadratureDomains.size(), kMat, this);
     }
 
-    public void quadrateTriangleDomainsByGrid(int start, int end, FlexCompRowMatrix matrix, SupportDomain supportDomain, ShapeFunction shapeFunction, RadialBasisFunction radialBasisFunction) throws ArgumentOutsideDomainException {
+    public static void quadrateTriangleDomainsByGrid(int start, int end, FlexCompRowMatrix matrix, Model model) throws ArgumentOutsideDomainException {
 //        log.info(String.format("Start quadrateTriangleDomainsByGrid(%d)", quadratureNum));
+       if(null==log){
+            log=Logger.getLogger(Model.class);
+        }
+        SupportDomain localSupportDomain = model.supportDomain.CopyOf(false);
+        ShapeFunction localShapeFunction = model.shapeFunction.CopyOf(false);
+        RadialBasisFunction localRadialBasisFunction = model.radialBasisFunction.CopyOf(false);
+        localShapeFunction.setRadialBasisFunction(localRadialBasisFunction);
         double nodesAverDistance;
         ArrayList<Node> supportNodes = new ArrayList<Node>(100);
         Vector[] partialValues;
 
         double[] weights = null;
         double[] points = null;
-        weights = GaussLegendreQuadrature.getGaussLegendreQuadratureCoefficients(quadratureNum);
-        points = GaussLegendreQuadrature.getGaussLegendreQuadraturePoints(quadratureNum);
+        weights = GaussLegendreQuadrature.getGaussLegendreQuadratureCoefficients(model.quadratureNum);
+        points = GaussLegendreQuadrature.getGaussLegendreQuadraturePoints(model.quadratureNum);
         if (log.isDebugEnabled()) {
             log.debug("weights:" + Arrays.toString(weights));
             log.debug("area Coordinates: " + Arrays.toString(points));
         }
 
-        ListIterator<double[]> iterator = triangleQuadratureDomains.listIterator(start);
+        ListIterator<double[]> iterator = model.triangleQuadratureDomains.listIterator(start);
         int counter = start;
         while (iterator.hasNext() && counter < end) {
             double[] triangleDomain = iterator.next();
             counter++;
-            if (counter % 10 == 0) {
-                sumQuadrated.getAndAdd(10);
-            }
 
             double x1 = triangleDomain[0];
             double y1 = triangleDomain[1];
@@ -453,9 +569,9 @@ public abstract class AbstractModel implements ModelImagePainter {
                     y = y1 + u * y2 - u * y1 + v * u * y3 - v * u * y2;
                     J = 0.25 * Math.abs(u * (x2 * y3 - x1 * y3 + x1 * y2 - x3 * y2 + x3 * y1 - x2 * y1));
                     w = weights[k] * weights[l] * J;
-                    nodesAverDistance = supportDomain.supportNodes(x, y, supportNodes);
-                    radialBasisFunction.setNodesAverageDistance(nodesAverDistance);
-                    partialValues = shapeFunction.shapePartialValues(supportNodes, x, y);
+                    nodesAverDistance = localSupportDomain.supportNodes(x, y, supportNodes);
+                    localRadialBasisFunction.setNodesAverageDistance(nodesAverDistance);
+                    partialValues = localShapeFunction.shapePartialValues(supportNodes, x, y);
                     for (int m = 0; m < supportNodes.size(); m++) {
                         double mx = partialValues[0].get(m);
                         double my = partialValues[1].get(m);
@@ -468,7 +584,7 @@ public abstract class AbstractModel implements ModelImagePainter {
 
                             double nx = partialValues[0].get(n);
                             double ny = partialValues[1].get(n);
-                            quadrateCore(mIndex, mx, my, nIndex, nx, ny, w, matrix);
+                            model.modelCore.quadrateCore(mIndex, mx, my, nIndex, nx, ny, w, matrix);
                         }
 
                     }
@@ -478,8 +594,7 @@ public abstract class AbstractModel implements ModelImagePainter {
 //        log.info("End of quadrateTriangleDomainsByGrid");
     }
 
-    abstract public void quadrateCore(int mIndex, double dphim_dx, double dphim_dy, int nIndex, double dphin_dx, double dphin_dy, double coefs, FlexCompRowMatrix matrix);
-
+//    abstract public void quadrateCore(int mIndex, double dphim_dx, double dphim_dy, int nIndex, double dphin_dx, double dphin_dy, double coefs, FlexCompRowMatrix matrix);
     public void applyEssentialBoundaryConditionsByPenalty() {
         log.info("Start applyEssentialBoundaryConditionsByPenalty");
         Segment segment;
@@ -610,15 +725,14 @@ public abstract class AbstractModel implements ModelImagePainter {
                 }
 
                 rowcol = bNode.getMatrixIndex();
-                accurateEssentialCore(txy, rowcol, tb);
+                modelCore.accurateEssentialCore(txy, rowcol, tb, kMat, bVector);
             }
 
         }
         log.info("End of applyAccurateEssentialBoundaryConditions");
     }
 
-    abstract public void accurateEssentialCore(double[] values, int index, byte flag);
-
+//    abstract public void accurateEssentialCore(double[] values, int index, byte flag);
     public void setQuadratureNum(int quadN) {
         this.quadratureNum = quadN;
     }
@@ -717,7 +831,7 @@ public abstract class AbstractModel implements ModelImagePainter {
                             shapeVector = shapeFunction.shapeValues(supportNodes, x, y);
                             for (k = 0; k < shapeVector.size(); k++) {
                                 row = supportNodes.get(k).getMatrixIndex();
-                                natureConBoundaryQuadrateCore(values, row, shapeVector.get(k));
+                                modelCore.natureConBoundaryQuadrateCore(values, row, shapeVector.get(k), bVector);
                             }
                         }
                         if (log.isDebugEnabled()) {
@@ -759,7 +873,7 @@ public abstract class AbstractModel implements ModelImagePainter {
                             if (0 != tempBC.getValues(t, txy)) {
                                 for (k = 0; k < supportNodes.size(); k++) {
                                     row = supportNodes.get(k).getMatrixIndex();
-                                    natureBoundaryQudarateCore(txy, row, shapeVector.get(k), coef);
+                                    modelCore.natureBoundaryQudarateCore(txy, row, shapeVector.get(k), coef, bVector);
 
                                 }
                             }
@@ -774,8 +888,5 @@ public abstract class AbstractModel implements ModelImagePainter {
         }
         log.info("End of natureBoundaryQuadrate");
     }
-
-    abstract public void natureConBoundaryQuadrateCore(double[] values, int index, double phi);
-
-    abstract public void natureBoundaryQudarateCore(double[] values, int index, double phi, double coef);
+   
 }

@@ -5,6 +5,7 @@
 package net.epsilony.simpmeshfree.model.geometry;
 
 import java.awt.geom.Path2D;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.LinkedList;
 import net.epsilony.simpmeshfree.utils.ModelElementIndexManager;
@@ -13,7 +14,7 @@ import net.epsilony.simpmeshfree.utils.ModelElementIndexManager;
  *
  * @author epsilon
  */
-abstract public class Segment extends ModelElement {
+abstract public class Segment extends ModelElement implements Serializable {
 
     static ModelElementIndexManager segmentIM = new ModelElementIndexManager();
 //    LinkedList<BoundaryNode> nodes = new LinkedList<BoundaryNode>();

@@ -5,6 +5,7 @@
 
 package net.epsilony.simpmeshfree.model.mechanics;
 
+import java.io.Serializable;
 import java.util.List;
 
 import net.epsilony.simpmeshfree.model.geometry.Node;
@@ -14,7 +15,7 @@ import net.epsilony.simpmeshfree.model.geometry.Segment;
  *
  * @author epsilon
  */
-public interface SupportDomain {
+public interface SupportDomain extends Serializable{
 
     public double supportNodes(double x,double y,List<Node> list);
 

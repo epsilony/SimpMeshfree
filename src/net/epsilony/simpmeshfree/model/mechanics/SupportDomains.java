@@ -24,7 +24,7 @@ public class SupportDomains {
 
     public static class SimpleRoundSupportDomain implements SupportDomain {
 
-        Logger log = Logger.getLogger(SimpleRoundSupportDomain.class);
+        transient static Logger log = Logger.getLogger(SimpleRoundSupportDomain.class);
         double rMin;
         private double rMax;
         private double maxStep;
@@ -45,6 +45,9 @@ public class SupportDomains {
 
         @Override
         public double supportNodes(double x, double y, List<Node> output) {
+            if(null==log){
+            log=Logger.getLogger(SimpleRoundSupportDomain.class);
+        }
             Node nodeFrom = Node.tempNode(0, 0);
             Node nodeTo = Node.tempNode(0, 0);
             output.clear();
@@ -68,7 +71,7 @@ public class SupportDomains {
             }
 
             output.addAll(tnodes);
-            if (log.isDebugEnabled()) {
+            if (null!=log&&log.isDebugEnabled()) {
                 log.debug(String.format("SimpleRoundSupportDomain.supportNodes(%5.2f,%5.2f,output)%nnodesAverageDistance=%5.2f (r=%5.3f) output.size()=%d", x, y, nodesAverageDistance, r - (rMax - rMin) / maxStep, tnodes.size()));
             }
             return nodesAverageDistance;
@@ -76,6 +79,9 @@ public class SupportDomains {
 
         @Override
         public double boundarySupportNodes(Segment bSegment, double parm, List<Node> output) {
+            if(null==log){
+            log=Logger.getLogger(SimpleRoundSupportDomain.class);
+        }
             Node nodeFrom = Node.tempNode(0, 0);
             Node nodeTo = Node.tempNode(0, 0);
             output.clear();

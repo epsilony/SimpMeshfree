@@ -20,7 +20,7 @@ import org.apache.log4j.Logger;
 public class TriangleJni {
 
     
-    static Logger log = Logger.getLogger(TriangleJni.class);
+    transient static Logger log = Logger.getLogger(TriangleJni.class);
     public double[] pointsXYIn;// = new double[]{80, 0, 100, 50, 0, 100, -100, 50, -80, 0, -100, -50, 0, -100, 100, -50, 0, -90, 80, -50, 0, -10, -80, -50, -70, 50, -60, 30, -10, 55, -40, 55, 70, 50, 60, 30, 10, 55, 40, 55, -10, 25, -20, -10, 10, 25, 20, -10, -50, 0, 50, 0};
     public int pointsXYSizeIn;// = 26;
     public int[] pointsMarkerIn;// = new int[]{2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 7, 7, 0, 0};

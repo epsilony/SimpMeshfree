@@ -59,7 +59,7 @@ public class ModelTestFrame extends javax.swing.JFrame {
     double nu = 0.3;
     double D = 12;
     double L = 48;
-    static Logger log = Logger.getLogger(ModelTestFrame.class);
+    transient static Logger log = Logger.getLogger(ModelTestFrame.class);
 
     /** Creates new form ModelTestFrame */
     public ModelTestFrame() {
@@ -235,6 +235,7 @@ public class ModelTestFrame extends javax.swing.JFrame {
         jPanel1 = panel;
         jButton1 = new javax.swing.JButton();
         jCheckBox1 = new javax.swing.JCheckBox();
+        jCheckBox2 = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -265,6 +266,8 @@ public class ModelTestFrame extends javax.swing.JFrame {
 
         jCheckBox1.setText("jCheckBox1");
 
+        jCheckBox2.setText("jCheckBox2");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -274,10 +277,12 @@ public class ModelTestFrame extends javax.swing.JFrame {
                 .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 128, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(layout.createSequentialGroup()
                         .addGap(12, 12, 12)
-                        .addComponent(jCheckBox1))
-                    .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 128, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jCheckBox2)
+                            .addComponent(jCheckBox1)))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -285,7 +290,9 @@ public class ModelTestFrame extends javax.swing.JFrame {
                 .addComponent(jButton1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jCheckBox1)
-                .addContainerGap(706, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jCheckBox2)
+                .addContainerGap(674, Short.MAX_VALUE))
             .addGroup(layout.createSequentialGroup()
                 .addGap(12, 12, 12)
                 .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -327,11 +334,14 @@ public class ModelTestFrame extends javax.swing.JFrame {
         @Override
         public void run() {
 //            Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
-            try {
-                mm.solve();
-            } catch (ArgumentOutsideDomainException ex) {
-                java.util.logging.Logger.getLogger(ModelTestFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-            }
+            
+                try {
+                    mm.solve();
+                } catch (Exception ex) {
+                    log.error(ex);
+                    ex.printStackTrace();
+                }
+            
             mpm.viewWhole();
             mpm.repaintModel();
         }
@@ -339,6 +349,7 @@ public class ModelTestFrame extends javax.swing.JFrame {
     ExecutorService es;
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         mm.setForceSingleCore(jCheckBox1.isSelected());
+        mm.setForceLocalCore(jCheckBox2.isSelected());
         if (null == es) {
             es = Executors.newSingleThreadExecutor();
             es.submit(task);
@@ -370,6 +381,7 @@ public class ModelTestFrame extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
     private javax.swing.JCheckBox jCheckBox1;
+    private javax.swing.JCheckBox jCheckBox2;
     private javax.swing.JPanel jPanel1;
     // End of variables declaration//GEN-END:variables
 }

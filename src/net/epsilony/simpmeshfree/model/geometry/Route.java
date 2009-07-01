@@ -18,7 +18,7 @@ import org.apache.log4j.Logger;
  */
 public class Route extends ModelElement {
 
-    static Logger log = Logger.getLogger(Route.class);
+    transient static Logger log = Logger.getLogger(Route.class);
     static ModelElementIndexManager routeIm = new ModelElementIndexManager();
     LinkedList<Segment> segments = new LinkedList<Segment>();
 

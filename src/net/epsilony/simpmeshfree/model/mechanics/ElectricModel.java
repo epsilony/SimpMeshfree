@@ -48,7 +48,7 @@ public class ElectricModel implements ModelImagePainter {
     public ElectricModel(GeometryModel gm) {
         this.gm = gm;
     }
-    Logger log = Logger.getLogger(ElectricModel.class);
+    transient static Logger log = Logger.getLogger(ElectricModel.class);
     private TriangleJni triJni;
     private int quadN;
     private DenseVector bVector;

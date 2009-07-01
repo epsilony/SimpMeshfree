@@ -13,6 +13,7 @@ import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -29,16 +30,16 @@ import org.apache.log4j.Logger;
  *
  * @author epsilon
  */
-public class GeometryModel implements ModelImagePainter {
+public class GeometryModel implements ModelImagePainter,Serializable {
 
-    static Logger log = Logger.getLogger(GeometryModel.class);
+    transient static Logger log = Logger.getLogger(GeometryModel.class);
 
     public LinkedList<Route> getRoutes() {
         return routes;
     }
     LinkedList<Route> routes = new LinkedList<Route>();
     LinkedList<ApproximatePoint> approximatePoints = new LinkedList<ApproximatePoint>();
-    private int compileCounter = 0;
+    transient private int compileCounter = 0;
     LayeredDomainTree<ApproximatePoint> approximatePointsSearchTree;
     boolean wider = true;
     double segmentApproximateSize;
@@ -53,7 +54,7 @@ public class GeometryModel implements ModelImagePainter {
     public Point getRightUp() {
         return rightUp;
     }
-    double[] addShapeTemps = new double[6];
+    transient double[] addShapeTemps = new double[6];
 
     public void addShape(Shape shape) {
         if (log.isDebugEnabled()) {
@@ -286,7 +287,7 @@ public class GeometryModel implements ModelImagePainter {
         outSegs.addAll(segmentSearchSet);
         return outSegs;
     }
-    private final TreeSet<Route> segmentRouteSearchSet = new TreeSet<Route>(ModelElement.indexComparator);
+    transient private final TreeSet<Route> segmentRouteSearchSet = new TreeSet<Route>(ModelElement.indexComparator);
 
     public List<Route> segmentRouteSearch(double x1, double y1, double x2, double y2, List<Route> outSegs) {
         outSegs.clear();
@@ -454,13 +455,13 @@ public class GeometryModel implements ModelImagePainter {
         GeometryModel gm = new GeometryModel();
         gm.addShape(new Rectangle2D.Double(0, 0, 48, 12));
     }
-    boolean showModelShape = true;
-    boolean showApproximatePoints = true;
-    boolean showApproximateRoute = false;
-    double approximatePointScreenSize = 3;
-    Color modelShapeColor = Color.BLACK;
-    Color approximatePointsColor = Color.BLACK;
-    Color approximateRouteColor = Color.LIGHT_GRAY;
+    transient boolean showModelShape = true;
+    transient boolean showApproximatePoints = true;
+    transient boolean showApproximateRoute = false;
+    transient double approximatePointScreenSize = 3;
+    transient Color modelShapeColor = Color.BLACK;
+    transient Color approximatePointsColor = Color.BLACK;
+    transient Color approximateRouteColor = Color.LIGHT_GRAY;
 
     public double getApproximatePointScreenSize() {
         return approximatePointScreenSize;
@@ -517,7 +518,7 @@ public class GeometryModel implements ModelImagePainter {
     public void setShowModelShape(boolean showModelShape) {
         this.showModelShape = showModelShape;
     }
-    ModelPanelManager.ViewMarkerType approximatePointScreenType = ModelPanelManager.ViewMarkerType.Rectangle;
+    transient ModelPanelManager.ViewMarkerType approximatePointScreenType = ModelPanelManager.ViewMarkerType.Rectangle;
 
     public ViewMarkerType getApproximatePointScreenType() {
         return approximatePointScreenType;

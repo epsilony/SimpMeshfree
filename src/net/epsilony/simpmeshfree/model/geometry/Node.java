@@ -5,6 +5,7 @@
 package net.epsilony.simpmeshfree.model.geometry;
 
 import java.awt.geom.Path2D;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -16,26 +17,28 @@ import net.epsilony.simpmeshfree.utils.ModelElementIndexManager;
  *
  * @author epsilon
  */
-public class Node extends Point {
-    public static Node tempNode(double x,double y){
-        Node n=new Node();
-        n.x=x;
-        n.y=y;
+public class Node extends Point implements Serializable{
+
+    public static Node tempNode(double x, double y) {
+        Node n = new Node();
+        n.x = x;
+        n.y = y;
         return n;
     }
+    public static final Comparator<Node> nodeComparator = new NodeComparator();
 
-    public static final Comparator<Node> nodeComparator = new Comparator<Node>() {
+    static class NodeComparator implements Comparator<Node>, Serializable {
 
         @Override
         public int compare(Node o1, Node o2) {
             return o1.index - o2.index;
         }
-    };
-    static ModelElementIndexManager nodeIM = new ModelElementIndexManager();
-    TreeSet<Node> neighbors = new TreeSet<Node>(nodeComparator);
-    LinkedList<Triangle> triangles = new LinkedList<Triangle>();
-    LinkedList<Node> affectedNodes = new LinkedList<Node>();
-    LinkedList<Node> supportDomainNodes=affectedNodes;
+    }
+    transient static ModelElementIndexManager nodeIM = new ModelElementIndexManager();
+    transient TreeSet<Node> neighbors = new TreeSet<Node>(nodeComparator);
+    transient LinkedList<Triangle> triangles = new LinkedList<Triangle>();
+    transient LinkedList<Node> affectedNodes = new LinkedList<Node>();
+    transient LinkedList<Node> supportDomainNodes = affectedNodes;
     public int flag;
     int matrixIndex;
     int bandWidth;
@@ -82,8 +85,7 @@ public class Node extends Point {
         this.index = nodeIM.getNewIndex();
     }
 
-    protected Node(){
-
+    protected Node() {
     }
 
     /**
@@ -133,51 +135,51 @@ public class Node extends Point {
         }
     }
 
-    public ArrayList<Node> bfsTraverse(int layer,ArrayList<Node> list){
+    public ArrayList<Node> bfsTraverse(int layer, ArrayList<Node> list) {
         list.clear();
-        if(layer<0){
+        if (layer < 0) {
             return list;
         }
         Node node;
-        flag=index;
-        int f=flag,start=0,end=1;
+        flag = index;
+        int f = flag, start = 0, end = 1;
         list.add(this);
-        for(int i=0;i<layer;i++){
-            for(int j=start;j<end;j++){
-                node=list.get(j);
-                for(Node n:node.neighbors){
-                    if(n.flag!=f){
-                        n.flag=f;
+        for (int i = 0; i < layer; i++) {
+            for (int j = start; j < end; j++) {
+                node = list.get(j);
+                for (Node n : node.neighbors) {
+                    if (n.flag != f) {
+                        n.flag = f;
                         list.add(n);
                     }
                 }
             }
-            start=end;
-            end=list.size();
-            if(start==end){
+            start = end;
+            end = list.size();
+            if (start == end) {
                 break;
             }
         }
         return list;
     }
 
-    public ArrayList<Node> bfsTraverse(ArrayList<Node> list){
+    public ArrayList<Node> bfsTraverse(ArrayList<Node> list) {
         list.clear();
-        flag=index;
-        int f=flag;
+        flag = index;
+        int f = flag;
         list.add(this);
-        for(int i=0;i<list.size();i++){
-            for(Node n:list.get(i).neighbors){
-                if(n.flag!=f){
+        for (int i = 0; i < list.size(); i++) {
+            for (Node n : list.get(i).neighbors) {
+                if (n.flag != f) {
                     list.add(n);
-                    n.flag=f;
+                    n.flag = f;
                 }
             }
         }
         return list;
     }
 
-    public ArrayList<Node> dfsTraverse(ArrayList<Node> list){
+    public ArrayList<Node> dfsTraverse(ArrayList<Node> list) {
         list.clear();
 
         return list;
@@ -199,14 +201,14 @@ public class Node extends Point {
      * and won't call setBandWidth()</br>
      * @return matrixIndex
      */
-    public int bandWidth(){
-        int size=0;
-        for(Node n:neighbors){
-            if(Math.abs(n.matrixIndex-matrixIndex)>size){
-                size=Math.abs(n.matrixIndex-matrixIndex);
+    public int bandWidth() {
+        int size = 0;
+        for (Node n : neighbors) {
+            if (Math.abs(n.matrixIndex - matrixIndex) > size) {
+                size = Math.abs(n.matrixIndex - matrixIndex);
             }
         }
-        bandWidth=size;
+        bandWidth = size;
         return size;
     }
 
@@ -216,11 +218,11 @@ public class Node extends Point {
      * @return the node band with by the assumpted index
      *
      */
-    public int bandWith(int index){
-        int size=0;
-        for(Node n:neighbors){
-            if(Math.abs(n.matrixIndex-index)>size){
-                size=Math.abs(n.matrixIndex-index);
+    public int bandWith(int index) {
+        int size = 0;
+        for (Node n : neighbors) {
+            if (Math.abs(n.matrixIndex - index) > size) {
+                size = Math.abs(n.matrixIndex - index);
             }
         }
         return size;
@@ -237,7 +239,6 @@ public class Node extends Point {
     public TreeSet<Node> getNeighbors() {
         return neighbors;
     }
-
     double ux, uy;
 
     public double getUx() {
@@ -255,9 +256,6 @@ public class Node extends Point {
     public void setUy(double uy) {
         this.uy = uy;
     }
-
-
-
 //    protected void copyNode(Node n) {
 //        setXY(n);
 //        setIndex(n.getIndex());
