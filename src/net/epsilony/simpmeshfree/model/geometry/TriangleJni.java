@@ -76,7 +76,7 @@ public class TriangleJni {
      * @param gm {@link GeometryModel}
      * @param switchs
      */
-    public void complie(GeometryModel gm, String switchs) {
+    public void complie(Model gm, String switchs) {
         log.info("Start Complie");
         log.info("set Points Segments by GeometryModel's approximate Points");
         setPointsSegments(gm.getApproximatePoints(), new LinkedList<Point>());

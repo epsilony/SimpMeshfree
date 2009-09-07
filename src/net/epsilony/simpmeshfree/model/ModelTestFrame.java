@@ -30,7 +30,7 @@ import javax.swing.JPanel;
 import net.epsilony.math.radialbasis.MultiQuadRadial;
 import net.epsilony.math.radialbasis.RadialBasisFunction;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryConditions;
-import net.epsilony.simpmeshfree.model.geometry.GeometryModel;
+import net.epsilony.simpmeshfree.model.geometry.Model;
 import net.epsilony.simpmeshfree.model.geometry.LineSegment;
 import net.epsilony.simpmeshfree.model.geometry.Node;
 import net.epsilony.simpmeshfree.model.geometry.Segment;
@@ -80,7 +80,7 @@ public class ModelTestFrame extends javax.swing.JFrame {
     LinkedList<Node> outputs = new LinkedList<Node>();
     ModelPanel panel = new ModelPanel();
     ModelPanelManager mpm;
-    GeometryModel gm = new GeometryModel();
+    Model gm = new Model();
     MechanicsModel mm = new MechanicsModel(gm);
 
 
@@ -348,8 +348,8 @@ public class ModelTestFrame extends javax.swing.JFrame {
     };
     ExecutorService es;
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        mm.setForceSingleCore(jCheckBox1.isSelected());
-        mm.setForceLocalCore(jCheckBox2.isSelected());
+        mm.setForceSingleProcessor(jCheckBox1.isSelected());
+        mm.setForceLocalProcessor(jCheckBox2.isSelected());
         if (null == es) {
             es = Executors.newSingleThreadExecutor();
             es.submit(task);

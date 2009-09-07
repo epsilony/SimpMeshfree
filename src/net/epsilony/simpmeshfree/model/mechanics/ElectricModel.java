@@ -19,7 +19,7 @@ import net.epsilony.math.radialbasis.RadialBasisFunction;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition.BoundaryConditionType;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryNode;
-import net.epsilony.simpmeshfree.model.geometry.GeometryModel;
+import net.epsilony.simpmeshfree.model.geometry.Model;
 import net.epsilony.simpmeshfree.model.geometry.ModelElement.ModelElementType;
 import net.epsilony.simpmeshfree.model.geometry.Node;
 import net.epsilony.simpmeshfree.model.geometry.Point;
@@ -45,7 +45,7 @@ import org.apache.log4j.Logger;
  */
 public class ElectricModel implements ModelImagePainter {
 
-    public ElectricModel(GeometryModel gm) {
+    public ElectricModel(Model gm) {
         this.gm = gm;
     }
     transient static Logger log = Logger.getLogger(ElectricModel.class);
@@ -57,7 +57,7 @@ public class ElectricModel implements ModelImagePainter {
     public LinkedList<Node> getNodes() {
         return nodes;
     }
-    GeometryModel gm;
+    Model gm;
     SupportDomain supportDomain;
     ShapeFunction shapeFunction;
 

@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import net.epsilony.simpmeshfree.model.geometry.ApproximatePoint;
-import net.epsilony.simpmeshfree.model.geometry.GeometryModel;
+import net.epsilony.simpmeshfree.model.geometry.Model;
 import net.epsilony.simpmeshfree.model.geometry.GeometryUtils;
 import net.epsilony.simpmeshfree.model.geometry.Node;
 import net.epsilony.simpmeshfree.model.geometry.Point;
@@ -30,10 +30,10 @@ public class SupportDomains {
         private double maxStep;
         private int minNode;
         LayeredDomainTree<Node> nodesDomainTree = null;
-        private GeometryModel gm;
+        private Model gm;
         Collection<Node> nodes;
 
-        public SimpleRoundSupportDomain(double rMin, double rMax, double maxStep, int minNode, GeometryModel gm, Collection<Node> nodes) {
+        public SimpleRoundSupportDomain(double rMin, double rMax, double maxStep, int minNode, Model gm, Collection<Node> nodes) {
             this.rMin = rMin;
             this.rMax = rMax;
             this.maxStep = maxStep;

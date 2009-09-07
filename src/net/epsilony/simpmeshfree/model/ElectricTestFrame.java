@@ -24,7 +24,7 @@ import net.epsilony.math.radialbasis.MultiQuadRadial;
 import net.epsilony.math.radialbasis.RadialBasisFunction;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryConditions;
-import net.epsilony.simpmeshfree.model.geometry.GeometryModel;
+import net.epsilony.simpmeshfree.model.geometry.Model;
 import net.epsilony.simpmeshfree.model.geometry.LineSegment;
 import net.epsilony.simpmeshfree.model.geometry.Node;
 import net.epsilony.simpmeshfree.model.geometry.Point;
@@ -65,7 +65,7 @@ public class ElectricTestFrame extends javax.swing.JFrame {
     LinkedList<Node> outputs = new LinkedList<Node>();
     ModelPanel panel = new ModelPanel();
     ModelPanelManager mpm;
-    GeometryModel gm = new GeometryModel();
+    Model gm = new Model();
     ElectricModel em = new ElectricModel(gm);
 
 

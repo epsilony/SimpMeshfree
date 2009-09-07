@@ -12,7 +12,7 @@ import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
 import net.epsilony.simpmeshfree.model.ModelTestFrame;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition;
-import net.epsilony.simpmeshfree.model.geometry.GeometryModel;
+import net.epsilony.simpmeshfree.model.geometry.Model;
 import net.epsilony.simpmeshfree.model.geometry.Node;
 import net.epsilony.simpmeshfree.utils.ModelImagePainter;
 import net.epsilony.simpmeshfree.utils.ModelPanelManager;
@@ -36,7 +36,7 @@ import org.apache.log4j.Logger;
  * <br>{@link MechanicsModel#setSupportDomain(net.epsilony.simpmeshfree.model.mechanics.SupportDomain) }</br>
  * @author epsilon
  */
-public class MechanicsModel extends Model implements ModelImagePainter {
+public class MechanicsModel extends Solver implements ModelImagePainter {
 
     static class MechanicsModelCore implements ModelCore {
 
@@ -49,7 +49,7 @@ public class MechanicsModel extends Model implements ModelImagePainter {
         
 
         @Override
-        public void accurateEssentialCore(double[] values, int index, byte flag, FlexCompRowMatrix matrix, DenseVector vector) {
+        public void essentialBoundaryConditionCore(double[] values, int index, byte flag, FlexCompRowMatrix matrix, DenseVector vector) {
             int rowcol = index * 2;
             if ((BoundaryCondition.X & flag) == BoundaryCondition.X) {
                 double ux = values[0];
@@ -132,7 +132,7 @@ public class MechanicsModel extends Model implements ModelImagePainter {
     transient static Logger logDeep = Logger.getLogger(MechanicsModel.class.getName() + ".deep1");
     transient int logi;
 
-    public MechanicsModel(GeometryModel gm) {
+    public MechanicsModel(Model gm) {
         super(new MechanicsModelCore(), gm);
     }
 
@@ -193,7 +193,7 @@ public class MechanicsModel extends Model implements ModelImagePainter {
         quadrateDomains();
         bVector = new DenseVector(nodes.size() * 2);
         natureBoundaryQuadrate(quadratureNum);
-        applyAccurateEssentialBoundaryConditions();
+        applyEssentialBoundaryConditions();
         rcmJni = new RCMJni();
         Object[] results = rcmJni.compile(kMat, bVector);
         log.info("solve the Ax=b now");

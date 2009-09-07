@@ -13,7 +13,7 @@ package net.epsilony.simpmeshfree.model.mechanics;
 
 import java.awt.geom.Area;
 import java.awt.geom.Rectangle2D;
-import net.epsilony.simpmeshfree.model.geometry.GeometryModel;
+import net.epsilony.simpmeshfree.model.geometry.Model;
 
 /**
  *
@@ -23,7 +23,7 @@ public class BandWidthTestFrame extends javax.swing.JFrame {
     Area a=new Area(new Rectangle2D.Double(0,0,62,100));
 
 
-    GeometryModel gm=new GeometryModel();
+    Model gm=new Model();
 
 
     /** Creates new form BandWidthTestFrame */

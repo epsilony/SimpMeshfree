@@ -30,7 +30,7 @@ import net.epsilony.simpmeshfree.model.geometry.ApproximatePoint;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition.BoundaryConditionType;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryNode;
-import net.epsilony.simpmeshfree.model.geometry.GeometryModel;
+import net.epsilony.simpmeshfree.model.geometry.Model;
 import net.epsilony.simpmeshfree.model.geometry.ModelElement.ModelElementType;
 import net.epsilony.simpmeshfree.model.geometry.Node;
 import net.epsilony.simpmeshfree.model.geometry.Route;
@@ -61,11 +61,11 @@ import org.jppf.task.storage.MemoryMapDataProvider;
  *
  * @author epsilon
  */
-public class Model implements ModelImagePainter, Serializable {
+public class Solver implements ModelImagePainter, Serializable {
 
     ModelCore modelCore;
 
-    public Model(ModelCore modelCore, GeometryModel gm) {
+    public Solver(ModelCore modelCore, Model gm) {
         this.modelCore = modelCore;
         this.gm = gm;
     }
@@ -112,12 +112,12 @@ public class Model implements ModelImagePainter, Serializable {
 
         }
     }
-    transient static Logger log = Logger.getLogger(Model.class);
+    transient static Logger log = Logger.getLogger(Solver.class);
     transient DenseVector bVector;
     LinkedList<BoundaryNode> boundaryNodes = new LinkedList<BoundaryNode>();
     double boundaryNodesScreenSize = 3;
     transient ViewMarkerType boundaryNodesScreenType = ViewMarkerType.X;
-    GeometryModel gm;
+    Model gm;
     transient FlexCompRowMatrix kMat = null;
     transient UpperSymmBandMatrix matA;
     LinkedList<Node> nodes = new LinkedList<Node>();
@@ -141,11 +141,11 @@ public class Model implements ModelImagePainter, Serializable {
     transient DenseVector xVector = new DenseVector(nodes.size() * 2);
 //    ReentrantLock quadrateDomainsLock = new ReentrantLock();
 //    int submitEnd;
-    transient boolean forceSingleCore = false;
-    transient boolean forceLocalCore = false;
+    transient boolean forceSingleProcessor = false;
+    transient boolean forceLocalProcessor = false;
 
-    public void setForceSingleCore(boolean forceSingleCore) {
-        this.forceSingleCore = forceSingleCore;
+    public void setForceSingleProcessor(boolean forceSingleProcesser) {
+        this.forceSingleProcessor = forceSingleProcesser;
     }
     int kMatRow;
     int kMatCol;
@@ -153,13 +153,13 @@ public class Model implements ModelImagePainter, Serializable {
     public void quadrateDomains() throws ArgumentOutsideDomainException, Exception {
         int sumProcess = Runtime.getRuntime().availableProcessors();
         int sumDomains = rectangleQuadratureDomains.size() + triangleQuadratureDomains.size();
-        if (forceLocalCore || forceSingleCore) {
+        if (forceLocalProcessor || forceSingleProcessor) {
             initialKMatrix();
             log.info("Start quadrateDomains with multi threads");
             long time = System.nanoTime();
             taskDivision = sumProcess * 10;
             ExecutorService es;
-            if (forceSingleCore) {
+            if (forceSingleProcessor) {
                 es = Executors.newFixedThreadPool(1);
             } else {
                 es = Executors.newFixedThreadPool(sumProcess);
@@ -172,11 +172,11 @@ public class Model implements ModelImagePainter, Serializable {
             LinkedList<QuadrateDomainsTask> tasks = new LinkedList<QuadrateDomainsTask>();
             int start = 0;
             int end = start + gap;
-             DataProvider dataProvider = new MemoryMapDataProvider();
+            DataProvider dataProvider = new MemoryMapDataProvider();
             dataProvider.setValue("model", this);
 
             while (start < sumDomains) {
-                QuadrateDomainsTask task = new QuadrateDomainsTask(start, end,this);
+                QuadrateDomainsTask task = new QuadrateDomainsTask(start, end, this);
                 tasks.add(task);
                 es.submit(task);
 
@@ -200,7 +200,7 @@ public class Model implements ModelImagePainter, Serializable {
                 try {
                     allDone = es.awaitTermination(1, TimeUnit.SECONDS);
                 } catch (InterruptedException ex) {
-                    log.error (ex);
+                    log.error(ex);
                 }
             }
             log.info("All tasks' done! Assembling");
@@ -214,14 +214,14 @@ public class Model implements ModelImagePainter, Serializable {
         } else {
             initialKMatrix();
             log.info("Start quadrateDomains with net grid!");
-            long time=System.nanoTime();
+            long time = System.nanoTime();
             taskDivision = 5;
 
             int gap = sumDomains / taskDivision + 1;
             if (gap < 10) {
                 gap = 10;
             }
-            JPPFJob job=new JPPFJob();
+            JPPFJob job = new JPPFJob();
             int start = 0;
             int end = start + gap;
             if (end > sumDomains) {
@@ -239,20 +239,21 @@ public class Model implements ModelImagePainter, Serializable {
                 }
             }
 
-           
-           DomainQuadratureResultListerner domainQuadratureResultListerner = new DomainQuadratureResultListerner(job.getTasks().size(),kMat);
-           job.setDataProvider(dataProvider);
-           job.setResultListener(domainQuadratureResultListerner);
+
+            DomainQuadratureResultListerner domainQuadratureResultListerner = new DomainQuadratureResultListerner(job.getTasks().size(), kMat);
+            job.setDataProvider(dataProvider);
+            job.setResultListener(domainQuadratureResultListerner);
             JPPFClient client = new JPPFClient();
             client.submit(job);
             domainQuadratureResultListerner.waitForResults();
-            time=System.nanoTime()-time;
+            time = System.nanoTime() - time;
             log.info("Grid net quadrateDomains finished, time costs:" + time);
         }
     }
 
 //    DomainQuadratureResultListerner domainQuadratureResultListerner;
     static class DomainQuadratureResultListerner extends JPPFResultCollector {
+
         transient private FlexCompRowMatrix matrix;
 
         public DomainQuadratureResultListerner(int count, FlexCompRowMatrix matrix) {
@@ -280,8 +281,8 @@ public class Model implements ModelImagePainter, Serializable {
         }
     }
 
-    public void setForceLocalCore(boolean forceLocalCore) {
-        this.forceLocalCore = forceLocalCore;
+    public void setForceLocalProcessor(boolean forceLocalProcessor) {
+        this.forceLocalProcessor = forceLocalProcessor;
     }
 
     static class QuadrateDomainsJPPFTask extends JPPFTask {
@@ -294,10 +295,10 @@ public class Model implements ModelImagePainter, Serializable {
 //            Thread.setDefaultUncaughtExceptionHandler(eh);
                 DataProvider dp = getDataProvider();
                 try {
-                    task.model = (Model) dp.getValue("model");
+                    task.model = (Solver) dp.getValue("model");
                 } catch (Exception ex) {
-                    if(null==log){
-                        log=Logger.getLogger(Model.class);
+                    if (null == log) {
+                        log = Logger.getLogger(Solver.class);
                     }
                     log.error(ex);
                     this.setException(ex);
@@ -322,7 +323,7 @@ public class Model implements ModelImagePainter, Serializable {
         AtomicBoolean finished = new AtomicBoolean();
         transient FlexCompRowMatrix taskMatrix;
 
-        QuadrateDomainsTask(int start, int end, Model model) {
+        QuadrateDomainsTask(int start, int end, Solver model) {
             this.start = start;
             this.end = end;
             this.model = model;
@@ -333,20 +334,20 @@ public class Model implements ModelImagePainter, Serializable {
             this.start = start;
             this.end = end;
         }
-        Model model;
+        Solver model;
 
         @Override
         public void run() {
             if (null == log) {
-                        Logger.getLogger(Model.class);
-                    }
+                Logger.getLogger(Solver.class);
+            }
             taskMatrix = new FlexCompRowMatrix(model.kMatRow, model.kMatCol);
 
             if (start < model.rectangleQuadratureDomains.size()) {
                 try {
-                    Model.quadrateRectangleDomains(start, end, taskMatrix, model);
+                    Solver.quadrateRectangleDomains(start, end, taskMatrix, model);
                 } catch (ArgumentOutsideDomainException ex) {
-                    
+
                     log.error(ex);
                 }
             }
@@ -360,7 +361,7 @@ public class Model implements ModelImagePainter, Serializable {
                 int triEnd = end - model.rectangleQuadratureDomains.size();
 
                 try {
-                    Model.quadrateTriangleDomainsByGrid(triStart, triEnd, taskMatrix, model);
+                    Solver.quadrateTriangleDomains(triStart, triEnd, taskMatrix, model);
                 } catch (ArgumentOutsideDomainException ex) {
                     log.error(ex);
                 }
@@ -447,16 +448,19 @@ public class Model implements ModelImagePainter, Serializable {
         quadrateRectangleDomains(0, rectangleQuadratureDomains.size(), kMat, this);
     }
 
-    public static void quadrateRectangleDomains(int start, int end, FlexCompRowMatrix taskMatrix, Model model) throws ArgumentOutsideDomainException {
+    public static void quadrateRectangleDomains(int start, int end, FlexCompRowMatrix taskMatrix, Solver model) throws ArgumentOutsideDomainException {
 //        System.out.println(Thread.currentThread());
 //        log.info(String.format("Start quadrateRectangleDomains(%d)", quadratureNum));
-        if(null==log){
-            log=Logger.getLogger(Model.class);
+        if (null == log) {
+            log = Logger.getLogger(Solver.class);
         }
+        //for synchronized computing
         SupportDomain localSupportDomain = model.supportDomain.CopyOf(false);
         ShapeFunction localShapeFunction = model.shapeFunction.CopyOf(false);
         RadialBasisFunction localRadialBasisFunction = model.radialBasisFunction.CopyOf(false);
         localShapeFunction.setRadialBasisFunction(localRadialBasisFunction);
+        //end for synchronized computing
+
         double nodesAverDistance;
         ArrayList<Node> supportNodes = new ArrayList<Node>(100);
         Vector[] partialValues;
@@ -517,14 +521,14 @@ public class Model implements ModelImagePainter, Serializable {
 //        log.info("End of quadrateRectangleDomains");
     }
 
-    public void quadrateTriangleDomainsByGrid() throws ArgumentOutsideDomainException {
-        quadrateTriangleDomainsByGrid(0, triangleQuadratureDomains.size(), kMat, this);
+    public void quadrateTriangleDomains() throws ArgumentOutsideDomainException {
+        quadrateTriangleDomains(0, triangleQuadratureDomains.size(), kMat, this);
     }
 
-    public static void quadrateTriangleDomainsByGrid(int start, int end, FlexCompRowMatrix matrix, Model model) throws ArgumentOutsideDomainException {
+    public static void quadrateTriangleDomains(int start, int end, FlexCompRowMatrix matrix, Solver model) throws ArgumentOutsideDomainException {
 //        log.info(String.format("Start quadrateTriangleDomainsByGrid(%d)", quadratureNum));
-       if(null==log){
-            log=Logger.getLogger(Model.class);
+        if (null == log) {
+            log = Logger.getLogger(Solver.class);
         }
         SupportDomain localSupportDomain = model.supportDomain.CopyOf(false);
         ShapeFunction localShapeFunction = model.shapeFunction.CopyOf(false);
@@ -594,87 +598,7 @@ public class Model implements ModelImagePainter, Serializable {
 //        log.info("End of quadrateTriangleDomainsByGrid");
     }
 
-//    abstract public void quadrateCore(int mIndex, double dphim_dx, double dphim_dy, int nIndex, double dphin_dx, double dphin_dy, double coefs, FlexCompRowMatrix matrix);
-    public void applyEssentialBoundaryConditionsByPenalty() {
-        log.info("Start applyEssentialBoundaryConditionsByPenalty");
-        Segment segment;
-
-        double segmentParm;
-
-        LinkedList<BoundaryCondition> tempBCs;
-        int rowcol;
-        nodes.size();
-        double[] txy = new double[2];
-        double ux, uy;
-        byte tb;
-        double kMax = kMat.get(0, 0);
-        for (int i = 0; i < kMat.numRows(); i++) {
-            if (kMax < kMat.get(i, i)) {
-                kMax = kMat.get(i, i);
-            }
-
-        }
-        double alpha = 1e8 * kMax;
-        for (BoundaryNode bNode : boundaryNodes) {
-            segment = bNode.getSegment();
-            segmentParm = bNode.getSegmentParm();
-            if (0 == segmentParm) {
-                LinkedList<BoundaryCondition> bc1, bc2;
-                bc1 = segment.getBoundaryConditions();
-                bc2 = segment.getBack().getBoundaryConditions();
-                if (bc1 != null || bc2 != null) {
-                    tempBCs = new LinkedList<BoundaryCondition>();
-                    if (bc1 != null) {
-                        tempBCs.addAll(segment.getBoundaryConditions());
-                    }
-
-                    if (bc2 != null) {
-                        tempBCs.addAll(segment.getBack().getBoundaryConditions());
-                    }
-
-                } else {
-                    tempBCs = null;
-                }
-
-            } else {
-                tempBCs = segment.getBoundaryConditions();
-            }
-
-            if (null == tempBCs) {
-                continue;
-            }
-
-            for (BoundaryCondition bc : tempBCs) {
-                if (bc.getType() != BoundaryConditionType.Essential) {
-                    continue;
-                }
-
-                tb = bc.getValues(bNode.getSegmentParm(), txy);
-                if (BoundaryCondition.NOT == tb) {
-                    continue;
-                }
-
-                rowcol = bNode.getMatrixIndex() * 2;
-                if ((BoundaryCondition.X & tb) == BoundaryCondition.X) {
-                    ux = txy[0];
-                    double kii = kMat.get(rowcol, rowcol);
-                    kMat.set(rowcol, rowcol, alpha * kii);
-                    bVector.set(rowcol, alpha * kii * ux);
-                }
-
-                if ((BoundaryCondition.Y & tb) == BoundaryCondition.Y) {
-                    uy = txy[1];
-                    double kii = kMat.get(rowcol + 1, rowcol + 1);
-                    kMat.set(rowcol + 1, rowcol + 1, alpha * kii);
-                    bVector.set(rowcol + 1, alpha * kii * uy);
-                }
-
-            }
-        }
-        log.info("End of applyEssentialBoundaryConditionsByPenalty");
-    }
-
-    public void applyAccurateEssentialBoundaryConditions() {
+    public void applyEssentialBoundaryConditions() {
         log.info("Start applyAccurateEssentialBoundaryConditions");
         Segment segment;
 
@@ -725,7 +649,7 @@ public class Model implements ModelImagePainter, Serializable {
                 }
 
                 rowcol = bNode.getMatrixIndex();
-                modelCore.accurateEssentialCore(txy, rowcol, tb, kMat, bVector);
+                modelCore.essentialBoundaryConditionCore(txy, rowcol, tb, kMat, bVector);
             }
 
         }
@@ -888,5 +812,4 @@ public class Model implements ModelImagePainter, Serializable {
         }
         log.info("End of natureBoundaryQuadrate");
     }
-   
 }

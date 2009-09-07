@@ -139,7 +139,7 @@ public class GeometryUtils {
     }
 
     public static void main(String[] args) {
-        GeometryModel gm = new GeometryModel();
+        Model gm = new Model();
         gm.addShape(new Rectangle2D.Double(0, -6, 48, 6));
         gm.compile(0.5, 0.1);
         LinkedList<ApproximatePoint> aprxPts = new LinkedList<ApproximatePoint>();

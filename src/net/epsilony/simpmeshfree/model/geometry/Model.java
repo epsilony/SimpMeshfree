@@ -30,9 +30,9 @@ import org.apache.log4j.Logger;
  *
  * @author epsilon
  */
-public class GeometryModel implements ModelImagePainter,Serializable {
+public class Model implements ModelImagePainter,Serializable {
 
-    transient static Logger log = Logger.getLogger(GeometryModel.class);
+    transient static Logger log = Logger.getLogger(Model.class);
 
     public LinkedList<Route> getRoutes() {
         return routes;
@@ -452,7 +452,7 @@ public class GeometryModel implements ModelImagePainter,Serializable {
     }
 
     public static void main(String[] args) {
-        GeometryModel gm = new GeometryModel();
+        Model gm = new Model();
         gm.addShape(new Rectangle2D.Double(0, 0, 48, 12));
     }
     transient boolean showModelShape = true;
