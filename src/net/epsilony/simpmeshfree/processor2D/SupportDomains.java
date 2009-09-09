@@ -2,17 +2,17 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.epsilony.simpmeshfree.model.mechanics;
+package net.epsilony.simpmeshfree.processor2D;
 
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import net.epsilony.simpmeshfree.model.geometry.ApproximatePoint;
-import net.epsilony.simpmeshfree.model.geometry.Model;
-import net.epsilony.simpmeshfree.model.geometry.GeometryUtils;
-import net.epsilony.simpmeshfree.model.geometry.Node;
-import net.epsilony.simpmeshfree.model.geometry.Point;
-import net.epsilony.simpmeshfree.model.geometry.Segment;
+import net.epsilony.simpmeshfree.model2D.ApproximatePoint;
+import net.epsilony.simpmeshfree.model2D.Model;
+import net.epsilony.simpmeshfree.model2D.GeometryUtils;
+import net.epsilony.simpmeshfree.model2D.Node;
+import net.epsilony.simpmeshfree.model2D.Point;
+import net.epsilony.simpmeshfree.model2D.Segment;
 import net.epsilony.util.collection.LayeredDomainTree;
 import org.apache.log4j.Logger;
 

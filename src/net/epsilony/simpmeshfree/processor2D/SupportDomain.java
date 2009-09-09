@@ -3,13 +3,13 @@
  * and open the template in the editor.
  */
 
-package net.epsilony.simpmeshfree.model.mechanics;
+package net.epsilony.simpmeshfree.processor2D;
 
 import java.io.Serializable;
 import java.util.List;
 
-import net.epsilony.simpmeshfree.model.geometry.Node;
-import net.epsilony.simpmeshfree.model.geometry.Segment;
+import net.epsilony.simpmeshfree.model2D.Node;
+import net.epsilony.simpmeshfree.model2D.Segment;
 
 /**
  *

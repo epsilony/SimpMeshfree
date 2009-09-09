@@ -2,11 +2,11 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.epsilony.simpmeshfree.model.mechanics;
+package net.epsilony.simpmeshfree.processor2D;
 
 import java.util.Arrays;
 import java.util.LinkedList;
-import net.epsilony.simpmeshfree.model.geometry.Node;
+import net.epsilony.simpmeshfree.model2D.Node;
 import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;

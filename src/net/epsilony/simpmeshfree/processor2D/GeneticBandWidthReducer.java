@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.epsilony.simpmeshfree.model.mechanics;
+package net.epsilony.simpmeshfree.processor2D;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -13,7 +13,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 import java.util.TreeSet;
-import net.epsilony.simpmeshfree.model.geometry.Node;
+import net.epsilony.simpmeshfree.model2D.Node;
 
 /**
  *

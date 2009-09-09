@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package net.epsilony.simpmeshfree.model.mechanics;
+package net.epsilony.simpmeshfree.processor2D;
 
 import java.io.Serializable;
 import no.uib.cipr.matrix.DenseVector;
@@ -13,7 +13,7 @@ import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
  *
  * @author epsilon
  */
-public interface ModelCore extends Serializable{
+public interface WeakMethodCore extends Serializable{
     /**
      * 施加本质边界条件的内核
      * @param values 本质边界条件的数值，根据flag参数会有{ux uy} {u NaN} {NaN u} 等

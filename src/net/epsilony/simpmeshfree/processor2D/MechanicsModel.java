@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.epsilony.simpmeshfree.model.mechanics;
+package net.epsilony.simpmeshfree.processor2D;
 
 import java.awt.AlphaComposite;
 import java.awt.Color;
@@ -10,10 +10,10 @@ import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
-import net.epsilony.simpmeshfree.model.ModelTestFrame;
-import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition;
-import net.epsilony.simpmeshfree.model.geometry.Model;
-import net.epsilony.simpmeshfree.model.geometry.Node;
+import net.epsilony.simpmeshfree.modeltest.ModelTestFrame;
+import net.epsilony.simpmeshfree.model2D.BoundaryCondition;
+import net.epsilony.simpmeshfree.model2D.Model;
+import net.epsilony.simpmeshfree.model2D.Node;
 import net.epsilony.simpmeshfree.utils.ModelImagePainter;
 import net.epsilony.simpmeshfree.utils.ModelPanelManager;
 import no.uib.cipr.matrix.DenseMatrix;
@@ -36,9 +36,9 @@ import org.apache.log4j.Logger;
  * <br>{@link MechanicsModel#setSupportDomain(net.epsilony.simpmeshfree.model.mechanics.SupportDomain) }</br>
  * @author epsilon
  */
-public class MechanicsModel extends Solver implements ModelImagePainter {
+public class MechanicsModel extends WeakMethodProcessor implements ModelImagePainter {
 
-    static class MechanicsModelCore implements ModelCore {
+    static class MechanicsModelCore implements WeakMethodCore {
 
         double d00;// = constitutiveLaw.get(0, 0);
         double d01;// = constitutiveLaw.get(0, 1);

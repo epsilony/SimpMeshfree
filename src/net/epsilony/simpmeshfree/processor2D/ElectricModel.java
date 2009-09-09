@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.epsilony.simpmeshfree.model.mechanics;
+package net.epsilony.simpmeshfree.processor2D;
 
 import java.awt.AlphaComposite;
 import java.awt.Color;
@@ -16,16 +16,16 @@ import java.util.LinkedList;
 import java.util.List;
 import net.epsilony.math.analysis.GaussLegendreQuadrature;
 import net.epsilony.math.radialbasis.RadialBasisFunction;
-import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition;
-import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition.BoundaryConditionType;
-import net.epsilony.simpmeshfree.model.geometry.BoundaryNode;
-import net.epsilony.simpmeshfree.model.geometry.Model;
-import net.epsilony.simpmeshfree.model.geometry.ModelElement.ModelElementType;
-import net.epsilony.simpmeshfree.model.geometry.Node;
-import net.epsilony.simpmeshfree.model.geometry.Point;
-import net.epsilony.simpmeshfree.model.geometry.Segment;
-import net.epsilony.simpmeshfree.model.geometry.TriangleJni;
-import net.epsilony.simpmeshfree.model.mechanics.SupportDomains.SimpleRoundSupportDomain;
+import net.epsilony.simpmeshfree.model2D.BoundaryCondition;
+import net.epsilony.simpmeshfree.model2D.BoundaryCondition.BoundaryConditionType;
+import net.epsilony.simpmeshfree.model2D.BoundaryNode;
+import net.epsilony.simpmeshfree.model2D.Model;
+import net.epsilony.simpmeshfree.model2D.ModelElement.ModelElementType;
+import net.epsilony.simpmeshfree.model2D.Node;
+import net.epsilony.simpmeshfree.model2D.Point;
+import net.epsilony.simpmeshfree.model2D.Segment;
+import net.epsilony.simpmeshfree.model2D.TriangleJni;
+import net.epsilony.simpmeshfree.processor2D.SupportDomains.SimpleRoundSupportDomain;
 import net.epsilony.simpmeshfree.shapefun.ShapeFunction;
 import net.epsilony.simpmeshfree.utils.ModelImagePainter;
 import net.epsilony.simpmeshfree.utils.ModelPanelManager;
@@ -131,7 +131,7 @@ public class ElectricModel implements ModelImagePainter {
 
         TriangleJni triangleJni = new TriangleJni();
 
-        gm.compile(size, flatness);
+        gm.generateApproximatePoints(size, flatness);
 
         triangleJni.complie(gm, s);
 
@@ -219,7 +219,7 @@ public class ElectricModel implements ModelImagePainter {
     public void generateQuadratureDomainsByTriangle(double size, double flatness, String s) {
         log.info(String.format("Start generateQuadratureDomainsByTriangle(%6.3e, %6.3e, %s", size, flatness, s));
         TriangleJni triangleJni = new TriangleJni();
-        gm.compile(size, flatness);
+        gm.generateApproximatePoints(size, flatness);
         triangleJni.complie(gm, s);
         triangleQuadratureDomains = triangleJni.getTriangleXYsList();
         log.info("End of generateQuadratureDomainsByTriangle()");

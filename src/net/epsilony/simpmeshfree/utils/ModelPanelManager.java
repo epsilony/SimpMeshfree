@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import static java.lang.Math.*;
-import net.epsilony.simpmeshfree.model.geometry.Point;
+import net.epsilony.simpmeshfree.model2D.Point;
 
 /**
  *

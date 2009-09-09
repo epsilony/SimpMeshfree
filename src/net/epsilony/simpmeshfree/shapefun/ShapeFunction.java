@@ -8,7 +8,7 @@ package net.epsilony.simpmeshfree.shapefun;
 import java.io.Serializable;
 import java.util.List;
 import net.epsilony.math.radialbasis.RadialBasisFunction;
-import net.epsilony.simpmeshfree.model.geometry.Node;
+import net.epsilony.simpmeshfree.model2D.Node;
 import no.uib.cipr.matrix.Vector;
 
 /**
