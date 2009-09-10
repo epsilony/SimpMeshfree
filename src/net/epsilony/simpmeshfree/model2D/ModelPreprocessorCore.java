@@ -15,5 +15,4 @@ public interface ModelPreprocessorCore {
         LinkedList<double[]> getTriangleQuadratureDomains();
         LinkedList<double[]> getQuadQudratureDomains();
         LinkedList<Node> getNodes();
-        LinkedList<Segment> getSegmentsWithBoundaryConditions();
 }

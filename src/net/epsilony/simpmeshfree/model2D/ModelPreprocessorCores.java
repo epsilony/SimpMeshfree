@@ -18,6 +18,7 @@ public class ModelPreprocessorCores {
 
     public static ModelPreprocessorCore autoTriangleCore(Model gm, double quadratureDomainSize, double quadratureDomainsFlatness, String quadratureDomainSwitch, boolean generateNodeByTriangle, double nodeSize, double nodesFlatness, String nodeSwitch) {
         TriangleJni triangleJni = null;
+        final LinkedList<Node> nodes = new LinkedList<Node>();
         if (generateNodeByTriangle) {
             log.info(String.format("Start generateNodesByTiangle%nsize=%6.3e flatness=%6.3e s=%s", nodeSize, nodesFlatness, nodeSwitch));
 
@@ -25,7 +26,7 @@ public class ModelPreprocessorCores {
             Node tn = Node.tempNode(0, 0);
             tn.getIndexManager().reset();
 
-            LinkedList<Node> nodes = new LinkedList<Node>();
+            
             LinkedList<BoundaryNode> boundaryNodes = new LinkedList<BoundaryNode>();
 
             triangleJni = new TriangleJni();
@@ -43,8 +44,25 @@ public class ModelPreprocessorCores {
         triangleJni = new TriangleJni();
         gm.generateApproximatePoints(quadratureDomainSize, quadratureDomainsFlatness);
         triangleJni.complie(gm, quadratureDomainSwitch);
-        LinkedList<double[]> triangleQuadratureDomains = triangleJni.getTriangleXYsList();
+        final LinkedList<double[]> triangleQuadratureDomains = triangleJni.getTriangleXYsList();
         log.info("End of generateQuadratureDomainsByTriangle()");
-        return null;
+        ModelPreprocessorCore result=new ModelPreprocessorCore() {
+
+            @Override
+            public LinkedList<double[]> getTriangleQuadratureDomains() {
+                return triangleQuadratureDomains;
+            }
+
+            @Override
+            public LinkedList<double[]> getQuadQudratureDomains() {
+                return null;
+            }
+
+            @Override
+            public LinkedList<Node> getNodes() {
+                return nodes;
+            }
+        };
+        return result;
     }
 }
