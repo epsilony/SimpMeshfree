@@ -27,7 +27,6 @@ import net.epsilony.simpmeshfree.model2D.BoundaryCondition;
 import net.epsilony.simpmeshfree.model2D.BoundaryCondition.BoundaryConditionType;
 import net.epsilony.simpmeshfree.model2D.BoundaryNode;
 import net.epsilony.simpmeshfree.model2D.Model;
-import net.epsilony.simpmeshfree.model2D.ModelElement.ModelElementType;
 import net.epsilony.simpmeshfree.model2D.Node;
 import net.epsilony.simpmeshfree.model2D.Route;
 import net.epsilony.simpmeshfree.model2D.Segment;
@@ -112,6 +111,10 @@ public class WeakMethodProcessor implements ModelImagePainter, Serializable {
     LinkedList<BoundaryNode> boundaryNodes = new LinkedList<BoundaryNode>();
     double boundaryNodesScreenSize = 3;
     transient ViewMarkerType boundaryNodesScreenType = ViewMarkerType.X;
+
+    public LinkedList<double[]> getTriangleQuadratureDomains() {
+        return triangleQuadratureDomains;
+    }
     Model gm;
     transient FlexCompRowMatrix kMat = null;
     transient UpperSymmBandMatrix matA;
@@ -125,7 +128,7 @@ public class WeakMethodProcessor implements ModelImagePainter, Serializable {
     transient boolean showNodes = true;
     transient boolean showTriangleDomain = true;
     SupportDomain supportDomain;
-    transient TriangleJni triJni;
+//    transient TriangleJni triJni;
     transient Color triangleDomainColor = Color.lightGray;
     LinkedList<double[]> triangleQuadratureDomains = new LinkedList<double[]>();
     LinkedList<double[]> rectangleQuadratureDomains = new LinkedList<double[]>();
@@ -366,47 +369,47 @@ public class WeakMethodProcessor implements ModelImagePainter, Serializable {
         }
     }
 
-    public void generateBoundaryNodeByApproximatePoints(double size, double flatness) {
-        gm.generateApproximatePoints(size, flatness);
-        for (Route route : gm.getRoutes()) {
-            for (ApproximatePoint ap : route.GetApproximatePoints()) {
-                BoundaryNode bn = new BoundaryNode(ap);
-                nodes.add(bn);
-                boundaryNodes.add(bn);
-            }
+//    public void generateBoundaryNodeByApproximatePoints(double size, double flatness) {
+//        gm.generateApproximatePoints(size, flatness);
+//        for (Route route : gm.getRoutes()) {
+//            for (ApproximatePoint ap : route.GetApproximatePoints()) {
+//                BoundaryNode bn = new BoundaryNode(ap);
+//                nodes.add(bn);
+//                boundaryNodes.add(bn);
+//            }
+//
+//        }
+//    }
 
-        }
-    }
+//    public void generateNodesByTriangle(double size, double flatness, String s, boolean needNeighbors, boolean resetNodesIndex) {
+//        log.info(String.format("Start generateNodesByTiangle%nsize=%6.3e flatness=%6.3e s=%s needNeighbors=%b resetNodesIndex %b", size, flatness, s, needNeighbors, resetNodesIndex));
+//        if (resetNodesIndex) {
+//            Node n = Node.tempNode(0, 0);
+//            n.getIndexManager().reset();
+//        }
+//
+//        nodes.clear();
+//        boundaryNodes.clear();
+//        TriangleJni triangleJni = new TriangleJni();
+//        gm.generateApproximatePoints(size, flatness);
+//        triangleJni.complie(gm, s);
+//        nodes.addAll(triangleJni.getNodes(needNeighbors));
+//        for (Node n : nodes) {
+//            if (n.type() == ModelElementType.BoundaryNode) {
+//                boundaryNodes.add((BoundaryNode) n);
+//            }
+//
+//        }
+//        triJni = triangleJni;
+//        log.info(String.format("End of generateNodesByTriangle%n nodes.size()=%d boundaryNodes.size()=%d", nodes.size(), boundaryNodes.size()));
+//    }
 
-    public void generateNodesByTriangle(double size, double flatness, String s, boolean needNeighbors, boolean resetNodesIndex) {
-        log.info(String.format("Start generateNodesByTiangle%nsize=%6.3e flatness=%6.3e s=%s needNeighbors=%b resetNodesIndex %b", size, flatness, s, needNeighbors, resetNodesIndex));
-        if (resetNodesIndex) {
-            Node n = Node.tempNode(0, 0);
-            n.getIndexManager().reset();
-        }
-
-        nodes.clear();
-        boundaryNodes.clear();
-        TriangleJni triangleJni = new TriangleJni();
-        gm.generateApproximatePoints(size, flatness);
-        triangleJni.complie(gm, s);
-        nodes.addAll(triangleJni.getNodes(needNeighbors));
-        for (Node n : nodes) {
-            if (n.type() == ModelElementType.BoundaryNode) {
-                boundaryNodes.add((BoundaryNode) n);
-            }
-
-        }
-        triJni = triangleJni;
-        log.info(String.format("End of generateNodesByTriangle%n nodes.size()=%d boundaryNodes.size()=%d", nodes.size(), boundaryNodes.size()));
-    }
-
-    public void generateQuadratureDomainsByTriangle() {
-        log.info("Start generateQuadratureDomainsByTriangle()");
-        triangleQuadratureDomains = triJni.getTriangleXYsList();
-        log.info("End of generateQuadratureDomainsByTriangle()");
-    }
-
+//    public void generateQuadratureDomainsByTriangle() {
+//        log.info("Start generateQuadratureDomainsByTriangle()");
+//        triangleQuadratureDomains = triJni.getTriangleXYsList();
+//        log.info("End of generateQuadratureDomainsByTriangle()");
+//    }
+//
     public void generateQuadratureDomainsByTriangle(double size, double flatness, String s) {
         log.info(String.format("Start generateQuadratureDomainsByTriangle(%6.3e, %6.3e, %s", size, flatness, s));
         TriangleJni triangleJni = new TriangleJni();

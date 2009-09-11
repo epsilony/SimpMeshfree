@@ -35,6 +35,7 @@ import net.epsilony.simpmeshfree.model2D.LineSegment;
 import net.epsilony.simpmeshfree.model2D.Node;
 import net.epsilony.simpmeshfree.model2D.Segment;
 import net.epsilony.simpmeshfree.processor2D.MechanicsModel;
+import net.epsilony.simpmeshfree.processor2D.PreProcessUtils;
 import net.epsilony.simpmeshfree.processor2D.SupportDomains.SimpleRoundSupportDomain;
 import net.epsilony.simpmeshfree.shapefun.RadialPolynomialShapeFunction;
 import net.epsilony.simpmeshfree.utils.Constitutives;
@@ -147,9 +148,8 @@ public class ModelTestFrame extends javax.swing.JFrame {
 
 //        mm.generateBoundaryNodeByApproximatePoints(2, 0.1);
 
-        mm.generateNodesByTriangle(1, 0.05, "pqa0.5nQ", true, true);
-        mm.generateQuadratureDomainsByTriangle(0.75, 0.25, "pqa0.25nQ");
-        mm.generateQuadratureDomainsByTriangle();
+        PreProcessUtils.generateNodesByTriangle(gm, 1, 0.05, "pqa0.5nQ", mm.getNodes(), mm.getBoundaryNodes());
+        PreProcessUtils.generateQuadratureDomainsByTriangle(gm,1, 0.05, "pqa0.5nQ",mm.getTriangleQuadratureDomains());
         mm.setQuadratureNum(3);
         mpm.addModelImagePainter(mm);
         mm.setSupportDomain(new SimpleRoundSupportDomain(3, 9, 3, 20, gm, mm.getNodes()));
