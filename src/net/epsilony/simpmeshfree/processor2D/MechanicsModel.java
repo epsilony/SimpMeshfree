@@ -133,7 +133,7 @@ public class MechanicsModel extends WeakMethodProcessor implements ModelImagePai
     transient int logi;
 
     public MechanicsModel(Model gm) {
-        super(new MechanicsModelCore(), gm);
+        super(new MechanicsModelCore() ,gm);
     }
 
 

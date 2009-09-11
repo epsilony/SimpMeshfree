@@ -10,10 +10,6 @@ import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,8 +42,6 @@ import no.uib.cipr.matrix.UpperSymmBandMatrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
 import org.apache.commons.math.ArgumentOutsideDomainException;
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.jppf.client.JPPFClient;
 import org.jppf.client.JPPFJob;
@@ -64,6 +58,7 @@ import org.jppf.task.storage.MemoryMapDataProvider;
 public class WeakMethodProcessor implements ModelImagePainter, Serializable {
 
     WeakMethodCore modelCore;
+  
 
     public WeakMethodProcessor(WeakMethodCore modelCore, Model gm) {
         this.modelCore = modelCore;
@@ -812,4 +807,5 @@ public class WeakMethodProcessor implements ModelImagePainter, Serializable {
         }
         log.info("End of natureBoundaryQuadrate");
     }
+
 }
