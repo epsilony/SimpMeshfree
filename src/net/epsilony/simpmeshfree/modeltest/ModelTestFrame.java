@@ -42,7 +42,6 @@ import net.epsilony.simpmeshfree.utils.Constitutives;
 import net.epsilony.simpmeshfree.utils.ModelImagePainter;
 import net.epsilony.simpmeshfree.utils.ModelPanelManager;
 import net.epsilony.util.ui.geom.ShapeUtils;
-import org.apache.commons.math.ArgumentOutsideDomainException;
 import org.apache.log4j.Appender;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
