@@ -14,7 +14,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.ListIterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -35,20 +34,12 @@ import net.epsilony.simpmeshfree.shapefun.ShapeFunction;
 import net.epsilony.simpmeshfree.utils.ModelImagePainter;
 import net.epsilony.simpmeshfree.utils.ModelPanelManager;
 import net.epsilony.simpmeshfree.utils.ModelPanelManager.ViewMarkerType;
-import net.epsilony.util.FlexCompRowMatrixSerializable;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.UpperSymmBandMatrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
 import org.apache.commons.math.ArgumentOutsideDomainException;
 import org.apache.log4j.Logger;
-import org.jppf.client.JPPFClient;
-import org.jppf.client.JPPFJob;
-import org.jppf.client.JPPFResultCollector;
-import org.jppf.client.event.TaskResultEvent;
-import org.jppf.server.protocol.JPPFTask;
-import org.jppf.task.storage.DataProvider;
-import org.jppf.task.storage.MemoryMapDataProvider;
 
 /**
  *
@@ -57,7 +48,6 @@ import org.jppf.task.storage.MemoryMapDataProvider;
 public class WeakMethodProcessor implements ModelImagePainter, Serializable {
 
     WeakMethodCore modelCore;
-  
 
     public WeakMethodProcessor(WeakMethodCore modelCore, Model gm) {
         this.modelCore = modelCore;
@@ -151,167 +141,62 @@ public class WeakMethodProcessor implements ModelImagePainter, Serializable {
     public void quadrateDomains() throws ArgumentOutsideDomainException, Exception {
         int sumProcess = Runtime.getRuntime().availableProcessors();
         int sumDomains = rectangleQuadratureDomains.size() + triangleQuadratureDomains.size();
-        if (forceLocalProcessor || forceSingleProcessor) {
-            initialKMatrix();
-            log.info("Start quadrateDomains with multi threads");
-            long time = System.nanoTime();
-            taskDivision = sumProcess * 10;
-            ExecutorService es;
-            if (forceSingleProcessor) {
-                es = Executors.newFixedThreadPool(1);
-            } else {
-                es = Executors.newFixedThreadPool(sumProcess);
-            }
 
-            int gap = (sumDomains) / taskDivision;
-            if (gap < 10) {
-                gap = 10;
-            }
-            LinkedList<QuadrateDomainsTask> tasks = new LinkedList<QuadrateDomainsTask>();
-            int start = 0;
-            int end = start + gap;
-            DataProvider dataProvider = new MemoryMapDataProvider();
-            dataProvider.setValue("model", this);
-
-            while (start < sumDomains) {
-                QuadrateDomainsTask task = new QuadrateDomainsTask(start, end, this);
-                tasks.add(task);
-                es.submit(task);
-
-                start = end;
-                end += gap;
-                if (end > sumDomains) {
-                    end = sumDomains;
-                }
-            }
-            es.shutdown();
-            boolean allDone = false;
-
-            while (!allDone) {
-                int sumQuadrated = 0;
-                for (QuadrateDomainsTask task : tasks) {
-                    if (task.finished.get()) {
-                        sumQuadrated += -task.start + task.end;
-                    }
-                }
-                log.info(String.format("Quadrating %d/%d %%%.0f", sumQuadrated, sumDomains, sumQuadrated / (double) sumDomains * 100));
-                try {
-                    allDone = es.awaitTermination(1, TimeUnit.SECONDS);
-                } catch (InterruptedException ex) {
-                    log.error(ex);
-                }
-            }
-            log.info("All tasks' done! Assembling");
-
-            for (QuadrateDomainsTask task : tasks) {
-                kMat.add(task.taskMatrix);
-            }
-            time = System.nanoTime() - time;
-            log.info("Multi Thread quadrateDomains finished, time costs:" + time);
-            return;
+        initialKMatrix();
+        log.info("Start quadrateDomains with multi threads");
+        long time = System.nanoTime();
+        taskDivision = sumProcess * 10;
+        ExecutorService es;
+        if (forceSingleProcessor) {
+            es = Executors.newFixedThreadPool(1);
         } else {
-            initialKMatrix();
-            log.info("Start quadrateDomains with net grid!");
-            long time = System.nanoTime();
-            taskDivision = 5;
+            es = Executors.newFixedThreadPool(sumProcess);
+        }
 
-            int gap = sumDomains / taskDivision + 1;
-            if (gap < 10) {
-                gap = 10;
-            }
-            JPPFJob job = new JPPFJob();
-            int start = 0;
-            int end = start + gap;
+        int gap = (sumDomains) / taskDivision;
+        if (gap < 10) {
+            gap = 10;
+        }
+        LinkedList<QuadrateDomainsTask> tasks = new LinkedList<QuadrateDomainsTask>();
+        int start = 0;
+        int end = start + gap;
+
+        while (start < sumDomains) {
+            QuadrateDomainsTask task = new QuadrateDomainsTask(start, end, this);
+            tasks.add(task);
+            es.submit(task);
+
+            start = end;
+            end += gap;
             if (end > sumDomains) {
                 end = sumDomains;
             }
-            DataProvider dataProvider = new MemoryMapDataProvider();
-            dataProvider.setValue("model", this);
-            while (start < sumDomains) {
-                QuadrateDomainsJPPFTask task = new QuadrateDomainsJPPFTask(start, end);
-                job.addTask(task);
-                start = end;
-                end += gap;
-                if (end > sumDomains) {
-                    end = sumDomains;
+        }
+        es.shutdown();
+        boolean allDone = false;
+
+        while (!allDone) {
+            int sumQuadrated = 0;
+            for (QuadrateDomainsTask task : tasks) {
+                if (task.finished.get()) {
+                    sumQuadrated += -task.start + task.end;
                 }
             }
-
-
-            DomainQuadratureResultListerner domainQuadratureResultListerner = new DomainQuadratureResultListerner(job.getTasks().size(), kMat);
-            job.setDataProvider(dataProvider);
-            job.setResultListener(domainQuadratureResultListerner);
-            JPPFClient client = new JPPFClient();
-            client.submit(job);
-            domainQuadratureResultListerner.waitForResults();
-            time = System.nanoTime() - time;
-            log.info("Grid net quadrateDomains finished, time costs:" + time);
-        }
-    }
-
-//    DomainQuadratureResultListerner domainQuadratureResultListerner;
-    static class DomainQuadratureResultListerner extends JPPFResultCollector {
-
-        transient private FlexCompRowMatrix matrix;
-
-        public DomainQuadratureResultListerner(int count, FlexCompRowMatrix matrix) {
-            super(count);
-            this.count = count;
-            this.matrix = matrix;
-        }
-        int count;
-        int sum = 0;
-
-        @Override
-        public void resultsReceived(TaskResultEvent event) {
-            super.resultsReceived(event);
-            sum += event.getResults().size();
-            log.info(String.format("Recieved results: %d/%d %%%.0f", sum, count, sum / (double) count * 100));
-            List<JPPFTask> results = event.getTaskList();
-            Exception ex;
-            for (JPPFTask result : results) {
-                ex = result.getException();
-                if (ex != null) {
-                    log.error(ex);
-                }
-                ((FlexCompRowMatrixSerializable) result.getResult()).addTo(matrix);
-            }
-        }
-    }
-
-    public void setForceLocalProcessor(boolean forceLocalProcessor) {
-        this.forceLocalProcessor = forceLocalProcessor;
-    }
-
-    static class QuadrateDomainsJPPFTask extends JPPFTask {
-
-        QuadrateDomainsTask task;
-
-        @Override
-        public void run() {
+            log.info(String.format("Quadrating %d/%d %%%.0f", sumQuadrated, sumDomains, sumQuadrated / (double) sumDomains * 100));
             try {
-//            Thread.setDefaultUncaughtExceptionHandler(eh);
-                DataProvider dp = getDataProvider();
-                try {
-                    task.model = (WeakMethodProcessor) dp.getValue("model");
-                } catch (Exception ex) {
-                    if (null == log) {
-                        log = Logger.getLogger(WeakMethodProcessor.class);
-                    }
-                    log.error(ex);
-                    this.setException(ex);
-                    return;
-                }
-                task.run();
-                setResult(new FlexCompRowMatrixSerializable(task.taskMatrix));
-            } catch (Throwable ex) {
-                setException(new Exception(ex));
+                allDone = es.awaitTermination(1, TimeUnit.SECONDS);
+            } catch (InterruptedException ex) {
+                log.error(ex);
             }
         }
+        log.info("All tasks' done! Assembling");
 
-        QuadrateDomainsJPPFTask(int start, int end) {
-            task = new QuadrateDomainsTask(start, end);
+        for (QuadrateDomainsTask task : tasks) {
+            kMat.add(task.taskMatrix);
         }
+        time = System.nanoTime() - time;
+        log.info("Multi Thread quadrateDomains finished, time costs:" + time);
+        return;
     }
 
     static class QuadrateDomainsTask implements Runnable, Serializable {
@@ -369,47 +254,6 @@ public class WeakMethodProcessor implements ModelImagePainter, Serializable {
         }
     }
 
-//    public void generateBoundaryNodeByApproximatePoints(double size, double flatness) {
-//        gm.generateApproximatePoints(size, flatness);
-//        for (Route route : gm.getRoutes()) {
-//            for (ApproximatePoint ap : route.GetApproximatePoints()) {
-//                BoundaryNode bn = new BoundaryNode(ap);
-//                nodes.add(bn);
-//                boundaryNodes.add(bn);
-//            }
-//
-//        }
-//    }
-
-//    public void generateNodesByTriangle(double size, double flatness, String s, boolean needNeighbors, boolean resetNodesIndex) {
-//        log.info(String.format("Start generateNodesByTiangle%nsize=%6.3e flatness=%6.3e s=%s needNeighbors=%b resetNodesIndex %b", size, flatness, s, needNeighbors, resetNodesIndex));
-//        if (resetNodesIndex) {
-//            Node n = Node.tempNode(0, 0);
-//            n.getIndexManager().reset();
-//        }
-//
-//        nodes.clear();
-//        boundaryNodes.clear();
-//        TriangleJni triangleJni = new TriangleJni();
-//        gm.generateApproximatePoints(size, flatness);
-//        triangleJni.complie(gm, s);
-//        nodes.addAll(triangleJni.getNodes(needNeighbors));
-//        for (Node n : nodes) {
-//            if (n.type() == ModelElementType.BoundaryNode) {
-//                boundaryNodes.add((BoundaryNode) n);
-//            }
-//
-//        }
-//        triJni = triangleJni;
-//        log.info(String.format("End of generateNodesByTriangle%n nodes.size()=%d boundaryNodes.size()=%d", nodes.size(), boundaryNodes.size()));
-//    }
-
-//    public void generateQuadratureDomainsByTriangle() {
-//        log.info("Start generateQuadratureDomainsByTriangle()");
-//        triangleQuadratureDomains = triJni.getTriangleXYsList();
-//        log.info("End of generateQuadratureDomainsByTriangle()");
-//    }
-//
     public void generateQuadratureDomainsByTriangle(double size, double flatness, String s) {
         log.info(String.format("Start generateQuadratureDomainsByTriangle(%6.3e, %6.3e, %s", size, flatness, s));
         TriangleJni triangleJni = new TriangleJni();
@@ -810,5 +654,4 @@ public class WeakMethodProcessor implements ModelImagePainter, Serializable {
         }
         log.info("End of natureBoundaryQuadrate");
     }
-
 }

@@ -348,7 +348,6 @@ public class ModelTestFrame extends javax.swing.JFrame {
     ExecutorService es;
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         mm.setForceSingleProcessor(jCheckBox1.isSelected());
-        mm.setForceLocalProcessor(jCheckBox2.isSelected());
         if (null == es) {
             es = Executors.newSingleThreadExecutor();
             es.submit(task);

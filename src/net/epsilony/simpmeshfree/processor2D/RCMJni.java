@@ -35,37 +35,37 @@ public class RCMJni {
         m.compact();
         SparseVector row;
         Ap[0] = 0;
-        LinkedList[] indes=new LinkedList[n];
-        for(int i=0;i<n;i++){
-            indes[i]=new LinkedList<Integer>();
+        LinkedList[] indes = new LinkedList[n];
+        for (int i = 0; i < n; i++) {
+            indes[i] = new LinkedList<Integer>();
         }
-        for(int i=0;i<n;i++){
-            row=m.getRow(i);
-            int[] index=row.getIndex();
-            double[] data=row.getData();
+        for (int i = 0; i < n; i++) {
+            row = m.getRow(i);
+            int[] index = row.getIndex();
+            double[] data = row.getData();
             int col;
-            for(int j=0;j<index.length;j++){
-                col=index[j];
-                if(col<=i||data[j]==0){
+            for (int j = 0; j < index.length; j++) {
+                col = index[j];
+                if (col <= i || data[j] == 0) {
                     continue;
-                }else{
-                    indes[i].add(col+1);
-                    indes[col].add(i+1);
+                } else {
+                    indes[i].add(col + 1);
+                    indes[col].add(i + 1);
                 }
             }
         }
-        int start=1;
+        int start = 1;
         for (int i = 0; i < n; i++) {
-           Ap[i]=start;
-           start=start+indes[i].size();
+            Ap[i] = start;
+            start = start + indes[i].size();
 
         }
-        Ap[n]=start;
-        Ai = new int[start-1];
-        int sum=0;
-        for(int i=0;i<n;i++){
-            for(Object iObj:indes[i]){
-                Ai[sum]=((Integer)iObj).intValue();
+        Ap[n] = start;
+        Ai = new int[start - 1];
+        int sum = 0;
+        for (int i = 0; i < n; i++) {
+            for (Object iObj : indes[i]) {
+                Ai[sum] = ((Integer) iObj).intValue();
                 sum++;
             }
         }
@@ -80,7 +80,6 @@ public class RCMJni {
         return P;
 
     }
-
 
     public Object[] compile(FlexCompRowMatrix m, DenseVector b) {//,List<Node> nodes) {
         log.info("Start complile");
@@ -103,24 +102,24 @@ public class RCMJni {
 //            sb.append(String.format("|%n"));
 //        }
 //        System.out.println(sb);
-        log.info("Former Half Band Width:"+bandWidth/2);
-        log.info("Optimized Half Band Width:"+pBandWidth/2);
+        log.info("Former Half Band Width:" + bandWidth / 2);
+        log.info("Optimized Half Band Width:" + pBandWidth / 2);
 
 
-        UpperSymmBandMatrix result = new UpperSymmBandMatrix(m.numRows(), pBandWidth/2);
+        UpperSymmBandMatrix result = new UpperSymmBandMatrix(m.numRows(), pBandWidth / 2);
         SparseVector rowVect;
         int row, col;
         DenseVector resultv = new DenseVector(b.size());
         for (int i = 0; i < m.numRows(); i++) {
             rowVect = m.getRow(i);
-            row = PInv[i]-1;
+            row = PInv[i] - 1;
 
             for (VectorEntry ve : rowVect) {
-                if(0==ve.get()){
-                        continue;
-                    }
-                col = PInv[ve.index()]-1;
-                
+                if (0 == ve.get()) {
+                    continue;
+                }
+                col = PInv[ve.index()] - 1;
+
                 if (col >= row) {
                     result.set(row, col, ve.get());
                 } else {
@@ -149,27 +148,27 @@ public class RCMJni {
 //        }
 //        System.out.println(sb);
 
-        return new Object[]{result,resultv};
+        return new Object[]{result, resultv};
     }
 
     public static void main(String[] args) {
         RCMJni rjni = new RCMJni();
         rjni.n = 10;
         rjni.Ap = new int[]{
-    1, 3, 7, 10, 14, 17, 21, 25, 27, 28, 29
-  };
+                    1, 3, 7, 10, 14, 17, 21, 25, 27, 28, 29
+                };
 
-        rjni.Ai = new int[] {
-    6, 4,
-    3, 10, 7, 5,
-    2, 4, 5,
-    1, 3, 6, 9,
-    2, 3, 7,
-    1, 4, 7, 8,
-    2, 5, 6, 8,
-    6, 7,
-    4,
-    2 };
+        rjni.Ai = new int[]{
+                    6, 4,
+                    3, 10, 7, 5,
+                    2, 4, 5,
+                    1, 3, 6, 9,
+                    2, 3, 7,
+                    1, 4, 7, 8,
+                    2, 5, 6, 8,
+                    6, 7,
+                    4,
+                    2};
         rjni.P = new int[10];
         rjni.rcmfun();
         System.out.println(Arrays.toString(rjni.P));
@@ -191,15 +190,15 @@ public class RCMJni {
         UpperSymmBandMatrix mm = new UpperSymmBandMatrix(4, 2);
         mm.set(0, 2, 1);
 
-        FlexCompRowMatrix test=new FlexCompRowMatrix(4, 4);
-        test.set(0,0,1);
-        test.set(0,1,1);
-        test.set(0,2,1);
-        test.set(0,0,0);
+        FlexCompRowMatrix test = new FlexCompRowMatrix(4, 4);
+        test.set(0, 0, 1);
+        test.set(0, 1, 1);
+        test.set(0, 2, 1);
+        test.set(0, 0, 0);
         test.compact();
         System.out.println(Arrays.toString(test.getRow(0).getIndex()));
         System.out.println(Arrays.toString(test.getRow(0).getData()));
-        for(VectorEntry ve:test.getRow(0)){
+        for (VectorEntry ve : test.getRow(0)) {
             System.out.println("ve.index() = " + ve.index());
             System.out.println("ve.get() = " + ve.get());
         }
@@ -214,8 +213,6 @@ public class RCMJni {
         return PInv;
     }
 
-
-
     static {
         //for debuging the native method
         //System.load("/home/epsilon/documents/4_java/javaProjects/SimpMeshfree/TriangleJni/TriangleJni.so");
@@ -228,10 +225,10 @@ public class RCMJni {
         if (arch.equals("i386")) {
             if (name.equals("Linux")) {
 //                System.load(System.getProperty("user.dir") + "/TriangleJni.so");
-                System.load("/usr/lib32/RCM_Native.so");
+                System.load("/usr/lib/RCM_Native.so");
             } else {
                 throw new UnsupportedOperationException();
-            //System.load(System.getProperty("user.dir")+"\\TriangleJni.dll");
+                //System.load(System.getProperty("user.dir")+"\\TriangleJni.dll");
             }
         } else if (arch.equals("amd64")) {
             if (name.equals("Linux")) {
@@ -241,9 +238,9 @@ public class RCMJni {
                 throw new UnsupportedOperationException();
             }
         }
-    //normal mode
-    //System.loadLibrary("TriangleJni");
+        //normal mode
+        //System.loadLibrary("TriangleJni");
     }
-    native public void rcmfun();
 
+    native public void rcmfun();
 }
