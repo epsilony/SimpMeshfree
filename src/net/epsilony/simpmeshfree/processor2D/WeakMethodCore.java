@@ -45,5 +45,5 @@ public interface WeakMethodCore extends Serializable{
      */
     void natureConBoundaryQuadrateCore(double[] values, int index, double phi, DenseVector vector);
     void natureBoundaryQudarateCore(double[] values, int index, double phi, double coef, DenseVector vector);
-     FlexCompRowMatrix initialKMatrix(int nodesSize);
+     FlexCompRowMatrix initialMatrixK(int nodesSize);
 }

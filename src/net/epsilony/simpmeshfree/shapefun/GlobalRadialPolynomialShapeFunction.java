@@ -6,11 +6,11 @@ package net.epsilony.simpmeshfree.shapefun;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.epsilony.jni.RCMJni;
 import net.epsilony.math.polynomial.BivariateBinomials;
 import net.epsilony.math.radialbasis.RadialBasisFunction;
 import net.epsilony.simpmeshfree.model2D.Node;
 import net.epsilony.simpmeshfree.model2D.Point;
-import net.epsilony.simpmeshfree.processor2D.RCMJni;
 import net.epsilony.util.collection.LayeredDomainTree;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.UpperSymmBandMatrix;

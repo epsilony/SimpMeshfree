@@ -10,6 +10,7 @@ import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
+import net.epsilony.jni.RCMJni;
 import net.epsilony.simpmeshfree.modeltest.ModelTestFrame;
 import net.epsilony.simpmeshfree.model2D.BoundaryCondition;
 import net.epsilony.simpmeshfree.model2D.Model;
@@ -36,7 +37,7 @@ import org.apache.log4j.Logger;
  * <br>{@link MechanicsModel#setSupportDomain(net.epsilony.simpmeshfree.model.mechanics.SupportDomain) }</br>
  * @author epsilon
  */
-public class MechanicsModel extends WeakMethodProcessor implements ModelImagePainter {
+public class MechanicsModel extends WeakMethodProcessor2D implements ModelImagePainter {
 
     static class MechanicsModelCore implements WeakMethodCore {
 
@@ -121,7 +122,7 @@ public class MechanicsModel extends WeakMethodProcessor implements ModelImagePai
         }
 
         @Override
-        public FlexCompRowMatrix initialKMatrix(int nodesSize) {
+        public FlexCompRowMatrix initialMatrixK(int nodesSize) {
             return new FlexCompRowMatrix(nodesSize*2, nodesSize*2);
         }
     }
@@ -195,7 +196,7 @@ public class MechanicsModel extends WeakMethodProcessor implements ModelImagePai
         natureBoundaryQuadrate(quadratureNum);
         applyEssentialBoundaryConditions();
         rcmJni = new RCMJni();
-        Object[] results = rcmJni.compile(kMat, bVector);
+        Object[] results = rcmJni.compile(matK, bVector);
         log.info("solve the Ax=b now");
         xVector = new DenseVector(bVector.size());
         ((UpperSymmBandMatrix) results[0]).solve((DenseVector) results[1], xVector);

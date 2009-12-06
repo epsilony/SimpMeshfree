@@ -45,11 +45,11 @@ import org.apache.log4j.Logger;
  *
  * @author epsilon
  */
-public class WeakMethodProcessor implements ModelImagePainter, Serializable {
+public class WeakMethodProcessor2D implements ModelImagePainter, Serializable {
 
     WeakMethodCore modelCore;
 
-    public WeakMethodProcessor(WeakMethodCore modelCore, Model gm) {
+    public WeakMethodProcessor2D(WeakMethodCore modelCore, Model gm) {
         this.modelCore = modelCore;
         this.gm = gm;
     }
@@ -96,7 +96,7 @@ public class WeakMethodProcessor implements ModelImagePainter, Serializable {
 
         }
     }
-    transient static Logger log = Logger.getLogger(WeakMethodProcessor.class);
+    transient static Logger log = Logger.getLogger(WeakMethodProcessor2D.class);
     transient DenseVector bVector;
     LinkedList<BoundaryNode> boundaryNodes = new LinkedList<BoundaryNode>();
     double boundaryNodesScreenSize = 3;
@@ -106,8 +106,8 @@ public class WeakMethodProcessor implements ModelImagePainter, Serializable {
         return triangleQuadratureDomains;
     }
     Model gm;
-    transient FlexCompRowMatrix kMat = null;
-    transient UpperSymmBandMatrix matA;
+    transient FlexCompRowMatrix matK = null;
+    transient UpperSymmBandMatrix matA; //bandcompressed matrix of matK
     LinkedList<Node> nodes = new LinkedList<Node>();
     transient Color nodesColor = Color.RED;
     transient double nodesScreenSize = 4;
@@ -135,14 +135,14 @@ public class WeakMethodProcessor implements ModelImagePainter, Serializable {
     public void setForceSingleProcessor(boolean forceSingleProcesser) {
         this.forceSingleProcessor = forceSingleProcesser;
     }
-    int kMatRow;
-    int kMatCol;
+    int matKRow;
+    int matKCol;
 
     public void quadrateDomains() throws ArgumentOutsideDomainException, Exception {
         int sumProcess = Runtime.getRuntime().availableProcessors();
         int sumDomains = rectangleQuadratureDomains.size() + triangleQuadratureDomains.size();
 
-        initialKMatrix();
+        initialMatrixK();
         log.info("Start quadrateDomains with multi threads");
         long time = System.nanoTime();
         taskDivision = sumProcess * 10;
@@ -192,7 +192,7 @@ public class WeakMethodProcessor implements ModelImagePainter, Serializable {
         log.info("All tasks' done! Assembling");
 
         for (QuadrateDomainsTask task : tasks) {
-            kMat.add(task.taskMatrix);
+            matK.add(task.taskMatrix);
         }
         time = System.nanoTime() - time;
         log.info("Multi Thread quadrateDomains finished, time costs:" + time);
@@ -206,7 +206,7 @@ public class WeakMethodProcessor implements ModelImagePainter, Serializable {
         AtomicBoolean finished = new AtomicBoolean();
         transient FlexCompRowMatrix taskMatrix;
 
-        QuadrateDomainsTask(int start, int end, WeakMethodProcessor model) {
+        QuadrateDomainsTask(int start, int end, WeakMethodProcessor2D model) {
             this.start = start;
             this.end = end;
             this.model = model;
@@ -217,18 +217,18 @@ public class WeakMethodProcessor implements ModelImagePainter, Serializable {
             this.start = start;
             this.end = end;
         }
-        WeakMethodProcessor model;
+        WeakMethodProcessor2D model;
 
         @Override
         public void run() {
             if (null == log) {
-                Logger.getLogger(WeakMethodProcessor.class);
+                Logger.getLogger(WeakMethodProcessor2D.class);
             }
-            taskMatrix = new FlexCompRowMatrix(model.kMatRow, model.kMatCol);
+            taskMatrix = new FlexCompRowMatrix(model.matKRow, model.matKCol);
 
             if (start < model.rectangleQuadratureDomains.size()) {
                 try {
-                    WeakMethodProcessor.quadrateRectangleDomains(start, end, taskMatrix, model);
+                    WeakMethodProcessor2D.quadrateRectangleDomains(start, end, taskMatrix, model);
                 } catch (ArgumentOutsideDomainException ex) {
 
                     log.error(ex);
@@ -244,7 +244,7 @@ public class WeakMethodProcessor implements ModelImagePainter, Serializable {
                 int triEnd = end - model.rectangleQuadratureDomains.size();
 
                 try {
-                    WeakMethodProcessor.quadrateTriangleDomains(triStart, triEnd, taskMatrix, model);
+                    WeakMethodProcessor2D.quadrateTriangleDomains(triStart, triEnd, taskMatrix, model);
                 } catch (ArgumentOutsideDomainException ex) {
                     log.error(ex);
                 }
@@ -280,21 +280,21 @@ public class WeakMethodProcessor implements ModelImagePainter, Serializable {
         return supportDomain;
     }
 
-    public void initialKMatrix() {
-        kMat = modelCore.initialKMatrix(nodes.size());
-        kMatCol = kMat.numColumns();
-        kMatRow = kMat.numRows();
+    public void initialMatrixK() {
+        matK = modelCore.initialMatrixK(nodes.size());
+        matKCol = matK.numColumns();
+        matKRow = matK.numRows();
     }
 
     public void quadrateRectangleDomains() throws ArgumentOutsideDomainException {
-        quadrateRectangleDomains(0, rectangleQuadratureDomains.size(), kMat, this);
+        quadrateRectangleDomains(0, rectangleQuadratureDomains.size(), matK, this);
     }
 
-    public static void quadrateRectangleDomains(int start, int end, FlexCompRowMatrix taskMatrix, WeakMethodProcessor model) throws ArgumentOutsideDomainException {
+    public static void quadrateRectangleDomains(int start, int end, FlexCompRowMatrix taskMatrix, WeakMethodProcessor2D model) throws ArgumentOutsideDomainException {
 //        System.out.println(Thread.currentThread());
 //        log.info(String.format("Start quadrateRectangleDomains(%d)", quadratureNum));
         if (null == log) {
-            log = Logger.getLogger(WeakMethodProcessor.class);
+            log = Logger.getLogger(WeakMethodProcessor2D.class);
         }
         //for synchronized computing
         SupportDomain localSupportDomain = model.supportDomain.CopyOf(false);
@@ -364,13 +364,13 @@ public class WeakMethodProcessor implements ModelImagePainter, Serializable {
     }
 
     public void quadrateTriangleDomains() throws ArgumentOutsideDomainException {
-        quadrateTriangleDomains(0, triangleQuadratureDomains.size(), kMat, this);
+        quadrateTriangleDomains(0, triangleQuadratureDomains.size(), matK, this);
     }
 
-    public static void quadrateTriangleDomains(int start, int end, FlexCompRowMatrix matrix, WeakMethodProcessor model) throws ArgumentOutsideDomainException {
+    public static void quadrateTriangleDomains(int start, int end, FlexCompRowMatrix matrix, WeakMethodProcessor2D model) throws ArgumentOutsideDomainException {
 //        log.info(String.format("Start quadrateTriangleDomainsByGrid(%d)", quadratureNum));
         if (null == log) {
-            log = Logger.getLogger(WeakMethodProcessor.class);
+            log = Logger.getLogger(WeakMethodProcessor2D.class);
         }
         SupportDomain localSupportDomain = model.supportDomain.CopyOf(false);
         ShapeFunction localShapeFunction = model.shapeFunction.CopyOf(false);
@@ -491,7 +491,7 @@ public class WeakMethodProcessor implements ModelImagePainter, Serializable {
                 }
 
                 rowcol = bNode.getMatrixIndex();
-                modelCore.essentialBoundaryConditionCore(txy, rowcol, tb, kMat, bVector);
+                modelCore.essentialBoundaryConditionCore(txy, rowcol, tb, matK, bVector);
             }
 
         }
