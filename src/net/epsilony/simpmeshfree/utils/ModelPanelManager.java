@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import static java.lang.Math.*;
-import net.epsilony.simpmeshfree.model2D.Point;
+import net.epsilony.simpmeshfree.model.geometry.Point;
 
 /**
  *
@@ -42,7 +42,7 @@ import net.epsilony.simpmeshfree.model2D.Point;
  */
 public class ModelPanelManager implements MouseMotionListener, MouseListener, MouseWheelListener, HierarchyBoundsListener {
 
-    transient public static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(ModelPanelManager.class);
+    public static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(ModelPanelManager.class);
     
 
 //    static {

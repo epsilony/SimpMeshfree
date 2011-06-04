@@ -5,17 +5,16 @@
 
 package net.epsilony.simpmeshfree.shapefun;
 
-import java.io.Serializable;
 import java.util.List;
 import net.epsilony.math.radialbasis.RadialBasisFunction;
-import net.epsilony.simpmeshfree.model2D.Node;
+import net.epsilony.simpmeshfree.model.geometry.Node;
 import no.uib.cipr.matrix.Vector;
 
 /**
  *
  * @author epsilon
  */
-public interface ShapeFunction extends Serializable{
+public interface ShapeFunction {
 
     /**
      * <br>计算点(x,y)的形函数偏导数向量</br>
