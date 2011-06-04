@@ -6,10 +6,7 @@ package net.epsilony.simpmeshfree.model.mechanics;
 
 import java.util.Arrays;
 import java.util.LinkedList;
-import net.epsilony.simpmeshfree.model.geometry.Node;
-import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
-import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.UpperSymmBandMatrix;
 import no.uib.cipr.matrix.VectorEntry;
 import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
@@ -220,32 +217,7 @@ public class RCMJni {
 
 
     static {
-        //for debuging the native method
-        //System.load("/home/epsilon/documents/4_java/javaProjects/SimpMeshfree/TriangleJni/TriangleJni.so");
-        //System.out.println(System.getProperty("java.library.path"));
-        //System.out.println(System.getProperty("user.dir"));
-        String arch = System.getProperty("os.arch");
-        String name = System.getProperty("os.name");
-//        System.out.println("arch = " + arch);
-//        System.out.println("name = " + name);
-        if (arch.equals("i386")) {
-            if (name.equals("Linux")) {
-//                System.load(System.getProperty("user.dir") + "/TriangleJni.so");
-                System.load("/usr/lib32/RCM_Native.so");
-            } else {
-                throw new UnsupportedOperationException();
-            //System.load(System.getProperty("user.dir")+"\\TriangleJni.dll");
-            }
-        } else if (arch.equals("amd64")) {
-            if (name.equals("Linux")) {
-//                System.load(System.getProperty("user.dir") + "/TriangleJniAmd64.so");
-                System.load("/usr/lib64/RCM_Native.so");
-            } else {
-                throw new UnsupportedOperationException();
-            }
-        }
-    //normal mode
-    //System.loadLibrary("TriangleJni");
+        System.loadLibrary("rcmjni");
     }
     native public void rcmfun();
 
