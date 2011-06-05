@@ -203,7 +203,7 @@ public class RCMJni {
             System.out.println("ve.index() = " + ve.index());
             System.out.println("ve.get() = " + ve.get());
         }
-
+       
     }
 
     public int[] getP() {
