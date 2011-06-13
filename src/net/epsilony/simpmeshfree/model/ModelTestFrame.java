@@ -147,8 +147,8 @@ public class ModelTestFrame extends javax.swing.JFrame {
 
 //        mm.generateBoundaryNodeByApproximatePoints(2, 0.1);
 
-        mm.generateNodesByTriangle(1, 0.05, "pqa0.5nQ", true, true);
-        mm.generateQuadratureDomainsByTriangle(0.75, 0.25, "pqa0.25nQ");
+        mm.generateNodesByTriangle(10, 0.5, "pqa0.5nQ", true, true);
+        mm.generateQuadratureDomainsByTriangle(5, 0.25, "pqa0.25nQ");
         mm.generateQuadratureDomainsByTriangle();
         mm.setQuadratureNum(3);
         mpm.addModelImagePainter(mm);

@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import net.epsilony.math.util.EYMath;
 import net.epsilony.math.util.MatrixUtils;
+import net.epsilony.math.util.MatrixUtils.Bandwidth;
 import net.epsilony.math.util.TriangleSymmetricQuadrature;
 import net.epsilony.simpmeshfree.model.ModelTestFrame;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition;
@@ -182,7 +183,7 @@ public class MechanicsModel extends AbstractModel implements ModelImagePainter {
 
 
     }
-    private RCMJni rcmJni;
+//    private RCMJni rcmJni;
 
     public void solve() throws ArgumentOutsideDomainException {
         log.info("Start solve()");
@@ -199,23 +200,28 @@ public class MechanicsModel extends AbstractModel implements ModelImagePainter {
         //        log.info("Finished: solve the Ax=b");
         //        fillDisplacement();
         //        log.info("End of solve()");
-        xVector = MatrixUtils.solveFlexCompRowMatrixByBandMethod(kMat, bVector, true, false);
+        kMat.compact();
+        System.out.println("end of compact");
+        Bandwidth bandwidth = MatrixUtils.getBandwidth(kMat);
+        System.out.println("kMat bandkwidth:" + bandwidth.upBandwidth + "u, " + bandwidth.lowBandwidth + "l");
+        xVector = MatrixUtils.solveFlexCompRowMatrixByBandMethod(kMat, bVector, MatrixUtils.SYMMETRICAL_BUT_RECORD_ONLY_UP_HALF);
         fillDisplacement();
+        log.info("End of solve");
     }
 
     public void fillDisplacement() {
-   
+
         log.info("edit the nodes ux uy data");
         for (Node node : nodes) {
-            node.setUx(xVector.get(node.getMatrixIndex()*2)) ;
-            node.setUy(xVector.get(node.getMatrixIndex()*2+1));
+            node.setUx(xVector.get(node.getMatrixIndex() * 2));
+            node.setUy(xVector.get(node.getMatrixIndex() * 2 + 1));
 //                 int index1, index2;
 //            index1 = rcmJni.PInv[node.getMatrixIndex() * 2] - 1;
 //            index2 = rcmJni.PInv[node.getMatrixIndex() * 2 + 1] - 1;
 //            node.setUx(xVector.get(index1));
 //            node.setUy(xVector.get(index2));
         }
-        
+
 
     }
 
@@ -233,7 +239,7 @@ public class MechanicsModel extends AbstractModel implements ModelImagePainter {
     DenseMatrix constitutiveLaw = null;
 
     @Override
-    public void quadrateCore(int mIndex, double dphim_dx, double dphim_dy, int nIndex, double dphin_dx, double dphin_dy, double coefs,FlexCompRowMatrix matrix) {
+    public void quadrateCore(int mIndex, double dphim_dx, double dphim_dy, int nIndex, double dphin_dx, double dphin_dy, double coefs, FlexCompRowMatrix matrix) {
         double td;
         mIndex *= 2;
         nIndex *= 2;
