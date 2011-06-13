@@ -13,7 +13,8 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import net.epsilony.math.util.EYMath;
-import net.epsilony.math.util.AreaCoordTriangleQuadrature;
+import net.epsilony.math.util.MatrixUtils;
+import net.epsilony.math.util.TriangleSymmetricQuadrature;
 import net.epsilony.simpmeshfree.model.ModelTestFrame;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition;
 import net.epsilony.simpmeshfree.model.geometry.GeometryModel;
@@ -23,7 +24,6 @@ import net.epsilony.simpmeshfree.utils.ModelPanelManager;
 import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
-import no.uib.cipr.matrix.UpperSymmBandMatrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.VectorEntry;
 import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
@@ -57,8 +57,8 @@ public class MechanicsModel extends AbstractModel implements ModelImagePainter {
         this.gm = gm;
     }
 
-    public void quadrateTriangleDomainsByAreaCoord(int qn) throws ArgumentOutsideDomainException {
-        log.info(String.format("Start quadrateTriangleDomainsByAreaCoord(%d)", qn));
+    public void quadrateTriangleDomainsByAreaCoord(int quadraturePower) throws ArgumentOutsideDomainException {
+        log.info(String.format("Start quadrateTriangleDomainsByAreaCoord(%d)", quadraturePower));
         double x, y, w, area;
         double nodesAverDistance;
         ArrayList<Node> supportNodes = new ArrayList<Node>(100);
@@ -68,8 +68,8 @@ public class MechanicsModel extends AbstractModel implements ModelImagePainter {
         DenseMatrix bl = new DenseMatrix(3, 2);
         DenseMatrix kkl = new DenseMatrix(2, 2);
         DenseMatrix tempMat = new DenseMatrix(2, 3);
-        double[] weights = AreaCoordTriangleQuadrature.getWeights(qn);
-        double[] areaCoords = AreaCoordTriangleQuadrature.getAreaCoordinates(qn);
+        double[] weights = TriangleSymmetricQuadrature.getWeights(quadraturePower);
+        double[] areaCoords = TriangleSymmetricQuadrature.getBarycentricCoordinates(quadraturePower);
         int i = 0, k, l;
 
         if (log.isDebugEnabled()) {
@@ -91,33 +91,10 @@ public class MechanicsModel extends AbstractModel implements ModelImagePainter {
             double y2 = triangleDomain[3];
             double x3 = triangleDomain[4];
             double y3 = triangleDomain[5];
-            area = Math.abs((x1 - x2) * (y3 - y2) - (x3 - x2) * (y1 - y2)) / 2;
-
+            area = EYMath.triangleArea(x1, y1, x2, y2, x3, y3);
             for (i = 0; i < weights.length; i++) {
                 x = x1 * areaCoords[i * 3] + x2 * areaCoords[i * 3 + 1] + x3 * areaCoords[i * 3 + 2];
                 y = y1 * areaCoords[i * 3] + y2 * areaCoords[i * 3 + 1] + y3 * areaCoords[i * 3 + 2];
-                if (logDeep.isDebugEnabled()) {
-                    double vec1 = EYMath.vectorProduct(x - x1, y - y1, x2 - x1, y2 - x1);
-                    double vec2 = EYMath.vectorProduct(x - x1, y - y1, x3 - x1, y3 - x1);
-                    boolean out = false;
-                    if (vec1 * vec2 > 0) {
-                        out = true;
-                    }
-                    vec1 = EYMath.vectorProduct(x - x2, y - y2, x1 - x2, y1 - y2);
-                    vec2 = EYMath.vectorProduct(x - x2, y - y2, x3 - x2, y3 - y2);
-                    if (vec1 * vec2 > 0) {
-                        out = true;
-                    }
-                    vec1 = EYMath.vectorProduct(x - x3, y - y3, x1 - x3, y1 - y3);
-                    vec2 = EYMath.vectorProduct(x - x3, y - y3, x2 - x3, y2 - y3);
-                    if (vec1 * vec2 > 0) {
-                        out = true;
-                    }
-                    if (out) {
-                        tsum++;
-                        logDeep.debug(String.format("%d:point(%.2f,%.2f)is outof %s", tsum, x, y, Arrays.toString(triangleDomain)));
-                    }
-                }
                 w = weights[i];
                 nodesAverDistance = supportDomain.supportNodes(x, y, supportNodes);
                 radialBasisFunction.setNodesAverageDistance(nodesAverDistance);
@@ -140,15 +117,6 @@ public class MechanicsModel extends AbstractModel implements ModelImagePainter {
                         bl.set(2, 1, partialValues[0].get(l));
                         bk.transAmult(constitutiveLaw, tempMat);
                         tempMat.mult(bl, kkl);
-//                        if(logDeep.isDebugEnabled()){
-//                            logDeep.debug("bkbl");
-//                            logDeep.debug(bk);
-//                            logDeep.debug(bl);
-//                            logDeep.debug("kkl:");
-//                            logDeep.debug(kkl);
-//                            logDeep.debug(constitutiveLaw);
-//                        }
-
                         kMat.add(kIndex, lIndex, kkl.get(0, 0) * w * area);
                         kMat.add(kIndex, lIndex + 1, kkl.get(0, 1) * w * area);
                         kMat.add(kIndex + 1, lIndex + 1, kkl.get(1, 1) * w * area);
@@ -219,32 +187,35 @@ public class MechanicsModel extends AbstractModel implements ModelImagePainter {
     public void solve() throws ArgumentOutsideDomainException {
         log.info("Start solve()");
         initNodesMatrixIndex();
-//        quadrateTriangleDomainsByGrid(quadratureNum);
-//        initialKMatrix();
-//        quadrateRectangleDomains();
         quadrateDomains();
         bVector = new DenseVector(nodes.size() * 2);
         natureBoundaryQuadrate(quadratureNum);
         applyAccurateEssentialBoundaryConditions();
-        rcmJni = new RCMJni();
-        Object[] results = rcmJni.compile(kMat, bVector);
-        log.info("solve the Ax=b now");
-        xVector = new DenseVector(bVector.size());
-        ((UpperSymmBandMatrix) results[0]).solve((DenseVector) results[1], xVector);
-        log.info("Finished: solve the Ax=b");
+        //        rcmJni = new RCMJni();
+        //        Object[] results = rcmJni.compile(kMat, bVector);
+        //        log.info("solve the Ax=b now");
+        //        xVector = new DenseVector(bVector.size());
+        //        ((UpperSymmBandMatrix) results[0]).solve((DenseVector) results[1], xVector);
+        //        log.info("Finished: solve the Ax=b");
+        //        fillDisplacement();
+        //        log.info("End of solve()");
+        xVector = MatrixUtils.solveFlexCompRowMatrixByBandMethod(kMat, bVector, true, false);
         fillDisplacement();
-        log.info("End of solve()");
     }
 
     public void fillDisplacement() {
-        int index1, index2;
+   
         log.info("edit the nodes ux uy data");
         for (Node node : nodes) {
-            index1 = rcmJni.PInv[node.getMatrixIndex() * 2] - 1;
-            index2 = rcmJni.PInv[node.getMatrixIndex() * 2 + 1] - 1;
-            node.setUx(xVector.get(index1));
-            node.setUy(xVector.get(index2));
+            node.setUx(xVector.get(node.getMatrixIndex()*2)) ;
+            node.setUy(xVector.get(node.getMatrixIndex()*2+1));
+//                 int index1, index2;
+//            index1 = rcmJni.PInv[node.getMatrixIndex() * 2] - 1;
+//            index2 = rcmJni.PInv[node.getMatrixIndex() * 2 + 1] - 1;
+//            node.setUx(xVector.get(index1));
+//            node.setUy(xVector.get(index2));
         }
+        
 
     }
 
