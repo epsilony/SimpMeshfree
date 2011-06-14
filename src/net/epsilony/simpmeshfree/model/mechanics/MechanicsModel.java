@@ -15,6 +15,8 @@ import java.util.Arrays;
 import net.epsilony.math.util.EYMath;
 import net.epsilony.math.util.MatrixUtils;
 import net.epsilony.math.util.MatrixUtils.Bandwidth;
+import net.epsilony.math.util.RcmJna;
+import net.epsilony.math.util.RcmJna.RcmResult;
 import net.epsilony.math.util.TriangleSymmetricQuadrature;
 import net.epsilony.simpmeshfree.model.ModelTestFrame;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition;
@@ -25,6 +27,8 @@ import net.epsilony.simpmeshfree.utils.ModelPanelManager;
 import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
+import no.uib.cipr.matrix.MatrixEntry;
+import no.uib.cipr.matrix.UpperSymmBandMatrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.VectorEntry;
 import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
@@ -43,6 +47,8 @@ import org.apache.log4j.Logger;
  * @author epsilon
  */
 public class MechanicsModel extends AbstractModel implements ModelImagePainter {
+
+    private RCMJni rcmJni;
 
     /**
      * 设置本构矩阵
@@ -192,19 +198,29 @@ public class MechanicsModel extends AbstractModel implements ModelImagePainter {
         bVector = new DenseVector(nodes.size() * 2);
         natureBoundaryQuadrate(quadratureNum);
         applyAccurateEssentialBoundaryConditions();
-        //        rcmJni = new RCMJni();
-        //        Object[] results = rcmJni.compile(kMat, bVector);
-        //        log.info("solve the Ax=b now");
-        //        xVector = new DenseVector(bVector.size());
-        //        ((UpperSymmBandMatrix) results[0]).solve((DenseVector) results[1], xVector);
-        //        log.info("Finished: solve the Ax=b");
-        //        fillDisplacement();
-        //        log.info("End of solve()");
+        
+//        rcmJni = new RCMJni();
+//        Object[] results = rcmJni.compile(kMat, bVector);
+//        log.info("solve the Ax=b now");
+//        xVector = new DenseVector(bVector.size());
+//        ((UpperSymmBandMatrix) results[0]).solve((DenseVector) results[1], xVector);
+//        log.info("Finished: solve the Ax=b");
+//        fillDisplacement();
+//        log.info("End of solve()");
         kMat.compact();
+        for(MatrixEntry me:kMat){
+            if(me.row()>me.column()||me.get()==0){
+                System.out.println(me);
+            }
+        }
         System.out.println("end of compact");
         Bandwidth bandwidth = MatrixUtils.getBandwidth(kMat);
         System.out.println("kMat bandkwidth:" + bandwidth.upBandwidth + "u, " + bandwidth.lowBandwidth + "l");
-        xVector = MatrixUtils.solveFlexCompRowMatrixByBandMethod(kMat, bVector, MatrixUtils.SYMMETRICAL_BUT_RECORD_ONLY_UP_HALF);
+        RcmResult rcmResult = RcmJna.genrcm2(kMat, MatrixUtils.UNSYMMETRICAL_BUT_MIRROR_FROM_UP_HALF, 0);
+        Bandwidth bandwidthByPerm = MatrixUtils.getBandwidthByPerm(kMat, rcmResult.perm);
+        System.out.println(bandwidthByPerm);
+        System.out.println("rcmjna bandwidth"+MatrixUtils.getBandwidthByPerm(kMat, rcmResult.perm));
+        xVector = MatrixUtils.solveFlexCompRowMatrixByBandMethod(kMat, bVector, MatrixUtils.UNSYMMETRICAL_BUT_MIRROR_FROM_UP_HALF);
         fillDisplacement();
         log.info("End of solve");
     }
@@ -215,7 +231,7 @@ public class MechanicsModel extends AbstractModel implements ModelImagePainter {
         for (Node node : nodes) {
             node.setUx(xVector.get(node.getMatrixIndex() * 2));
             node.setUy(xVector.get(node.getMatrixIndex() * 2 + 1));
-//                 int index1, index2;
+//            int index1, index2;
 //            index1 = rcmJni.PInv[node.getMatrixIndex() * 2] - 1;
 //            index2 = rcmJni.PInv[node.getMatrixIndex() * 2 + 1] - 1;
 //            node.setUx(xVector.get(index1));

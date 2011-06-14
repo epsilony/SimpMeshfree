@@ -152,7 +152,7 @@ public class ModelTestFrame extends javax.swing.JFrame {
         mm.generateQuadratureDomainsByTriangle();
         mm.setQuadratureNum(3);
         mpm.addModelImagePainter(mm);
-        mm.setSupportDomain(new SimpleRoundSupportDomain(3, 9, 3, 20, gm, mm.getNodes()));
+        mm.setSupportDomain(new SimpleRoundSupportDomain(1, 3, 3, 15, gm, mm.getNodes()));
         RadialBasisFunction rbf = new MultiQuadRadial(1.5, 1.03);
         mm.setRadialBasisFunction(rbf);
         mm.setShapeFunction(new RadialPolynomialShapeFunction(rbf, 1));
