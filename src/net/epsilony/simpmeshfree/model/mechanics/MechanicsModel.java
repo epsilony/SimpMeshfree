@@ -199,8 +199,8 @@ public class MechanicsModel extends AbstractModel implements ModelImagePainter {
         natureBoundaryQuadrate(quadratureNum);
         applyAccurateEssentialBoundaryConditions();
         
-//        rcmJni = new RCMJni();
-//        Object[] results = rcmJni.compile(kMat, bVector);
+        rcmJni = new RCMJni();
+        Object[] results = rcmJni.compile(kMat, bVector);
 //        log.info("solve the Ax=b now");
 //        xVector = new DenseVector(bVector.size());
 //        ((UpperSymmBandMatrix) results[0]).solve((DenseVector) results[1], xVector);
@@ -215,11 +215,11 @@ public class MechanicsModel extends AbstractModel implements ModelImagePainter {
         }
         System.out.println("end of compact");
         Bandwidth bandwidth = MatrixUtils.getBandwidth(kMat);
-        System.out.println("kMat bandkwidth:" + bandwidth.upBandwidth + "u, " + bandwidth.lowBandwidth + "l");
+        System.out.println("kMat bandkwidth:" + bandwidth);
         RcmResult rcmResult = RcmJna.genrcm2(kMat, MatrixUtils.UNSYMMETRICAL_BUT_MIRROR_FROM_UP_HALF, 0);
-        Bandwidth bandwidthByPerm = MatrixUtils.getBandwidthByPerm(kMat, rcmResult.perm);
-        System.out.println(bandwidthByPerm);
-        System.out.println("rcmjna bandwidth"+MatrixUtils.getBandwidthByPerm(kMat, rcmResult.perm));
+        Bandwidth bandwidthByPerm = MatrixUtils.getBandwidthByInvPerm(kMat, rcmResult.permInv);
+        System.out.println("rcmjna bandwidth:"+bandwidthByPerm);
+        System.out.println("rcmjni bandwidth"+MatrixUtils.getBandwidthByInvPerm(kMat, rcmJni.PInv));
         xVector = MatrixUtils.solveFlexCompRowMatrixByBandMethod(kMat, bVector, MatrixUtils.UNSYMMETRICAL_BUT_MIRROR_FROM_UP_HALF);
         fillDisplacement();
         log.info("End of solve");
