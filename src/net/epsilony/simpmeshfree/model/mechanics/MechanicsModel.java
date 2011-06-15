@@ -12,6 +12,7 @@ import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import net.epsilony.math.util.EYMath;
 import net.epsilony.math.util.MatrixUtils;
 import net.epsilony.math.util.MatrixUtils.Bandwidth;
@@ -31,7 +32,10 @@ import no.uib.cipr.matrix.MatrixEntry;
 import no.uib.cipr.matrix.UpperSymmBandMatrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.VectorEntry;
+import no.uib.cipr.matrix.sparse.CG;
+import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
+import no.uib.cipr.matrix.sparse.IterativeSolverNotConvergedException;
 import no.uib.cipr.matrix.sparse.SparseVector;
 import org.apache.commons.math.ArgumentOutsideDomainException;
 import org.apache.log4j.Logger;
@@ -48,7 +52,7 @@ import org.apache.log4j.Logger;
  */
 public class MechanicsModel extends AbstractModel implements ModelImagePainter {
 
-    private RCMJni rcmJni;
+//    private RCMJni rcmJni;
 
     /**
      * 设置本构矩阵
@@ -191,38 +195,48 @@ public class MechanicsModel extends AbstractModel implements ModelImagePainter {
     }
 //    private RCMJni rcmJni;
 
-    public void solve() throws ArgumentOutsideDomainException {
+    public void solve() throws ArgumentOutsideDomainException, IterativeSolverNotConvergedException {
         log.info("Start solve()");
         initNodesMatrixIndex();
         quadrateDomains();
         bVector = new DenseVector(nodes.size() * 2);
         natureBoundaryQuadrate(quadratureNum);
         applyAccurateEssentialBoundaryConditions();
-        
-        rcmJni = new RCMJni();
-        Object[] results = rcmJni.compile(kMat, bVector);
-//        log.info("solve the Ax=b now");
-//        xVector = new DenseVector(bVector.size());
-//        ((UpperSymmBandMatrix) results[0]).solve((DenseVector) results[1], xVector);
-//        log.info("Finished: solve the Ax=b");
-//        fillDisplacement();
-//        log.info("End of solve()");
-        kMat.compact();
-        for(MatrixEntry me:kMat){
-            if(me.row()>me.column()||me.get()==0){
-                System.out.println(me);
-            }
-        }
-        System.out.println("end of compact");
-        Bandwidth bandwidth = MatrixUtils.getBandwidth(kMat);
-        System.out.println("kMat bandkwidth:" + bandwidth);
-        RcmResult rcmResult = RcmJna.genrcm2(kMat, MatrixUtils.UNSYMMETRICAL_BUT_MIRROR_FROM_UP_HALF, 0);
-        Bandwidth bandwidthByPerm = MatrixUtils.getBandwidthByInvPerm(kMat, rcmResult.permInv);
-        System.out.println("rcmjna bandwidth:"+bandwidthByPerm);
-        System.out.println("rcmjni bandwidth"+MatrixUtils.getBandwidthByInvPerm(kMat, rcmJni.PInv));
-        xVector = MatrixUtils.solveFlexCompRowMatrixByBandMethod(kMat, bVector, MatrixUtils.UNSYMMETRICAL_BUT_MIRROR_FROM_UP_HALF);
+        solveSystemEquationByBandedMethod();
+//        solveSystemEquationBySparseMethod();
         fillDisplacement();
         log.info("End of solve");
+    }
+
+    private void solveSystemEquationBySparseMethod() throws IterativeSolverNotConvergedException{
+        log.info("start solving sparce system equations");
+        kMat.compact();
+        log.info("start completing the matrix");
+        FlexCompRowMatrix matComplete=(FlexCompRowMatrix) kMat.transpose(new FlexCompRowMatrix(kMat.numRows(),kMat.numColumns()));
+        for(int i=0;i<kMat.numRows();i++){
+            matComplete.set(i, i, 0);
+        }
+        matComplete.add(kMat);
+        log.info("competed ");
+        log.info("start solving");
+        CG cg=new CG(xVector);
+        cg.solve(matComplete, bVector, xVector);
+        log.info("solved");
+    }
+    
+    private void solveSystemEquationByBandedMethod() {
+        log.info("start solving system equation by RCM banded method");
+        kMat.compact();
+//        for(MatrixEntry me:kMat){
+//            if(me.row()>me.column()||me.get()==0){
+//                System.out.println(me);
+//            }
+//        }
+        Bandwidth bandwidth = MatrixUtils.getBandwidth(kMat);
+        log.info("Original "+bandwidth);
+        LinkedList<MatrixUtils.BandedResult> bandedResultList=new LinkedList<MatrixUtils.BandedResult>();
+        xVector = MatrixUtils.solveFlexCompRowMatrixByBandMethod(kMat, bVector, MatrixUtils.UNSYMMETRICAL_BUT_MIRROR_FROM_UP_HALF,bandedResultList);
+        log.info("finished solving system equation, the banded "+bandedResultList.getLast().bandwith);
     }
 
     public void fillDisplacement() {
@@ -231,11 +245,6 @@ public class MechanicsModel extends AbstractModel implements ModelImagePainter {
         for (Node node : nodes) {
             node.setUx(xVector.get(node.getMatrixIndex() * 2));
             node.setUy(xVector.get(node.getMatrixIndex() * 2 + 1));
-//            int index1, index2;
-//            index1 = rcmJni.PInv[node.getMatrixIndex() * 2] - 1;
-//            index2 = rcmJni.PInv[node.getMatrixIndex() * 2 + 1] - 1;
-//            node.setUx(xVector.get(index1));
-//            node.setUy(xVector.get(index2));
         }
 
 

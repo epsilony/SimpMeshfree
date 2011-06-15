@@ -41,6 +41,7 @@ import net.epsilony.simpmeshfree.utils.Constitutives;
 import net.epsilony.simpmeshfree.utils.ModelImagePainter;
 import net.epsilony.simpmeshfree.utils.ModelPanelManager;
 import net.epsilony.util.ui.geom.ShapeUtils;
+import no.uib.cipr.matrix.sparse.IterativeSolverNotConvergedException;
 import org.apache.commons.math.ArgumentOutsideDomainException;
 import org.apache.log4j.Appender;
 import org.apache.log4j.BasicConfigurator;
@@ -82,7 +83,6 @@ public class ModelTestFrame extends javax.swing.JFrame {
     ModelPanelManager mpm;
     GeometryModel gm = new GeometryModel();
     MechanicsModel mm = new MechanicsModel(gm);
-
 
     {
         BasicConfigurator.configure();
@@ -147,8 +147,8 @@ public class ModelTestFrame extends javax.swing.JFrame {
 
 //        mm.generateBoundaryNodeByApproximatePoints(2, 0.1);
 
-        mm.generateNodesByTriangle(10, 0.5, "pqa0.5nQ", true, true);
-        mm.generateQuadratureDomainsByTriangle(5, 0.25, "pqa0.25nQ");
+        mm.generateNodesByTriangle(10, 0.2, "pqa0.2nQ", true, true);
+        mm.generateQuadratureDomainsByTriangle(5, 0.1, "pqa0.1nQ");
         mm.generateQuadratureDomainsByTriangle();
         mm.setQuadratureNum(3);
         mpm.addModelImagePainter(mm);
@@ -203,7 +203,7 @@ public class ModelTestFrame extends javax.swing.JFrame {
 //                    if(x==0){
 //                        System.out.println(String.format("y=%5e u=%5e v=%5e", y,u,v));
 //                    }
-                //path.append(mpm.viewMarker(x+u*500, y+v*500, 10, ModelPanelManager.ViewMarkerType.DownTriangle), false);
+                    //path.append(mpm.viewMarker(x+u*500, y+v*500, 10, ModelPanelManager.ViewMarkerType.DownTriangle), false);
 
 //                g2.draw(mpm.viewMarker(x+u*500, y+v*500, 10, ModelPanelManager.ViewMarkerType.DownTriangle));
                 }
@@ -328,12 +328,14 @@ public class ModelTestFrame extends javax.swing.JFrame {
         public void run() {
 //            Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
             try {
+
                 mm.solve();
+
             } catch (ArgumentOutsideDomainException ex) {
                 java.util.logging.Logger.getLogger(ModelTestFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            } catch (IterativeSolverNotConvergedException ex2){
+                log.error(ex2);
             }
-            mpm.viewWhole();
-            mpm.repaintModel();
         }
     };
     ExecutorService es;
