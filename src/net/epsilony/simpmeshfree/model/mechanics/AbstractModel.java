@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
-import net.epsilony.math.analysis.GaussLegendreQuadrature;
+import net.epsilony.math.analysis.GaussLegendreQuadratureUtils;
 import net.epsilony.math.radialbasis.RadialBasisFunction;
 import net.epsilony.simpmeshfree.model.geometry.ApproximatePoint;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition;
@@ -342,15 +342,15 @@ public abstract class AbstractModel implements ModelImagePainter {
 
     public void quadrateRectangleDomains(int start, int end, FlexCompRowMatrix matrix, SupportDomain supportDomain, ShapeFunction shapeFunction, RadialBasisFunction radialBasisFunction) throws ArgumentOutsideDomainException {
 //        System.out.println(Thread.currentThread());
-//        log.info(String.format("Start quadrateRectangleDomains(%d)", quadratureNum));
+        log.info(String.format("Start quadrateRectangleDomains, 积分点数: %1$d x %1$d{0}", quadratureNum));
         double nodesAverDistance;
         ArrayList<Node> supportNodes = new ArrayList<Node>(100);
         Vector[] partialValues;
 
         double[] weights = null;
         double[] points = null;
-        weights = GaussLegendreQuadrature.getGaussLegendreQuadratureCoefficients(quadratureNum);
-        points = GaussLegendreQuadrature.getGaussLegendreQuadraturePoints(quadratureNum);
+        weights = GaussLegendreQuadratureUtils.getWeights(quadratureNum);
+        points = GaussLegendreQuadratureUtils.getPositions(quadratureNum);
         if (log.isDebugEnabled()) {
             log.debug("weights:" + Arrays.toString(weights));
             log.debug("area Coordinates: " + Arrays.toString(points));
@@ -404,7 +404,7 @@ public abstract class AbstractModel implements ModelImagePainter {
                 }
             }
         }
-//        log.info("End of quadrateRectangleDomains");
+        log.info("End of quadrateRectangleDomains");
     }
 
     public void quadrateTriangleDomainsByGrid() throws ArgumentOutsideDomainException {
@@ -412,15 +412,15 @@ public abstract class AbstractModel implements ModelImagePainter {
     }
 
     public void quadrateTriangleDomainsByGrid(int start, int end, FlexCompRowMatrix matrix, SupportDomain supportDomain, ShapeFunction shapeFunction, RadialBasisFunction radialBasisFunction) throws ArgumentOutsideDomainException {
-//        log.info(String.format("Start quadrateTriangleDomainsByGrid(%d)", quadratureNum));
+        log.info(String.format("Start quadrateTriangleDomainsByGrid %1$d x %1$d)", quadratureNum));
         double nodesAverDistance;
         ArrayList<Node> supportNodes = new ArrayList<Node>(100);
         Vector[] partialValues;
 
         double[] weights = null;
         double[] points = null;
-        weights = GaussLegendreQuadrature.getGaussLegendreQuadratureCoefficients(quadratureNum);
-        points = GaussLegendreQuadrature.getGaussLegendreQuadraturePoints(quadratureNum);
+        weights = GaussLegendreQuadratureUtils.getWeights(quadratureNum);
+        points = GaussLegendreQuadratureUtils.getPositions(quadratureNum);
         if (log.isDebugEnabled()) {
             log.debug("weights:" + Arrays.toString(weights));
             log.debug("area Coordinates: " + Arrays.toString(points));
@@ -667,8 +667,8 @@ public abstract class AbstractModel implements ModelImagePainter {
         BoundaryCondition tempBC;
 
         double[] txy = new double[2];
-        double[] quadratePoints = GaussLegendreQuadrature.getGaussLegendreQuadraturePoints(n);
-        double[] quadrateCoefs = GaussLegendreQuadrature.getGaussLegendreQuadratureCoefficients(n);
+        double[] quadratePoints = GaussLegendreQuadratureUtils.getPositions(n);
+        double[] quadrateCoefs = GaussLegendreQuadratureUtils.getWeights(n);
         int i = 0;
         int j;
         int k;

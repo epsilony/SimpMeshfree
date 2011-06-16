@@ -13,11 +13,10 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.logging.Level;
 import net.epsilony.math.util.EYMath;
 import net.epsilony.math.util.MatrixUtils;
 import net.epsilony.math.util.MatrixUtils.Bandwidth;
-import net.epsilony.math.util.RcmJna;
-import net.epsilony.math.util.RcmJna.RcmResult;
 import net.epsilony.math.util.TriangleSymmetricQuadrature;
 import net.epsilony.simpmeshfree.model.ModelTestFrame;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition;
@@ -28,13 +27,13 @@ import net.epsilony.simpmeshfree.utils.ModelPanelManager;
 import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
-import no.uib.cipr.matrix.MatrixEntry;
-import no.uib.cipr.matrix.UpperSymmBandMatrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.VectorEntry;
+import no.uib.cipr.matrix.sparse.AMG;
 import no.uib.cipr.matrix.sparse.CG;
-import no.uib.cipr.matrix.sparse.CompRowMatrix;
+import no.uib.cipr.matrix.sparse.DefaultIterationMonitor;
 import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
+import no.uib.cipr.matrix.sparse.IterationMonitor;
 import no.uib.cipr.matrix.sparse.IterativeSolverNotConvergedException;
 import no.uib.cipr.matrix.sparse.SparseVector;
 import org.apache.commons.math.ArgumentOutsideDomainException;
@@ -53,7 +52,6 @@ import org.apache.log4j.Logger;
 public class MechanicsModel extends AbstractModel implements ModelImagePainter {
 
 //    private RCMJni rcmJni;
-
     /**
      * 设置本构矩阵
      * @param constitutiveLaw
@@ -202,28 +200,47 @@ public class MechanicsModel extends AbstractModel implements ModelImagePainter {
         bVector = new DenseVector(nodes.size() * 2);
         natureBoundaryQuadrate(quadratureNum);
         applyAccurateEssentialBoundaryConditions();
-        solveSystemEquationByBandedMethod();
-//        solveSystemEquationBySparseMethod();
+//        solveSystemEquationByBandedMethod();
+        solveSystemEquationBySparseMethod();
         fillDisplacement();
         log.info("End of solve");
     }
 
-    private void solveSystemEquationBySparseMethod() throws IterativeSolverNotConvergedException{
+    private void solveSystemEquationBySparseMethod() throws IterativeSolverNotConvergedException {
         log.info("start solving sparce system equations");
         kMat.compact();
         log.info("start completing the matrix");
-        FlexCompRowMatrix matComplete=(FlexCompRowMatrix) kMat.transpose(new FlexCompRowMatrix(kMat.numRows(),kMat.numColumns()));
-        for(int i=0;i<kMat.numRows();i++){
+        FlexCompRowMatrix matComplete = (FlexCompRowMatrix) kMat.transpose(new FlexCompRowMatrix(kMat.numRows(), kMat.numColumns()));
+        for (int i = 0; i < kMat.numRows(); i++) {
             matComplete.set(i, i, 0);
         }
         matComplete.add(kMat);
         log.info("competed ");
         log.info("start solving");
-        CG cg=new CG(xVector);
+        xVector=new DenseVector(kMat.numRows());
+        CG cg = new CG(xVector);
+//        cg.setPreconditioner(new AMG());
+//        cg.setIterationMonitor(new DefaultIterationMonitor());
+//        final IterationMonitor iterationMonitor = cg.getIterationMonitor();
+//        new Thread(new Runnable() {
+//
+//            @Override
+//            public void run() {
+//                do {
+//                    try {
+//                        log.info("iterations:" + iterationMonitor);
+//                        iterationMonitor.wait(1000);
+//                    } catch (InterruptedException ex) {
+//                        break;
+//                    }
+//                } while (!Thread.interrupted());
+//            }
+//        }).start();
         cg.solve(matComplete, bVector, xVector);
+
         log.info("solved");
     }
-    
+
     private void solveSystemEquationByBandedMethod() {
         log.info("start solving system equation by RCM banded method");
         kMat.compact();
@@ -233,10 +250,10 @@ public class MechanicsModel extends AbstractModel implements ModelImagePainter {
 //            }
 //        }
         Bandwidth bandwidth = MatrixUtils.getBandwidth(kMat);
-        log.info("Original "+bandwidth);
-        LinkedList<MatrixUtils.BandedResult> bandedResultList=new LinkedList<MatrixUtils.BandedResult>();
-        xVector = MatrixUtils.solveFlexCompRowMatrixByBandMethod(kMat, bVector, MatrixUtils.UNSYMMETRICAL_BUT_MIRROR_FROM_UP_HALF,bandedResultList);
-        log.info("finished solving system equation, the banded "+bandedResultList.getLast().bandwith);
+        log.info("Original " + bandwidth);
+        LinkedList<MatrixUtils.BandedResult> bandedResultList = new LinkedList<MatrixUtils.BandedResult>();
+        xVector = MatrixUtils.solveFlexCompRowMatrixByBandMethod(kMat, bVector, MatrixUtils.UNSYMMETRICAL_BUT_MIRROR_FROM_UP_HALF, bandedResultList);
+        log.info("finished solving system equation, the banded " + bandedResultList.getLast().bandwith);
     }
 
     public void fillDisplacement() {
@@ -251,6 +268,7 @@ public class MechanicsModel extends AbstractModel implements ModelImagePainter {
     }
 
     private void initNodesMatrixIndex() {
+        log.info("Nodes index base is 0, nodes.size = " + nodes.size());
         int i = 0;
         for (Node node : nodes) {
             node.setMatrixIndex(i);

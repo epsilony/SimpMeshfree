@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import net.epsilony.math.analysis.GaussLegendreQuadrature;
+import net.epsilony.math.analysis.GaussLegendreQuadratureUtils;
 import net.epsilony.math.radialbasis.RadialBasisFunction;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition.BoundaryConditionType;
@@ -156,8 +156,8 @@ public class ElectricModel implements ModelImagePainter {
         double[] weights = null;
         double[] points = null;
 
-        weights = GaussLegendreQuadrature.getGaussLegendreQuadratureCoefficients(qn);
-        points = GaussLegendreQuadrature.getGaussLegendreQuadraturePoints(qn);
+        weights = GaussLegendreQuadratureUtils.getWeights(qn);
+        points = GaussLegendreQuadratureUtils.getPositions(qn);
         if (log.isDebugEnabled()) {
             log.debug("weights:" + Arrays.toString(weights));
             log.debug("area Coordinates: " + Arrays.toString(points));
