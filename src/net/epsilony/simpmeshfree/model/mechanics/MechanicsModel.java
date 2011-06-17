@@ -13,7 +13,6 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
-import java.util.logging.Level;
 import net.epsilony.math.util.EYMath;
 import net.epsilony.math.util.MatrixUtils;
 import net.epsilony.math.util.MatrixUtils.Bandwidth;
@@ -29,11 +28,8 @@ import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.VectorEntry;
-import no.uib.cipr.matrix.sparse.AMG;
 import no.uib.cipr.matrix.sparse.CG;
-import no.uib.cipr.matrix.sparse.DefaultIterationMonitor;
 import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
-import no.uib.cipr.matrix.sparse.IterationMonitor;
 import no.uib.cipr.matrix.sparse.IterativeSolverNotConvergedException;
 import no.uib.cipr.matrix.sparse.SparseVector;
 import org.apache.commons.math.ArgumentOutsideDomainException;
@@ -86,7 +82,6 @@ public class MechanicsModel extends AbstractModel implements ModelImagePainter {
             log.debug("area Coordinates: " + Arrays.toString(areaCoords));
         }
         logi = 0;
-        int tsum = 0;
         for (double[] triangleDomain : triangleQuadratureDomains) {
 
 

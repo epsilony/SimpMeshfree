@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import net.epsilony.math.analysis.GaussLegendreQuadratureUtils;
+import net.epsilony.math.util.GaussLegendreQuadratureUtils;
 import net.epsilony.math.radialbasis.RadialBasisFunction;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition.BoundaryConditionType;

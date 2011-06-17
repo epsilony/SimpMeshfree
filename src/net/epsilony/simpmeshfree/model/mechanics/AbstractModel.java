@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
-import net.epsilony.math.analysis.GaussLegendreQuadratureUtils;
+import net.epsilony.math.util.GaussLegendreQuadratureUtils;
 import net.epsilony.math.radialbasis.RadialBasisFunction;
 import net.epsilony.simpmeshfree.model.geometry.ApproximatePoint;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition;
