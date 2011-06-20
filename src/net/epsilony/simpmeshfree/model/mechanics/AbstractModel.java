@@ -27,7 +27,6 @@ import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition.BoundaryConditionType;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryNode;
 import net.epsilony.simpmeshfree.model.geometry.GeometryModel;
-import net.epsilony.simpmeshfree.model.geometry.ModelElement.ModelElementType;
 import net.epsilony.simpmeshfree.model.geometry.Node;
 import net.epsilony.simpmeshfree.model.geometry.Route;
 import net.epsilony.simpmeshfree.model.geometry.Segment;
@@ -197,6 +196,15 @@ public abstract class AbstractModel implements ModelImagePainter {
         log.info("Multi Thread quadrateDomains finished, time costs:" + time);
     }
 
+    public void initNodesIndes() {
+        log.info("Nodes index base is 0, nodes.size = " + nodes.size());
+        int i = 0;
+        for (Node node : nodes) {
+            node.setIndex(i);
+            i++;
+        }
+    }
+
     class QuadrateDomainTask implements Runnable {
 
         int gap;
@@ -280,10 +288,6 @@ public abstract class AbstractModel implements ModelImagePainter {
 
     public void generateNodesByTriangle(double size, double flatness, String s, boolean needNeighbors, boolean resetNodesIndex) {
         log.info(String.format("Start generateNodesByTiangle%nsize=%6.3e flatness=%6.3e s=%s needNeighbors=%b resetNodesIndex %b", size, flatness, s, needNeighbors, resetNodesIndex));
-        if (resetNodesIndex) {
-            Node n = Node.tempNode(0, 0);
-            n.getIndexManager().reset();
-        }
 
         nodes.clear();
         boundaryNodes.clear();
@@ -292,12 +296,15 @@ public abstract class AbstractModel implements ModelImagePainter {
         triangleJni.complie(gm, s);
         nodes.addAll(triangleJni.getNodes(needNeighbors));
         for (Node n : nodes) {
-            if (n.type() == ModelElementType.BoundaryNode) {
+            if (n.getClass() == BoundaryNode.class) {
                 boundaryNodes.add((BoundaryNode) n);
             }
 
         }
         triJni = triangleJni;
+        if (resetNodesIndex) {
+            initNodesIndes();
+        }
         log.info(String.format("End of generateNodesByTriangle%n nodes.size()=%d boundaryNodes.size()=%d", nodes.size(), boundaryNodes.size()));
     }
 
@@ -389,8 +396,8 @@ public abstract class AbstractModel implements ModelImagePainter {
                         double mx = partialValues[0].get(m);
                         double my = partialValues[1].get(m);
                         for (int n = 0; n < supportNodes.size(); n++) {
-                            int nIndex = supportNodes.get(n).getMatrixIndex();
-                            int mIndex = supportNodes.get(m).getMatrixIndex();
+                            int nIndex = supportNodes.get(n).getIndex();
+                            int mIndex = supportNodes.get(m).getIndex();
                             if (mIndex > nIndex) {
                                 continue;
                             }
@@ -462,8 +469,8 @@ public abstract class AbstractModel implements ModelImagePainter {
                         double mx = partialValues[0].get(m);
                         double my = partialValues[1].get(m);
                         for (int n = 0; n < supportNodes.size(); n++) {
-                            int nIndex = supportNodes.get(n).getMatrixIndex();
-                            int mIndex = supportNodes.get(m).getMatrixIndex();
+                            int nIndex = supportNodes.get(n).getIndex();
+                            int mIndex = supportNodes.get(m).getIndex();
                             if (mIndex > nIndex) {
                                 continue;
                             }
@@ -541,7 +548,7 @@ public abstract class AbstractModel implements ModelImagePainter {
                     continue;
                 }
 
-                rowcol = bNode.getMatrixIndex() * 2;
+                rowcol = bNode.getIndex() * 2;
                 if ((BoundaryCondition.X & tb) == BoundaryCondition.X) {
                     ux = txy[0];
                     double kii = kMat.get(rowcol, rowcol);
@@ -611,7 +618,7 @@ public abstract class AbstractModel implements ModelImagePainter {
                     continue;
                 }
 
-                rowcol = bNode.getMatrixIndex();
+                rowcol = bNode.getIndex();
                 accurateEssentialCore(txy, rowcol, tb);
             }
 
@@ -718,7 +725,7 @@ public abstract class AbstractModel implements ModelImagePainter {
                             y = txy[1];
                             shapeVector = shapeFunction.shapeValues(supportNodes, x, y);
                             for (k = 0; k < shapeVector.size(); k++) {
-                                row = supportNodes.get(k).getMatrixIndex();
+                                row = supportNodes.get(k).getIndex();
                                 natureConBoundaryQuadrateCore(values, row, shapeVector.get(k));
                             }
                         }
@@ -760,7 +767,7 @@ public abstract class AbstractModel implements ModelImagePainter {
                             tempBC = naturalBCs.get(j);
                             if (0 != tempBC.getValues(t, txy)) {
                                 for (k = 0; k < supportNodes.size(); k++) {
-                                    row = supportNodes.get(k).getMatrixIndex();
+                                    row = supportNodes.get(k).getIndex();
                                     natureBoundaryQudarateCore(txy, row, shapeVector.get(k), coef);
 
                                 }

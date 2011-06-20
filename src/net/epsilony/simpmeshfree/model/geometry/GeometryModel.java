@@ -227,7 +227,7 @@ public class GeometryModel implements ModelImagePainter {
 //        return outPts;
 //    }
 //    private final LinkedList<ApproximatePoint> segmentSearchApproximatePointList = new LinkedList<ApproximatePoint>();
-//    private final TreeSet<Segment> segmentSearchSet = new TreeSet<Segment>(ModelElement.indexComparator);
+//    private final TreeSet<Segment> segmentSearchSet = new TreeSet<Segment>(Indexing.indexComparator);
     /**
      * 搜索与直线(x1,y1)-(x2,y2)有可能相交的LineSegment
      * @param x1
@@ -250,7 +250,7 @@ public class GeometryModel implements ModelImagePainter {
             y2 = t;
         }
         LinkedList<ApproximatePoint> segmentSearchApproximatePointList = new LinkedList<ApproximatePoint>();
-        TreeSet<Segment> segmentSearchSet = new TreeSet<Segment>(ModelElement.indexComparator);
+        TreeSet<Segment> segmentSearchSet = new TreeSet<Segment>(Indexing.indexComparator);
         ApproximatePoint searchApproximatePointFrom = ApproximatePoint.tempApproximatePoint(0, 0), searchApproximatePointTo = ApproximatePoint.tempApproximatePoint(0, 0);
 
         searchApproximatePointFrom.setXY(x1 - segmentApproximateSize, y1 - segmentApproximateSize);
@@ -286,7 +286,7 @@ public class GeometryModel implements ModelImagePainter {
         outSegs.addAll(segmentSearchSet);
         return outSegs;
     }
-    private final TreeSet<Route> segmentRouteSearchSet = new TreeSet<Route>(ModelElement.indexComparator);
+    private final TreeSet<Route> segmentRouteSearchSet = new TreeSet<Route>(Indexing.indexComparator);
 
     public List<Route> segmentRouteSearch(double x1, double y1, double x2, double y2, List<Route> outSegs) {
         outSegs.clear();

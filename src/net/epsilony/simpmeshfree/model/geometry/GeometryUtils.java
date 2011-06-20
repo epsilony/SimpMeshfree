@@ -31,7 +31,7 @@ public class GeometryUtils {
      * @param nodes 候选结点
      */
     public static void insightNodes(double x, double y, double r, Segment segment, double t, Collection<ApproximatePoint> aps, LinkedList<Node> nodes) {
-        TreeSet<ApproximatePoint> apTree = new TreeSet<ApproximatePoint>(ModelElement.indexComparator);
+        TreeSet<ApproximatePoint> apTree = new TreeSet<ApproximatePoint>(Indexing.indexComparator);
         double outProduct;
         ApproximatePoint start, end;
         ApproximatePoint tempNodeAp = null;

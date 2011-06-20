@@ -13,20 +13,6 @@ import static net.epsilony.math.util.EYMath.*;
  * @author epsilon
  */
 public class LineSegment extends Segment {
-    protected LineSegment(boolean temp,LineSegment ls){
-        super(temp);
-        pts=new Point[2];
-        pts[0]=ls.pts[0];
-        pts[1]=ls.pts[1];
-        route=ls.route;
-        if(temp){
-            index=-1;
-        }
-    }  
-    @Override
-    public ModelElementType type() {
-        return ModelElementType.LineSegment;
-    }
 
     public double lengthSqr(){
         return (pts[0].x-pts[1].x)*(pts[0].x-pts[1].x)+(pts[0].y-pts[1].y)*(pts[0].y+pts[1].y);
@@ -44,17 +30,6 @@ public class LineSegment extends Segment {
         pts=new Point[2];
         pts[0]=v1;
         pts[1]=v2;
-    }
-
-
-    public static void main(String [] args){
-        LineSegment s=new LineSegment(new Point(0,0),new Point(0,1));
-        System.out.println("s.getIndex() = " + s.getIndex());
-        s=new LineSegment(new Point(0,0),new Point(0,1));
-        System.out.println("s.getIndex() = " + s.getIndex());
-        Node n=new Node(0,1);
-        n=new Node(0,1);
-        System.out.println("n.getIndex() = " + n.getIndex());
     }
 
     @Override

@@ -305,17 +305,17 @@ public class TriangleJni {
             n1 = nodes.get(trianglesOut[i * 3] - 1);
             n2 = nodes.get(trianglesOut[i * 3 + 1] - 1);
             n3 = nodes.get(trianglesOut[i * 3 + 2] - 1);
-            n1.neighbors.add(n2);
-            n2.neighbors.add(n1);
-            n2.neighbors.add(n3);
-            n3.neighbors.add(n2);
-            n3.neighbors.add(n1);
-            n1.neighbors.add(n3);
+//            n1.neighbors.add(n2);
+//            n2.neighbors.add(n1);
+//            n2.neighbors.add(n3);
+//            n3.neighbors.add(n2);
+//            n3.neighbors.add(n1);
+//            n1.neighbors.add(n3);
             tr = new Triangle(n1, n2, n3);
 
-            n1.triangles.add(tr);
-            n2.triangles.add(tr);
-            n3.triangles.add(tr);
+//            n1.triangles.add(tr);
+//            n2.triangles.add(tr);
+//            n3.triangles.add(tr);
         }
 //        System.out.println("nodes.size()" + nodes.size());
         return nodes;
@@ -392,17 +392,17 @@ public class TriangleJni {
             n1 = nodes.get(trianglesOut[i * 3] - 1);
             n2 = nodes.get(trianglesOut[i * 3 + 1] - 1);
             n3 = nodes.get(trianglesOut[i * 3 + 2] - 1);
-            n1.neighbors.add(n2);
-            n2.neighbors.add(n1);
-            n2.neighbors.add(n3);
-            n3.neighbors.add(n2);
-            n3.neighbors.add(n1);
-            n1.neighbors.add(n3);
+//            n1.neighbors.add(n2);
+//            n2.neighbors.add(n1);
+//            n2.neighbors.add(n3);
+//            n3.neighbors.add(n2);
+//            n3.neighbors.add(n1);
+//            n1.neighbors.add(n3);
             tr = new Triangle(n1, n2, n3);
             trs.add(tr);
-            n1.triangles.add(tr);
-            n2.triangles.add(tr);
-            n3.triangles.add(tr);
+//            n1.triangles.add(tr);
+//            n2.triangles.add(tr);
+//            n3.triangles.add(tr);
         }
         log.info("End of getNodesTriangles()");
 //        System.out.println("nodes.size()" + nodes.size());

@@ -45,8 +45,8 @@ public class SupportDomains {
 
         @Override
         public double supportNodes(double x, double y, List<Node> output) {
-            Node nodeFrom = Node.tempNode(0, 0);
-            Node nodeTo = Node.tempNode(0, 0);
+            Node nodeFrom = new Node(0,0);
+            Node nodeTo = new Node(0, 0);
             output.clear();
             LinkedList<Node> tnodes = new LinkedList<Node>();
             double r = rMin;
@@ -76,8 +76,8 @@ public class SupportDomains {
 
         @Override
         public double boundarySupportNodes(Segment bSegment, double parm, List<Node> output) {
-            Node nodeFrom = Node.tempNode(0, 0);
-            Node nodeTo = Node.tempNode(0, 0);
+            Node nodeFrom = new Node(0, 0);
+            Node nodeTo = new Node(0, 0);
             output.clear();
             LinkedList<Node> tnodes = new LinkedList<Node>();
             double[] pt = new double[2];

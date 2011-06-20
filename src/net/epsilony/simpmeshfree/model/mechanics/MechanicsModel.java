@@ -104,10 +104,10 @@ public class MechanicsModel extends AbstractModel implements ModelImagePainter {
                 radialBasisFunction.setNodesAverageDistance(nodesAverDistance);
                 partialValues = shapeFunction.shapePartialValues(supportNodes, x, y);
                 for (k = 0; k < supportNodes.size(); k++) {
-                    int kIndex = supportNodes.get(k).getMatrixIndex() * 2;
+                    int kIndex = supportNodes.get(k).getIndex() * 2;
 
                     for (l = 0; l < supportNodes.size(); l++) {
-                        int lIndex = supportNodes.get(l).getMatrixIndex() * 2;
+                        int lIndex = supportNodes.get(l).getIndex() * 2;
                         if (k < l) {
                             continue;
                         }
@@ -190,7 +190,7 @@ public class MechanicsModel extends AbstractModel implements ModelImagePainter {
 
     public void solve() throws ArgumentOutsideDomainException, IterativeSolverNotConvergedException {
         log.info("Start solve()");
-        initNodesMatrixIndex();
+        initNodesIndes();
         quadrateDomains();
         bVector = new DenseVector(nodes.size() * 2);
         natureBoundaryQuadrate(quadratureNum);
@@ -255,20 +255,11 @@ public class MechanicsModel extends AbstractModel implements ModelImagePainter {
 
         log.info("edit the nodes ux uy data");
         for (Node node : nodes) {
-            node.setUx(xVector.get(node.getMatrixIndex() * 2));
-            node.setUy(xVector.get(node.getMatrixIndex() * 2 + 1));
+            node.setUx(xVector.get(node.getIndex() * 2));
+            node.setUy(xVector.get(node.getIndex() * 2 + 1));
         }
 
 
-    }
-
-    private void initNodesMatrixIndex() {
-        log.info("Nodes index base is 0, nodes.size = " + nodes.size());
-        int i = 0;
-        for (Node node : nodes) {
-            node.setMatrixIndex(i);
-            i++;
-        }
     }
 
     public Matrix getConstitutiveLaw() {

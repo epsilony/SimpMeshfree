@@ -4,9 +4,6 @@
  */
 package net.epsilony.simpmeshfree.model.geometry;
 
-
-import net.epsilony.simpmeshfree.model.geometry.ModelElement.ModelElementType;
-
 /**
  *
  * @author epsilon
@@ -14,12 +11,12 @@ import net.epsilony.simpmeshfree.model.geometry.ModelElement.ModelElementType;
 public class BoundaryNode extends Node {
     public BoundaryNode(ApproximatePoint approximatePoint) {
         super(approximatePoint);
-//        this.approximatePoint = approximatePoint;
         segmentParm=approximatePoint.segmentParm;
         segment=approximatePoint.segment;
     }
 
     public BoundaryNode(double x,double y){
+        super(x,y);
         this.x=x;
         this.y=y;
     }
@@ -35,11 +32,4 @@ public class BoundaryNode extends Node {
     public double getSegmentParm() {
         return segmentParm;
     }
-    
-
-    @Override
-    public ModelElementType type() {
-        return ModelElementType.BoundaryNode;
-    }
-
 }

@@ -12,8 +12,9 @@ import net.epsilony.simpmeshfree.utils.ModelElementIndexManager;
  *
  * @author epsilon
  */
-public class Point extends ModelElement {
+public class Point extends Point2D.Double implements Indexing {
 
+    int index;
     public static Comparator<Point> compX;
     public static Comparator<Point> compY;
 
@@ -68,16 +69,8 @@ public class Point extends ModelElement {
         p.index = pointIm.getMax() + 1;
         return p;
     }
-    protected double x,  y;
+
     static ModelElementIndexManager pointIm = new ModelElementIndexManager();
-
-    public double getX() {
-        return x;
-    }
-
-    public double getY() {
-        return y;
-    }
 
     protected Point(double x, double y, Boolean temp) {
         if (!temp) {
@@ -120,18 +113,6 @@ public class Point extends ModelElement {
         this.y=y;
     }
 
-
-
-    @Override
-    public ModelElementType type() {
-        return ModelElementType.Point;
-    }
-
-    @Override
-    public ModelElementIndexManager getIndexManager() {
-        return pointIm;
-    }
-
     public Point2D setPoint2D(Point2D p2) {
         p2.setLocation(x, y);
         return p2;
@@ -139,6 +120,22 @@ public class Point extends ModelElement {
 
     @Override
     public String toString() {
-        return String.format("%s:%d-(%.2f, %.2f)", type(),index, x, y);
+        return String.format("%s:%d-(%.2f, %.2f)", Point.class.getSimpleName(),index, x, y);
+    }
+
+    @Override
+    public int getIndex() {
+        return index;
+    }
+
+    @Override
+    public void setIndex(int index) {
+        this.index=index;
+    }
+    
+    public static void main(String[] args) {
+        Point p=new Point(3,4);
+        p.index=144;
+        System.out.println(p);
     }
 }

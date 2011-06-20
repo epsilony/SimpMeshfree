@@ -4,7 +4,6 @@
  */
 package net.epsilony.simpmeshfree.model.geometry;
 
-import net.epsilony.simpmeshfree.model.geometry.ModelElement.ModelElementType;
 import net.epsilony.simpmeshfree.utils.ModelElementIndexManager;
 
 /**
@@ -24,15 +23,6 @@ public class ApproximatePoint extends Point {
     protected ApproximatePoint() {
     }
 
-    @Override
-    public ModelElementIndexManager getIndexManager() {
-        return aPointIm;
-    }
-
-    @Override
-    public ModelElementType type() {
-        return ModelElementType.ApproximatPoint;
-    }
     ApproximatePoint back, front;
     Segment segment;
     double segmentParm;
@@ -72,7 +62,7 @@ public class ApproximatePoint extends Point {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(200);
-        sb.append(String.format("%s %d:(%.2f, %.2f)-%s t=%.4f", type(), index, x, y, segment, segmentParm));
+        sb.append(String.format("%s %d:(%.2f, %.2f)-%s t=%.4f", ApproximatePoint.class.getSimpleName(), index, x, y, segment, segmentParm));
         if (null == front) {
             sb.append("front null");
         } else {

@@ -229,7 +229,7 @@ public class NodesManager {
             out.printf("%20s%20s%20s%20s%20s%20s", "Index", "x", "y", "radiu", "err", "type");
             for (i = 0; i < status.outErrSupportNodes.size(); i++) {
                 Node node = status.outErrSupportNodes.get(i);
-                out.printf("%20d%20e%20e%20e%20e%20s%n", node.getIndex(), node.getX(), node.getY(), node.getInfRadius(), status.outErrSupportNodesMinErr.get(i), node.type());
+                out.printf("%20d%20e%20e%20e%20e%20s%n", node.getIndex(), node.getX(), node.getY(), node.getInfRadius(), status.outErrSupportNodesMinErr.get(i), node.getClass().getSimpleName());
             }
         } catch (IOException ex) {
             Logger.getLogger(NodesManager.class.getName()).log(Level.SEVERE, null, ex);

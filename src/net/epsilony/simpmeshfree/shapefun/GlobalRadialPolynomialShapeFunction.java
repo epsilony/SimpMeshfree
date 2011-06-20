@@ -90,7 +90,7 @@ public class GlobalRadialPolynomialShapeFunction implements ShapeFunction {
         for (int i = 0; i < nodes.size(); i++) {
             nodex = nodes.get(i).getX();
             nodey = nodes.get(i).getY();
-            nodes.get(i).setMatrixIndex(i);
+            nodes.get(i).setIndex(i);
             radialBasisFunction.setCenter(nodex, nodey);
             for (int j = i; j < nodes.size(); j++) {
                 double xj = nodes.get(j).getX();
@@ -143,8 +143,8 @@ public class GlobalRadialPolynomialShapeFunction implements ShapeFunction {
     @Override
     public Vector[] shapePartialValues(List<Node> nodes, double x, double y) {
         if (supportDomainSize > 0) {
-            Node from = Node.tempNode(x - supportDomainSize, y - supportDomainSize);
-            Node to = Node.tempNode(x + supportDomainSize, y + supportDomainSize);
+            Node from = new Node(x - supportDomainSize, y - supportDomainSize);
+            Node to = new Node(x + supportDomainSize, y + supportDomainSize);
             nodeSearchTree.domainSearch(supportNodes, from, to);
         }
         values.zero();
@@ -152,8 +152,8 @@ public class GlobalRadialPolynomialShapeFunction implements ShapeFunction {
         for (Node node : supportNodes) {
             radialBasisFunction.setCenter(node.getX(), node.getY());
             radialBasisFunction.partialDifferential(x, y, tds);
-            pxValues.set(PInv[node.getMatrixIndex()] - 1, tds[0]);
-            pyValues.set(PInv[node.getMatrixIndex()] - 1, tds[1]);
+            pxValues.set(PInv[node.getIndex()] - 1, tds[0]);
+            pyValues.set(PInv[node.getIndex()] - 1, tds[1]);
         }
 
         gMat.solve(pxValues, tVector);
@@ -171,8 +171,8 @@ public class GlobalRadialPolynomialShapeFunction implements ShapeFunction {
     @Override
     public Vector[] shapeQuadPartialValues(List<Node> nodes, double x, double y) {
         if (supportDomainSize > 0) {
-            Node from = Node.tempNode(x - supportDomainSize, y - supportDomainSize);
-            Node to = Node.tempNode(x + supportDomainSize, y + supportDomainSize);
+            Node from = new Node(x - supportDomainSize, y - supportDomainSize);
+            Node to = new Node(x + supportDomainSize, y + supportDomainSize);
             nodeSearchTree.domainSearch(supportNodes, from, to);
         }
 
@@ -181,9 +181,9 @@ public class GlobalRadialPolynomialShapeFunction implements ShapeFunction {
         for (Node node : supportNodes) {
             radialBasisFunction.setCenter(node.getX(), node.getY());
             radialBasisFunction.quadPartialDifferential(x, y, tds);
-            pxxValues.set(PInv[node.getMatrixIndex()] - 1, tds[0]);
-            pxyValues.set(PInv[node.getMatrixIndex()] - 1, tds[1]);
-            pyyValues.set(PInv[node.getMatrixIndex()] - 1, tds[2]);
+            pxxValues.set(PInv[node.getIndex()] - 1, tds[0]);
+            pxyValues.set(PInv[node.getIndex()] - 1, tds[1]);
+            pyyValues.set(PInv[node.getIndex()] - 1, tds[2]);
         }
 
         gMat.solve(pxxValues, tVector);
@@ -207,15 +207,15 @@ public class GlobalRadialPolynomialShapeFunction implements ShapeFunction {
     public Vector shapeValues(List<Node> nodes, double x, double y) {
 
         if (supportDomainSize > 0) {
-            Node from = Node.tempNode(x - supportDomainSize, y - supportDomainSize);
-            Node to = Node.tempNode(x + supportDomainSize, y + supportDomainSize);
+            Node from = new Node(x - supportDomainSize, y - supportDomainSize);
+            Node to = new Node(x + supportDomainSize, y + supportDomainSize);
             nodeSearchTree.domainSearch(supportNodes, from, to);
         }
 
         values.zero();
         for (Node node : supportNodes) {
             radialBasisFunction.setCenter(node.getX(), node.getY());
-            values.set(PInv[node.getMatrixIndex()] - 1, radialBasisFunction.value(x, y));
+            values.set(PInv[node.getIndex()] - 1, radialBasisFunction.value(x, y));
         }
 //        if(x==0&&y==0){
 //            DenseVector tv=new DenseVector(values.size());

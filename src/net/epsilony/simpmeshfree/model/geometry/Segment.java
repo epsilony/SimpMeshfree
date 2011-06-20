@@ -7,16 +7,13 @@ package net.epsilony.simpmeshfree.model.geometry;
 import java.awt.geom.Path2D;
 import java.util.Collection;
 import java.util.LinkedList;
-import net.epsilony.simpmeshfree.utils.ModelElementIndexManager;
 
 /**
  *
  * @author epsilon
  */
-abstract public class Segment extends ModelElement {
+public abstract class Segment implements Indexing {
 
-    static ModelElementIndexManager segmentIM = new ModelElementIndexManager();
-//    LinkedList<BoundaryNode> nodes = new LinkedList<BoundaryNode>();
     Route route;
     LinkedList<BoundaryCondition> boundaryConditions;
     Segment back,front;
@@ -27,6 +24,16 @@ abstract public class Segment extends ModelElement {
 
     public void setFront(Segment front) {
         this.front = front;
+    }
+
+    @Override
+    public int getIndex() {
+        return index;
+    }
+
+    @Override
+    public void setIndex(int index) {
+        this.index=index;
     }
 
 
@@ -52,7 +59,7 @@ abstract public class Segment extends ModelElement {
      */
     public void setBoundaryConditions(Collection<BoundaryCondition> bcs) {
         if (null != bcs) {
-            if (bcs.size() == 0) {
+            if (bcs.isEmpty()) {
                 boundaryConditions = null;
             } else {
                 if (null != boundaryConditions) {
@@ -72,16 +79,7 @@ abstract public class Segment extends ModelElement {
         return boundaryConditions.add(e);
     }
 
-
-
-    protected Segment() {
-        index = segmentIM.getNewIndex();
-    }
-
-    @Override
-    public ModelElementIndexManager getIndexManager() {
-        return segmentIM;
-    }
+    public int index;
     public Point[] pts;
 
     /**
@@ -108,12 +106,6 @@ abstract public class Segment extends ModelElement {
         this.route = route;
     }
 
-    protected Segment(boolean temp) {
-        if (!temp) {
-            index = segmentIM.getNewIndex();
-        }
-    }
-
     abstract public Point getFirstVertex();
 
     abstract public Point getLastVertex();
@@ -130,7 +122,7 @@ abstract public class Segment extends ModelElement {
     public String toString() {
 
         StringBuilder sb = new StringBuilder();
-        sb.append(type());
+        sb.append(this.getClass().getSimpleName());
         sb.append(":");
         for (int i = 0; i < pts.length; i++) {
             sb.append(String.format("(%.2f, %.2f) ", pts[i].x, pts[i].y));

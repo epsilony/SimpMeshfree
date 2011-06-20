@@ -20,7 +20,6 @@ import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryCondition.BoundaryConditionType;
 import net.epsilony.simpmeshfree.model.geometry.BoundaryNode;
 import net.epsilony.simpmeshfree.model.geometry.GeometryModel;
-import net.epsilony.simpmeshfree.model.geometry.ModelElement.ModelElementType;
 import net.epsilony.simpmeshfree.model.geometry.Node;
 import net.epsilony.simpmeshfree.model.geometry.Point;
 import net.epsilony.simpmeshfree.model.geometry.Segment;
@@ -103,10 +102,10 @@ public class ElectricModel implements ModelImagePainter {
         return supportDomain;
     }
 
-    private void initNodesMatrixIndex() {
+    private void initNotesIndex() {
         int i = 0;
         for (Node node : nodes) {
-            node.setMatrixIndex(i);
+            node.setIndex(i);
             i++;
         }
     }
@@ -121,10 +120,7 @@ public class ElectricModel implements ModelImagePainter {
      */
     public void generateNodesByTriangle(double size, double flatness, String s, boolean needNeighbors, boolean resetNodesIndex) {
         log.info(String.format("Start generateNodesByTiangle%nsize=%6.3e flatness=%6.3e s=%s needNeighbors=%b resetNodesIndex %b", size, flatness, s, needNeighbors, resetNodesIndex));
-        if (resetNodesIndex) {
-            Node n = Node.tempNode(0, 0);
-            n.getIndexManager().reset();
-        }
+        
 
         nodes.clear();
         boundaryNodes.clear();
@@ -137,12 +133,15 @@ public class ElectricModel implements ModelImagePainter {
 
         nodes.addAll(triangleJni.getNodes(needNeighbors));
         for (Node n : nodes) {
-            if (n.type() == ModelElementType.BoundaryNode) {
+            if (n.getClass() ==BoundaryNode.class) {
                 boundaryNodes.add((BoundaryNode) n);
             }
         }
 //        nodesDomainTree = new LayeredDomainTree<Node>(nodes, Point.compX, Point.compY, true);
         triJni = triangleJni;
+        if (resetNodesIndex) {
+           initNotesIndex();   
+        }
         log.info(String.format("End of generateNodesByTriangle%n nodes.size()=%d boundaryNodes.size()=%d", nodes.size(), boundaryNodes.size()));
     }
 
@@ -191,8 +190,8 @@ public class ElectricModel implements ModelImagePainter {
                         double mx = partialValues[0].get(m);
                         double my = partialValues[1].get(m);
                         for (int n = 0; n < supportNodes.size(); n++) {
-                            int nIndex = supportNodes.get(n).getMatrixIndex();
-                            int mIndex = supportNodes.get(m).getMatrixIndex();
+                            int nIndex = supportNodes.get(n).getIndex();
+                            int mIndex = supportNodes.get(m).getIndex();
                             if (mIndex > nIndex) {
                                 continue;
                             }
@@ -272,7 +271,7 @@ public class ElectricModel implements ModelImagePainter {
                     continue;
                 }
 
-                rowcol = bNode.getMatrixIndex();
+                rowcol = bNode.getIndex();
 
                 if ((BoundaryCondition.X & tb) == BoundaryCondition.X) {
                     ux = txy[0];
@@ -298,7 +297,7 @@ public class ElectricModel implements ModelImagePainter {
 
     public void solve() throws ArgumentOutsideDomainException {
         log.info("Start solve()");
-        initNodesMatrixIndex();
+        initNotesIndex();
         quadrateTriangleDomains(quadN);
         bVector = new DenseVector(nodes.size());
 
@@ -318,7 +317,7 @@ public class ElectricModel implements ModelImagePainter {
         log.info("edit the nodes ux uy data");
         int[] PInv = rcmJni.PInv;
         for (Node node : nodes) {
-            index = PInv[node.getMatrixIndex()] - 1;
+            index = PInv[node.getIndex()] - 1;
             node.setUx(xVector.get(index));
         }
         log.info("End of solve()");

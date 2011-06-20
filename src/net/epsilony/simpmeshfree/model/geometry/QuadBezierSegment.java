@@ -7,7 +7,6 @@ package net.epsilony.simpmeshfree.model.geometry;
 
 import java.awt.geom.Path2D;
 import java.util.LinkedList;
-import net.epsilony.simpmeshfree.model.geometry.ModelElement.ModelElementType;
 
 /**
  *@deprecated 
@@ -25,11 +24,6 @@ public class QuadBezierSegment extends Segment{
     @Override
     public void addToPath(Path2D path) {
         path.quadTo(v2.x, v2.y, v3.x, v3.y);
-    }
-
-    @Override
-    public ModelElementType type() {
-        return ModelElementType.QuadBezierSegment;
     }
 
     @Override

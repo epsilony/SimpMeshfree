@@ -16,7 +16,7 @@ import org.apache.log4j.Logger;
  *
  * @author epsilon
  */
-public class Route extends ModelElement {
+public class Route implements Indexing {
 
     static Logger log = Logger.getLogger(Route.class);
     static ModelElementIndexManager routeIm = new ModelElementIndexManager();
@@ -30,17 +30,13 @@ public class Route extends ModelElement {
             sb.append(firstVertex.x);
             sb.append(" ");
             sb.append(firstVertex.y);
-            sb.append(segment.type());
+            sb.append(segment.getClass().getSimpleName());
         }
         return sb.toString();
     }
 
     public LinkedList<Segment> getSegments() {
         return segments;
-    }
-
-    public Route() {
-        index = routeIm.getNewIndex();
     }
 
     public Segment getLast() {
@@ -216,16 +212,6 @@ public class Route extends ModelElement {
 
     }
 
-    @Override
-    public ModelElementType type() {
-        return ModelElementType.SegmentRoute;
-    }
-
-    @Override
-    public ModelElementIndexManager getIndexManager() {
-        return routeIm;
-    }
-
     public void addToPath(Path2D path) {
         if (segments == null || segments.isEmpty()) {
             return;
@@ -266,5 +252,15 @@ public class Route extends ModelElement {
         for (Integer i : list) {
             System.out.println("i=" + i);
         }
+    }
+
+    @Override
+    public int getIndex() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void setIndex(int index) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

@@ -7,7 +7,6 @@ package net.epsilony.simpmeshfree.model.geometry;
 import java.awt.geom.Path2D;
 import java.util.LinkedList;
 import net.epsilony.math.util.EYMath;
-import net.epsilony.simpmeshfree.model.geometry.ModelElement.ModelElementType;
 import static net.epsilony.math.util.EYMath.*;
 
 /**
@@ -36,11 +35,6 @@ public class CubicBezierSegment extends Segment {
     @Override
     public void addToPath(Path2D path) {
         path.curveTo(pts[1].x, pts[1].y, pts[2].x, pts[2].y, pts[3].x, pts[3].y);
-    }
-
-    @Override
-    public ModelElementType type() {
-        return ModelElementType.CubicBezierSegment;
     }
 
     @Override
