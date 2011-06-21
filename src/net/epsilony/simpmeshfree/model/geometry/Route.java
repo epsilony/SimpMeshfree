@@ -87,7 +87,7 @@ public class Route implements Indexing {
         }
         ApproximatePoint tAp = aprxPts.getLast();
         for (ApproximatePoint ap : aprxPts) {
-            ap.back = tAp;
+            ap.rear = tAp;
             tAp.front = ap;
             tAp = ap;
         }
@@ -143,7 +143,7 @@ public class Route implements Indexing {
      * @return null:本Route是逆时针的，Point:该Route顺时针所围区域中的一点，及结构中孔洞中的一点
      */
     public Point getHolePoint() {
-        Point pt = Point.tempPoint(0, 0);
+        Point pt = new Point(0,0);
         //假设本Route是顺时针的，因此要找一个右拐的ApproximatePoint
         ApproximatePoint start, end, front, stopCond;
         double outProduct, v1x, v1y, v2x, v2y;
@@ -242,16 +242,6 @@ public class Route implements Indexing {
             start = start.front;
         } while (start != stop);
         path.closePath();
-    }
-
-    public static void main(String[] args) {
-        LinkedList<Integer> list = new LinkedList<Integer>();
-        list.add(0);
-        list.add(1);
-        list.add(2);
-        for (Integer i : list) {
-            System.out.println("i=" + i);
-        }
     }
 
     @Override

@@ -43,8 +43,8 @@ public class GeometryModel implements ModelImagePainter {
     boolean wider = true;
     double segmentApproximateSize;
     double segmentFlatness;
-    Point leftDown = Point.tempPoint(0, 0);
-    Point rightUp = Point.tempPoint(0, 0);
+    Point leftDown = new Point(0, 0);
+    Point rightUp = new Point(0, 0);
 
     public Point getLeftDown() {
         return leftDown;
@@ -142,8 +142,8 @@ public class GeometryModel implements ModelImagePainter {
         segmentFlatness = flatness;
         log.info("Start Generate Approximate Points");
         GenerateApproximatePoints(size, flatness);
-        leftDown.setXY(approximatePoints.getFirst());
-        rightUp.setXY(approximatePoints.getFirst());
+        leftDown.setLocation(approximatePoints.getFirst());
+        rightUp.setLocation(approximatePoints.getFirst());
 
         for (ApproximatePoint ap : approximatePoints) {
             if (ap.x < leftDown.x) {
@@ -187,8 +187,8 @@ public class GeometryModel implements ModelImagePainter {
 //        outPts.clear();
 //        switch (center.type()) {
 //            case ApproximatPoint:
-//                searchApproximatePointFrom.setXY(x1, y1);
-//                searchApproximatePointTo.setXY(x2, y2);
+//                searchApproximatePointFrom.setLocation(x1, y1);
+//                searchApproximatePointTo.setLocation(x2, y2);
 //                approximatePointsSearchTree.domainSearch((List<ApproximatePoint>) outPts, searchApproximatePointFrom, searchApproximatePointTo);
 //                break;
 //            default:
@@ -251,10 +251,10 @@ public class GeometryModel implements ModelImagePainter {
         }
         LinkedList<ApproximatePoint> segmentSearchApproximatePointList = new LinkedList<ApproximatePoint>();
         TreeSet<Segment> segmentSearchSet = new TreeSet<Segment>(Indexing.indexComparator);
-        ApproximatePoint searchApproximatePointFrom = ApproximatePoint.tempApproximatePoint(0, 0), searchApproximatePointTo = ApproximatePoint.tempApproximatePoint(0, 0);
+        ApproximatePoint searchApproximatePointFrom = new ApproximatePoint(0, 0), searchApproximatePointTo = new ApproximatePoint(0, 0);
 
-        searchApproximatePointFrom.setXY(x1 - segmentApproximateSize, y1 - segmentApproximateSize);
-        searchApproximatePointTo.setXY(x2 + segmentApproximateSize, y2 + segmentApproximateSize);
+        searchApproximatePointFrom.setLocation(x1 - segmentApproximateSize, y1 - segmentApproximateSize);
+        searchApproximatePointTo.setLocation(x2 + segmentApproximateSize, y2 + segmentApproximateSize);
         approximatePointsSearchTree.domainSearch(segmentSearchApproximatePointList, searchApproximatePointFrom, searchApproximatePointTo);
         segmentSearchSet.clear();
         if (log.isDebugEnabled()) {
@@ -263,16 +263,16 @@ public class GeometryModel implements ModelImagePainter {
         for (ApproximatePoint p : segmentSearchApproximatePointList) {
             segmentSearchSet.add(p.segment);
             if (p.segmentParm == 0) {
-                segmentSearchSet.add(p.back.segment);
+                segmentSearchSet.add(p.rear.segment);
             }
 //            if (p.x <= x2 && p.x >= x1 || p.y <= y2 && p.y >= y1) {
 //                segmentSearchSet.add(p.segment);
 //                continue;
 //            }
-//            if (EYMath.isLineSegmentIntersect(x1, y1, x1, y2, p.x, p.y, p.back.x, p.back.y) ||
-//                    EYMath.isLineSegmentIntersect(x2, y1, x2, y2, p.x, p.y, p.back.x, p.back.y) ||
-//                    EYMath.isLineSegmentIntersect(x1, y1, x2, y1, p.x, p.y, p.back.x, p.back.y) ||
-//                    EYMath.isLineSegmentIntersect(x1, y2, x2, y2, p.x, p.y, p.back.x, p.back.y)) {
+//            if (EYMath.isLineSegmentIntersect(x1, y1, x1, y2, p.x, p.y, p.rear.x, p.rear.y) ||
+//                    EYMath.isLineSegmentIntersect(x2, y1, x2, y2, p.x, p.y, p.rear.x, p.rear.y) ||
+//                    EYMath.isLineSegmentIntersect(x1, y1, x2, y1, p.x, p.y, p.rear.x, p.rear.y) ||
+//                    EYMath.isLineSegmentIntersect(x1, y2, x2, y2, p.x, p.y, p.rear.x, p.rear.y)) {
 //                segmentSearchSet.add(p.segment);
 //                continue;
 //            }
@@ -301,10 +301,10 @@ public class GeometryModel implements ModelImagePainter {
             y2 = t;
         }
         LinkedList<ApproximatePoint> segmentSearchApproximatePointList = new LinkedList<ApproximatePoint>();
-        ApproximatePoint searchApproximatePointFrom = ApproximatePoint.tempApproximatePoint(0, 0), searchApproximatePointTo = ApproximatePoint.tempApproximatePoint(0, 0);
+        ApproximatePoint searchApproximatePointFrom = new ApproximatePoint(0, 0), searchApproximatePointTo = new ApproximatePoint(0, 0);
 
-        searchApproximatePointFrom.setXY(x1 - segmentApproximateSize, y1 - segmentApproximateSize);
-        searchApproximatePointTo.setXY(x2 + segmentApproximateSize, y2 + segmentApproximateSize);
+        searchApproximatePointFrom.setLocation(x1 - segmentApproximateSize, y1 - segmentApproximateSize);
+        searchApproximatePointTo.setLocation(x2 + segmentApproximateSize, y2 + segmentApproximateSize);
         approximatePointsSearchTree.domainSearch(segmentSearchApproximatePointList, searchApproximatePointFrom, searchApproximatePointTo);
         segmentRouteSearchSet.clear();
         for (ApproximatePoint p : segmentSearchApproximatePointList) {
@@ -312,10 +312,10 @@ public class GeometryModel implements ModelImagePainter {
                 segmentRouteSearchSet.add(p.segment.route);
                 continue;
             }
-            if (EYMath.isLineSegmentIntersect(x1, y1, x1, y2, p.x, p.y, p.back.x, p.back.y) ||
-                    EYMath.isLineSegmentIntersect(x2, y1, x2, y2, p.x, p.y, p.back.x, p.back.y) ||
-                    EYMath.isLineSegmentIntersect(x1, y1, x2, y1, p.x, p.y, p.back.x, p.back.y) ||
-                    EYMath.isLineSegmentIntersect(x1, y2, x2, y2, p.x, p.y, p.back.x, p.back.y)) {
+            if (EYMath.isLineSegmentIntersect(x1, y1, x1, y2, p.x, p.y, p.rear.x, p.rear.y) ||
+                    EYMath.isLineSegmentIntersect(x2, y1, x2, y2, p.x, p.y, p.rear.x, p.rear.y) ||
+                    EYMath.isLineSegmentIntersect(x1, y1, x2, y1, p.x, p.y, p.rear.x, p.rear.y) ||
+                    EYMath.isLineSegmentIntersect(x1, y2, x2, y2, p.x, p.y, p.rear.x, p.rear.y)) {
                 segmentRouteSearchSet.add(p.segment.route);
                 continue;
             }
@@ -332,7 +332,7 @@ public class GeometryModel implements ModelImagePainter {
 
     public static boolean canSeeEach(Point e1, Point e2, Collection<ApproximatePoint> aps) {
         for (ApproximatePoint ap : aps) {
-            if (EYMath.isLineSegmentIntersect(e1.x, e1.y, e2.x, e2.y, ap.x, ap.y, ap.back.x, ap.back.y) || EYMath.isLineSegmentIntersect(e1.x, e1.y, e2.x, e2.y, ap.x, ap.y, ap.front.x, ap.front.y)) {
+            if (EYMath.isLineSegmentIntersect(e1.x, e1.y, e2.x, e2.y, ap.x, ap.y, ap.rear.x, ap.rear.y) || EYMath.isLineSegmentIntersect(e1.x, e1.y, e2.x, e2.y, ap.x, ap.y, ap.front.x, ap.front.y)) {
                 return false;
             }
         }
@@ -341,7 +341,7 @@ public class GeometryModel implements ModelImagePainter {
 
     public static boolean canSeeEach(double x1, double y1, double x2, double y2, Collection<ApproximatePoint> aps) {
         for (ApproximatePoint ap : aps) {
-            if (EYMath.isLineSegmentIntersect(x1, y1, x2, y2, ap.x, ap.y, ap.back.x, ap.back.y) || EYMath.isLineSegmentIntersect(x1, y1, x2, y2, ap.x, ap.y, ap.front.x, ap.front.y)) {
+            if (EYMath.isLineSegmentIntersect(x1, y1, x2, y2, ap.x, ap.y, ap.rear.x, ap.rear.y) || EYMath.isLineSegmentIntersect(x1, y1, x2, y2, ap.x, ap.y, ap.front.x, ap.front.y)) {
                 return false;
             }
         }
@@ -401,8 +401,8 @@ public class GeometryModel implements ModelImagePainter {
 //    private final ApproximatePoint tempApproximatePointSearchAp2 = ApproximatePoint.tempApproximatePoint(0, 0);
 
     public List<ApproximatePoint> approximatePointSearch(List<ApproximatePoint> list, ApproximatePoint from, ApproximatePoint to) {
-        ApproximatePoint tempApproximatePointSearchAp1 = ApproximatePoint.tempApproximatePoint(0, 0);
-        ApproximatePoint tempApproximatePointSearchAp2 = ApproximatePoint.tempApproximatePoint(0, 0);
+        ApproximatePoint tempApproximatePointSearchAp1 = new ApproximatePoint(0, 0);
+        ApproximatePoint tempApproximatePointSearchAp2 = new ApproximatePoint(0, 0);
         if (from.x > to.x) {
             tempApproximatePointSearchAp1.x = to.x;
             tempApproximatePointSearchAp2.x = from.x;
@@ -421,8 +421,8 @@ public class GeometryModel implements ModelImagePainter {
     }
 
     public List<ApproximatePoint> approximatePointSearch(List<ApproximatePoint> list, double x1, double y1, double x2, double y2) {
-         ApproximatePoint tempApproximatePointSearchAp1 = ApproximatePoint.tempApproximatePoint(0, 0);
-        ApproximatePoint tempApproximatePointSearchAp2 = ApproximatePoint.tempApproximatePoint(0, 0);
+         ApproximatePoint tempApproximatePointSearchAp1 = new ApproximatePoint(0, 0);
+        ApproximatePoint tempApproximatePointSearchAp2 = new  ApproximatePoint(0, 0);
         if (x1 < x2) {
             tempApproximatePointSearchAp1.x = x1;
             tempApproximatePointSearchAp2.x = x2;

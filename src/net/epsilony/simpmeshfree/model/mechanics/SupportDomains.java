@@ -52,8 +52,8 @@ public class SupportDomains {
             double r = rMin;
             double nodesAverageDistance;
             do {
-                nodeFrom.setXY(x - r, y - r);
-                nodeTo.setXY(x + r, y + r);
+                nodeFrom.setLocation(x - r, y - r);
+                nodeTo.setLocation(x + r, y + r);
                 nodesDomainTree.domainSearch(tnodes, nodeFrom, nodeTo);
                 nodesAverageDistance = r / (Math.sqrt(tnodes.size()) - 1);
                 if (null != gm) {
@@ -87,8 +87,8 @@ public class SupportDomains {
             double nodesAverageDistance;
             double r = rMin;
             do {
-                nodeFrom.setXY(x - r, y - r);
-                nodeTo.setXY(x + r, y + r);
+                nodeFrom.setLocation(x - r, y - r);
+                nodeTo.setLocation(x + r, y + r);
                 nodesDomainTree.domainSearch(tnodes, nodeFrom, nodeTo);
                 nodesAverageDistance = r / (Math.sqrt(tnodes.size()) - 1);
 

@@ -4,39 +4,28 @@
  */
 package net.epsilony.simpmeshfree.model.geometry;
 
-import net.epsilony.simpmeshfree.utils.ModelElementIndexManager;
-
 /**
  *
  * @author epsilon
  */
 public class ApproximatePoint extends Point {
 
-    public static ApproximatePoint tempApproximatePoint(double x, double y) {
-        ApproximatePoint ap = new ApproximatePoint();
-        ap.x = x;
-        ap.y = y;
-        return ap;
-    }
-    static ModelElementIndexManager aPointIm = new ModelElementIndexManager();
-
-    protected ApproximatePoint() {
-    }
-
-    ApproximatePoint back, front;
+    ApproximatePoint rear, front;
     Segment segment;
     double segmentParm;
 
     public ApproximatePoint(double x, double y, Segment attachedSegment, double segmentParm) {
-        this.x = x;
-        this.y = y;
-        index = aPointIm.getNewIndex();
+        super(x,y);
         this.segment = attachedSegment;
         this.segmentParm = segmentParm;
     }
 
-    public ApproximatePoint getBack() {
-        return back;
+    ApproximatePoint(double x, double y) {
+        super(x,y);
+    }
+
+    public ApproximatePoint getRear() {
+        return rear;
     }
 
     public double getSegmentParm() {
@@ -47,8 +36,8 @@ public class ApproximatePoint extends Point {
         return segment;
     }
 
-    public void setBack(ApproximatePoint l) {
-        this.back = l;
+    public void setRear(ApproximatePoint l) {
+        this.rear = l;
     }
 
     public ApproximatePoint getFront() {
@@ -69,11 +58,11 @@ public class ApproximatePoint extends Point {
             sb.append("front:");
             sb.append(front.segmentParm);
         }
-        if (null== back) {
+        if (null== rear) {
             sb.append("back null");
         } else {
             sb.append("back:");
-            sb.append(back.segmentParm);
+            sb.append(rear.segmentParm);
         }
         return sb.toString();
     }

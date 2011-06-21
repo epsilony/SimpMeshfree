@@ -47,29 +47,29 @@ public class GeometryUtils {
         if (null != segment) {
             for (ApproximatePoint ap : aps) {
 
-                start = ap.back;
+                start = ap.rear;
                 end = ap;
 
                 if (start.segment == segment && start.segmentParm < t && (end.segmentParm > t || end.segmentParm == 0)) {
-                    tempNodeAp = ApproximatePoint.tempApproximatePoint(x, y);
+                    tempNodeAp = new ApproximatePoint(x, y);
                     tempNodeAp.segment = segment;
-                    tempNodeAp.back = start;
+                    tempNodeAp.rear = start;
                     tempNodeAp.front = end;
                     tempNodeAp.segmentParm = t;
                     start.front = tempNodeAp;
-                    end.back = tempNodeAp;
+                    end.rear = tempNodeAp;
                     break;
                 }
                 start = ap;
                 end = ap.front;
                 if (start.segment == segment && start.segmentParm < t && (end.segmentParm > t || end.segmentParm == 0)) {
-                    tempNodeAp = ApproximatePoint.tempApproximatePoint(x, y);
+                    tempNodeAp = new ApproximatePoint(x, y);
                     tempNodeAp.segment = segment;
-                    tempNodeAp.back = start;
+                    tempNodeAp.rear = start;
                     tempNodeAp.front = end;
                     tempNodeAp.segmentParm = t;
                     start.front = tempNodeAp;
-                    end.back = tempNodeAp;
+                    end.rear = tempNodeAp;
                     break;
                 }
             }
@@ -81,7 +81,7 @@ public class GeometryUtils {
 
         //去除每一段相关的由ApproximatePoint连成的线段的“背面”的结点
         for (ApproximatePoint ap : aps) {
-            start = ap.back;
+            start = ap.rear;
             end = ap;
             outProduct = vectorProduct(end.x - start.x, end.y - start.y, x - start.x, y - start.y);
             if (outProduct <= 0 && !apTree.contains(start) && isLineCircleIntersects(x, y, r, start.x, start.y, end.x, end.y)) {
@@ -98,8 +98,8 @@ public class GeometryUtils {
 
         if (null != segment) {
             aps.remove(tempNodeAp);
-            tempNodeAp.back.front = tempNodeAp.front;
-            tempNodeAp.front.back = tempNodeAp.back;
+            tempNodeAp.rear.front = tempNodeAp.front;
+            tempNodeAp.front.rear = tempNodeAp.rear;
         }
     }
 

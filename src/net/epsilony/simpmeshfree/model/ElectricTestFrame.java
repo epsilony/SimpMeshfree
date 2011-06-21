@@ -150,7 +150,7 @@ public class ElectricTestFrame extends javax.swing.JFrame {
         ArrayList<Point> samplePoints = new ArrayList<Point>(400);
         for (int i = 0; i < 30; i++) {
             for (int j = 0; j < 30; j++) {
-                samplePoints.add(Point.tempPoint(i * 3.3 + 2.1, j * 3.3 + 2.1));
+                samplePoints.add(new Point(i * 3.3 + 2.1, j * 3.3 + 2.1));
             }
         }
         em.setGrandSamplePoints(samplePoints);
@@ -242,6 +242,7 @@ public class ElectricTestFrame extends javax.swing.JFrame {
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {
 
+            @Override
             public void run() {
                 new ElectricTestFrame().setVisible(true);
             }

@@ -22,8 +22,8 @@ public class BoundaryNode extends Node {
     }
     
 //    ApproximatePoint approximatePoint;
-    double segmentParm;
-    Segment segment;
+    public double segmentParm;
+    public Segment segment;
 
     public Segment getSegment() {
         return segment;
