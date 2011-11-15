@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import net.epsilony.geom.Coordinate;
 import net.epsilony.simpmeshfree.model.PartialDiffType;
 import net.epsilony.simpmeshfree.utils.BCQuadraturePoint;
 import net.epsilony.simpmeshfree.utils.FromToCalculator;
@@ -21,13 +22,13 @@ import no.uib.cipr.matrix.Vector;
  *
  * @author epsilon
  */
-public abstract class AbstractWeakFormProcessor<COORD, VCOORD> {
+public abstract class AbstractWeakFormProcessor {
 
-    LayeredRangeTree<Node<COORD>> nodesTree;
-    LayeredRangeTree<Boundary<COORD>> boundariesTree;
-    ShapeFunction<COORD> shapeFun;
+    LayeredRangeTree<Node> nodesTree;
+    LayeredRangeTree<Boundary> boundariesTree;
+    ShapeFunction shapeFun;
 
-    abstract FromToCalculator<COORD> getFromToCalulator();
+    abstract FromToCalculator getFromToCalulator();
     Matrix matrix;
     Vector vector;
 
@@ -35,29 +36,29 @@ public abstract class AbstractWeakFormProcessor<COORD, VCOORD> {
 
     abstract PartialDiffType[] getNeumannShapeFunctionTypes();
 
-    abstract Iterable<QuadraturePoint<COORD>> getVolumeQuadratureIterable();
+    abstract Iterable<QuadraturePoint> getVolumeQuadratureIterable();
 
-    abstract BoundaryCondition<COORD, VCOORD> getVolumeBoundaryCondtion();
+    abstract BoundaryCondition getVolumeBoundaryCondtion();
 
-    abstract Iterable<BCQuadraturePoint<COORD, VCOORD>> getDirichletBCQuadratureIterable();
+    abstract Iterable<BCQuadraturePoint> getDirichletBCQuadratureIterable();
 
-    abstract Iterable<BCQuadraturePoint<COORD, VCOORD>> getNeumannBCQuadratureIterable();
+    abstract Iterable<BCQuadraturePoint> getNeumannBCQuadratureIterable();
 
-    Collection<Node<COORD>> searchNodes(Node from, Node to, Collection<Node<COORD>> addTo) {
+    Collection<Node> searchNodes(Node from, Node to, Collection<Node> addTo) {
         nodesTree.search(addTo, from, to);
         return addTo;
     }
 
-    Collection<Boundary<COORD>> searchBoundaris(Boundary<COORD> from, Boundary<COORD> to, Collection<Boundary<COORD>> addTo) {
+    Collection<Boundary> searchBoundaris(Boundary from, Boundary to, Collection<Boundary> addTo) {
         boundariesTree.search(addTo, from, to);
         return addTo;
     }
 
-    private void initNodesSearch(Collection<Node<COORD>> nodes, List<Comparator<Node<COORD>>> comps) {
+    private void initNodesSearch(Collection<Node> nodes, List<Comparator<Node>> comps) {
         nodesTree = new LayeredRangeTree<>(nodes, comps);
     }
 
-    private void initBoundariesSearch(Collection<Boundary<COORD>> boundaries, List<Comparator<Boundary<COORD>>> comps) {
+    private void initBoundariesSearch(Collection<Boundary> boundaries, List<Comparator<Boundary>> comps) {
         boundariesTree = new LayeredRangeTree<>(boundaries, comps);
     }
 
@@ -66,47 +67,47 @@ public abstract class AbstractWeakFormProcessor<COORD, VCOORD> {
         this.vector = vector;
     }
 
-    abstract WeakFormAssemblier<COORD, VCOORD> getAssemblier();
+    abstract WeakFormAssemblier getAssemblier();
 
-    public ShapeFunction<COORD> getShapeFun() {
+    public ShapeFunction getShapeFun() {
         return shapeFun;
     }
 
-    private void setShapeFun(ShapeFunction<COORD> shapeFun) {
+    private void setShapeFun(ShapeFunction shapeFun) {
         this.shapeFun = shapeFun;
     }
 
-    protected AbstractWeakFormProcessor(ShapeFunction shapeFun, Collection<Node<COORD>> nodes, List<Comparator<Node<COORD>>> nodeComps, Collection<Boundary<COORD>> boundaries, List<Comparator<Boundary<COORD>>> boundComps) {
+    protected AbstractWeakFormProcessor(ShapeFunction shapeFun, Collection<Node> nodes, List<Comparator<Node>> nodeComps, Collection<Boundary> boundaries, List<Comparator<Boundary>> boundComps) {
         setShapeFun(shapeFun);
         initNodesSearch(nodes, nodeComps);
         initBoundariesSearch(boundaries, boundComps);
     }
 
     void assemblyEquation(int arrayListSize) {
-        Iterable<QuadraturePoint<COORD>> volIter = getVolumeQuadratureIterable();
-        ArrayList<Node<COORD>> searchedNodes = new ArrayList<>(arrayListSize);
-        ArrayList<Boundary<COORD>> seachedBoundaries = new ArrayList<>(arrayListSize);
-        Node<COORD> fromNode = new Node<>();
-        Node<COORD> toNode = new Node<>();
-        Boundary.CenterPointOnlyBoundary<COORD> fromBoundary = new Boundary.CenterPointOnlyBoundary<>();
-        Boundary.CenterPointOnlyBoundary<COORD> toBoundary = new Boundary.CenterPointOnlyBoundary<>();
-        FromToCalculator<COORD> fromToCalculator = getFromToCalulator();
-        COORD from = fromToCalculator.coordinateFactory();
-        COORD to = fromToCalculator.coordinateFactory();
+        Iterable<QuadraturePoint> volIter = getVolumeQuadratureIterable();
+        ArrayList<Node> searchedNodes = new ArrayList<>(arrayListSize);
+        ArrayList<Boundary> seachedBoundaries = new ArrayList<>(arrayListSize);
+        Node fromNode = new Node();
+        Node toNode = new Node();
+        Boundary.CenterPointOnlyBoundary fromBoundary = new Boundary.CenterPointOnlyBoundary();
+        Boundary.CenterPointOnlyBoundary toBoundary = new Boundary.CenterPointOnlyBoundary();
+        FromToCalculator fromToCalculator = getFromToCalulator();
+        Coordinate from = new Coordinate();
+        Coordinate to = new Coordinate();
         fromNode.coordinate = from;
         toNode.coordinate = to;
         fromBoundary.centerPoint = from;
         toBoundary.centerPoint = to;
-        WeakFormAssemblier<COORD, VCOORD> assemblier = getAssemblier();
+        WeakFormAssemblier assemblier = getAssemblier();
 
-        BoundaryCondition<COORD, VCOORD> volumnBoundaryCondition = getVolumeBoundaryCondtion();
+        BoundaryCondition volumnBoundaryCondition = getVolumeBoundaryCondtion();
         if (null == volumnBoundaryCondition) {
             PartialDiffType[] types = new PartialDiffType[]{PartialDiffType.X(), PartialDiffType.Y()};
             shapeFun.setPDTypes(types);
             DenseVector[] vectors = new DenseVector[types.length];
             
-            for (QuadraturePoint<COORD> qp : volIter) {
-                COORD qPoint = qp.point;
+            for (QuadraturePoint qp : volIter) {
+                Coordinate qPoint = qp.point;
                 fromToCalculator.calculate(qPoint, from, to);
                 searchedNodes.clear();
                 seachedBoundaries.clear();
@@ -120,8 +121,8 @@ public abstract class AbstractWeakFormProcessor<COORD, VCOORD> {
             PartialDiffType[] types = getVolumeShapeFunctionTypes();
             shapeFun.setPDTypes(types);
             DenseVector[] vectors = new DenseVector[types.length];
-            for (QuadraturePoint<COORD> qp : volIter) {
-                COORD qPoint = qp.point;
+            for (QuadraturePoint qp : volIter) {
+                Coordinate qPoint = qp.point;
                 fromToCalculator.calculate(qPoint, from, to);
                 searchedNodes.clear();
                 seachedBoundaries.clear();
@@ -133,14 +134,14 @@ public abstract class AbstractWeakFormProcessor<COORD, VCOORD> {
             }
         }
 
-        Iterable<BCQuadraturePoint<COORD, VCOORD>> dirichletIter = getDirichletBCQuadratureIterable();
+        Iterable<BCQuadraturePoint> dirichletIter = getDirichletBCQuadratureIterable();
         if (null != dirichletIter) {
             
             PartialDiffType[] types = new PartialDiffType[]{PartialDiffType.ORI()};
             shapeFun.setPDTypes(types);
             DenseVector[] vectors = new DenseVector[types.length];
-            for (BCQuadraturePoint<COORD, VCOORD> qp : dirichletIter) {
-                COORD qPoint = qp.point;
+            for (BCQuadraturePoint qp : dirichletIter) {
+                Coordinate qPoint = qp.point;
                 fromToCalculator.calculate(qPoint, from, to);
                 searchedNodes.clear();
                 seachedBoundaries.clear();
@@ -152,14 +153,14 @@ public abstract class AbstractWeakFormProcessor<COORD, VCOORD> {
             }
         }
 
-        Iterable<BCQuadraturePoint<COORD, VCOORD>> neumannIter = getNeumannBCQuadratureIterable();
+        Iterable<BCQuadraturePoint> neumannIter = getNeumannBCQuadratureIterable();
         if (null != neumannIter) {
 
             PartialDiffType[] types = getNeumannShapeFunctionTypes();
             shapeFun.setPDTypes(types);
             Vector[] vectors = new Vector[types.length];
-            for (BCQuadraturePoint<COORD, VCOORD> qp : neumannIter) {
-                COORD qPoint = qp.point;
+            for (BCQuadraturePoint qp : neumannIter) {
+                Coordinate qPoint = qp.point;
                 fromToCalculator.calculate(qPoint, from, to);
                 searchedNodes.clear();
                 seachedBoundaries.clear();

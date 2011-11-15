@@ -4,19 +4,21 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import net.epsilony.geom.Coordinate;
+
 /**
  *
  * @author epsilon
  */
-public interface Boundary<COORD> {
-    COORD getBoudaryElement(int index);
+public interface Boundary{
+    Coordinate getBoudaryElement(int index);
     int getBoudaryElementsSize();
-    COORD getCenterPoint(int index,COORD result);
-    public static class CenterPointOnlyBoundary<COORD> implements Boundary<COORD>{
-        COORD centerPoint;
+    Coordinate getCenterPoint(int index,Coordinate result);
+    public static class CenterPointOnlyBoundary implements Boundary{
+        Coordinate centerPoint;
 
         @Override
-        public COORD getBoudaryElement(int index) {
+        public Coordinate getBoudaryElement(int index) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
@@ -26,7 +28,7 @@ public interface Boundary<COORD> {
         }
 
         @Override
-        public COORD getCenterPoint(int index, COORD result) {
+        public Coordinate getCenterPoint(int index, Coordinate result) {
             return centerPoint;
         }
     }

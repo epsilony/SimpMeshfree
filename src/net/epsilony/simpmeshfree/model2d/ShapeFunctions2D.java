@@ -6,6 +6,7 @@ package net.epsilony.simpmeshfree.model2d;
 
 import java.util.Collection;
 import java.util.List;
+import net.epsilony.geom.Coordinate;
 import net.epsilony.simpmeshfree.model.Boundary;
 import net.epsilony.simpmeshfree.model.Node;
 import net.epsilony.simpmeshfree.model.ShapeFunction;
@@ -24,13 +25,13 @@ import no.uib.cipr.matrix.Vector;
  */
 public class ShapeFunctions2D {
 
-    public static class MLS implements ShapeFunction<Coordinate2D> {
+    public static class MLS implements ShapeFunction {
 
-        public MLS(WeightFunction<Coordinate2D> weightFunction, BivariateArrayFunction[] baseFunctions) {
+        public MLS(WeightFunction weightFunction, BivariateArrayFunction[] baseFunctions) {
             setWeightFunction(weightFunction);
             setBaseFunctions(baseFunctions);
         }
-        WeightFunction<Coordinate2D> weightFunction;       // [权函数 作x偏微分 作y偏微分]
+        WeightFunction weightFunction;       // [权函数 作x偏微分 作y偏微分]
         double[] weights = new double[3];                   //用于承载权函数s的返回信息
         /**
          * [0]一般是order阶完备多项式的基函数  =  [1 x y x^2 xy y^2 ...
@@ -117,7 +118,7 @@ public class ShapeFunctions2D {
             setValueDimension(baseFunctions[0].valueDimension());
         }
 
-        private void setWeightFunction(WeightFunction<Coordinate2D> weightFun) {
+        private void setWeightFunction(WeightFunction weightFun) {
             this.weightFunction = weightFun;
         }
 
@@ -129,7 +130,7 @@ public class ShapeFunctions2D {
         int oriI, xI, yI = -1;
 
         @Override
-        public Vector[] values(Coordinate2D center, List<Node<Coordinate2D>> nodes, Collection<Boundary<Coordinate2D>> boundaries, Vector[] results) {
+        public Vector[] values(Coordinate center, List<Node> nodes, Collection<Boundary> boundaries, Vector[] results) {
 
             int opt = 0;
 
@@ -210,8 +211,8 @@ public class ShapeFunctions2D {
                     mAx.zero();
                     mAy.zero();
                     int colBI = 0;
-                    for (Node<Coordinate2D> nd : nodes) {
-                        Coordinate2D coord = nd.coordinate;
+                    for (Node nd : nodes) {
+                        Coordinate coord = nd.coordinate;
                         double x = coord.x;
                         double y = coord.y;
                         weightFunction.values(nd, center, ws);

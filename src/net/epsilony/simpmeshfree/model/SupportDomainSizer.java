@@ -8,6 +8,20 @@ package net.epsilony.simpmeshfree.model;
  *
  * @author epsilon
  */
-interface SupportDomainSizer<COORD> {
-    double getRadium(Node<COORD> node);
+public class SupportDomainSizer {
+    public double[] radiumSquares;
+    public double[] radiums;
+    double getRadiumSquare(Node node){
+        return radiumSquares[node.id];
+    }
+    
+    double getRadium(Node node){
+        return radiums[node.id];
+    }
+    double[] getRadiumSquares(){
+        return radiumSquares;
+    }
+    double[] getRadiums(){
+        return radiums;
+    }
 }

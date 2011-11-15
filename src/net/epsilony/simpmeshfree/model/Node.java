@@ -4,11 +4,21 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import net.epsilony.geom.Coordinate;
+
 /**
  *
  * @author epsilon
  */
-public class Node<COORD> {
+public class Node{
     public int id;
-    public COORD coordinate;
+    public Coordinate coordinate;
+
+    public Node(double x, double y) {
+        coordinate=new Coordinate(x,y);
+    }
+    
+    public Node(){
+        
+    }
 }

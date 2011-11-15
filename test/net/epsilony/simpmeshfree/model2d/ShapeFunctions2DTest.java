@@ -4,6 +4,7 @@
  */
 package net.epsilony.simpmeshfree.model2d;
 
+import net.epsilony.geom.Coordinate;
 import no.uib.cipr.matrix.Vector;
 import java.util.ArrayList;
 import java.util.Random;
@@ -29,14 +30,14 @@ public class ShapeFunctions2DTest {
      * w=(1-r^2)^2
      * wx=4*(r^2-1)(x-xn)/260^2
      */
-    WeightFunction<Coordinate2D> weightFunction = new WeightFunction<Coordinate2D>() {
+    WeightFunction weightFunction = new WeightFunction() {
 
         double supportRad = 360;
         double supportRadSquare = 360 * 360;
 
         @Override
-        public double[] values(Node<Coordinate2D> node, Coordinate2D point, double[] results) {
-            Coordinate2D coord = node.coordinate;
+        public double[] values(Node node, Coordinate point, double[] results) {
+            Coordinate coord = node.coordinate;
             double xn = coord.x;
             double yn = coord.y;
             double x = point.x;
@@ -91,13 +92,13 @@ public class ShapeFunctions2DTest {
             nodesTestValue[i] = linearTestFun(nodesXYs[i * 2], nodesXYs[i * 2 + 1]);
         }
 
-        ArrayList<Node<Coordinate2D>> nodes = new ArrayList<>(9);
+        ArrayList<Node> nodes = new ArrayList<>(9);
         for (int i = 0; i < nodesXYs.length; i += 2) {
-            Node<Coordinate2D> t = new Node2D(nodesXYs[i], nodesXYs[i + 1]);
+            Node t = new Node(nodesXYs[i], nodesXYs[i + 1]);
             nodes.add(t);
         }
         Vector[] results = new Vector[3];
-        mls.values(new Coordinate2D(50, 55), nodes, null, results);
+        mls.values(new Coordinate(50, 55), nodes, null, results);
         DenseVector nodesTestValueVector = new DenseVector(nodesTestValue, false);
         double act = results[0].dot(nodesTestValueVector);
         double exp = linearTestFun(50, 55);
@@ -113,7 +114,7 @@ public class ShapeFunctions2DTest {
             Random rand = new Random();
             double x = rand.nextDouble() * 200;
             double y = rand.nextDouble() * 200;
-            mls.values(new Coordinate2D(x, y), nodes, null, results);
+            mls.values(new Coordinate(x, y), nodes, null, results);
             exp = linearTestFun(x, y);
             act = results[0].dot(nodesTestValueVector);
             assertEquals(exp, act, 0.00001);
@@ -147,13 +148,13 @@ public class ShapeFunctions2DTest {
             nodesTestValue[i] = cubicTestFun(nodesXYs[i * 2], nodesXYs[i * 2 + 1]);
         }
 
-        ArrayList<Node<Coordinate2D>> nodes = new ArrayList<>(nodesTestValue.length);
+        ArrayList<Node> nodes = new ArrayList<>(nodesTestValue.length);
         for (int i = 0; i < nodesXYs.length; i += 2) {
-            Node<Coordinate2D> t = new Node2D(nodesXYs[i], nodesXYs[i + 1]);
+            Node t = new Node(nodesXYs[i], nodesXYs[i + 1]);
             nodes.add(t);
         }
         Vector[] results = new Vector[3];
-        mls.values(new Coordinate2D(50, 55), nodes, null, results);
+        mls.values(new Coordinate(50, 55), nodes, null, results);
         DenseVector nodesTestValueVector = new DenseVector(nodesTestValue, false);
         double exp, act;
 
@@ -161,7 +162,7 @@ public class ShapeFunctions2DTest {
             Random rand = new Random();
             double x = rand.nextDouble() * 300;
             double y = rand.nextDouble() * 300;
-            mls.values(new Coordinate2D(x, y), nodes, null, results);
+            mls.values(new Coordinate(x, y), nodes, null, results);
             exp = cubicTestFun(x, y);
             act = results[0].dot(nodesTestValueVector);
             assertEquals(exp, act, 0.00001);
@@ -190,9 +191,9 @@ public class ShapeFunctions2DTest {
             nodesTestValue[i] = sinTestFun(nodesXYs[i * 2], nodesXYs[i * 2 + 1]);
         }
 
-        ArrayList<Node<Coordinate2D>> nodes = new ArrayList<>(nodesTestValue.length);
+        ArrayList<Node> nodes = new ArrayList<>(nodesTestValue.length);
         for (int i = 0; i < nodesXYs.length; i += 2) {
-            Node<Coordinate2D> t = new Node2D(nodesXYs[i], nodesXYs[i + 1]);
+            Node t = new Node(nodesXYs[i], nodesXYs[i + 1]);
             nodes.add(t);
         }
         Vector[] results = new Vector[3];
@@ -202,7 +203,7 @@ public class ShapeFunctions2DTest {
             for (int j = 0; j < testNum; j++) {
                 double x = 300.0 / testNum * i;
                 double y = 300.0 / testNum * j;
-                mls.values(new Coordinate2D(x, y), nodes, null, results);
+                mls.values(new Coordinate(x, y), nodes, null, results);
                 exp = sinTestFun(x, y);
                 act = results[0].dot(nodesTestValueVector);
                 System.out.println("ori");

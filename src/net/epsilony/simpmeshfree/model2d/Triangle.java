@@ -4,6 +4,8 @@
  */
 package net.epsilony.simpmeshfree.model2d;
 
+import net.epsilony.simpmeshfree.model.Node;
+
 /**
  *
  * @author epsilon
@@ -11,16 +13,16 @@ package net.epsilony.simpmeshfree.model2d;
 public class Triangle {
 
     //double cx, cy, cr, crsq;//Cirum circle's center position cx,cy the radiu cr and crsq=cr*cr;
-    Node2D [] nodes=new Node2D[3];
+    Node [] nodes=new Node[3];
 
-    public Triangle(Node2D[] nodes) {
+    public Triangle(Node[] nodes) {
         this.nodes[0]=nodes[0];
         this.nodes[1]=nodes[1];
         this.nodes[2]=nodes[2];
         //calculateCirumRadiuAndCenter();
     }
 
-    public Triangle(Node2D n1, Node2D n2, Node2D n3) {
+    public Triangle(Node n1, Node n2, Node n3) {
     
         nodes[0]=n1;
         nodes[1]=n2;

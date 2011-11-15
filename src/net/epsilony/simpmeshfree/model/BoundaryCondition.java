@@ -4,12 +4,14 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import net.epsilony.geom.Coordinate;
+
 /**
  *
  * @author epsilon
  */
-public interface BoundaryCondition <COORD,VCOORD>{
+public interface BoundaryCondition {
     enum Type{Neumann,Dirichlet,Volume};
-    VCOORD getValue(COORD pos);
+    double[] getValue(Coordinate pos);
     Type getType();
 }

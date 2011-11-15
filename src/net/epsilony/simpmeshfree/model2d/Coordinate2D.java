@@ -5,6 +5,7 @@
 package net.epsilony.simpmeshfree.model2d;
 
 import java.util.Comparator;
+import net.epsilony.geom.Coordinate;
 
 /**
  *
@@ -12,16 +13,15 @@ import java.util.Comparator;
  */
 public class Coordinate2D{
 
-    public double x,y;
-    public static Comparator<Coordinate2D> compX;
-    public static Comparator<Coordinate2D> compY;
+    public static Comparator<Coordinate> compX;
+    public static Comparator<Coordinate> compY;
 
 
     static {
-        compX = new Comparator<Coordinate2D>() {
+        compX = new Comparator<Coordinate>() {
 
             @Override
-            public int compare(Coordinate2D o1, Coordinate2D o2) {
+            public int compare(Coordinate o1, Coordinate o2) {
                 double t = o1.x - o2.x;
                 if (t > 0) {
                     return 1;
@@ -35,10 +35,10 @@ public class Coordinate2D{
             }
         };
 
-        compY = new Comparator<Coordinate2D>() {
+        compY = new Comparator<Coordinate>() {
 
             @Override
-            public int compare(Coordinate2D o1, Coordinate2D o2) {
+            public int compare(Coordinate o1, Coordinate o2) {
                 double t = o1.y - o2.y;
                 if (t > 0) {
                     return 1;
@@ -53,18 +53,7 @@ public class Coordinate2D{
         };
     }
 
-    public Coordinate2D(double x, double y) {
-        this.x = x;
-        this.y = y;
-    }
-
-    public Coordinate2D(Coordinate2D p) {
-        this.x = p.x;
-        this.y = p.y;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("%s:%d-(%.2f, %.2f)", Coordinate2D.class.getSimpleName(), x, y);
+    public static String toString(Coordinate coord) {
+        return String.format("%d-(%.2f, %.2f)", coord.x, coord.y);
     }
 }

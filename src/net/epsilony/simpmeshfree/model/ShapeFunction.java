@@ -6,15 +6,16 @@ package net.epsilony.simpmeshfree.model;
 
 import java.util.Collection;
 import java.util.List;
+import net.epsilony.geom.Coordinate;
 import no.uib.cipr.matrix.Vector;
 
 /**
  *
  * @author epsilon
  */
-public interface ShapeFunction<COORD> {
+public interface ShapeFunction {
 
-    Vector[] values(COORD center, List<Node<COORD>> nodes, Collection<Boundary<COORD>> boundaries, Vector[] results);
+    Vector[] values(Coordinate center, List<Node> nodes, Collection<Boundary> boundaries, Vector[] results);
     
     void setPDTypes(PartialDiffType[] types);
 }

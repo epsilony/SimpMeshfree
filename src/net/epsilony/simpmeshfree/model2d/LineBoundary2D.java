@@ -4,16 +4,17 @@
  */
 package net.epsilony.simpmeshfree.model2d;
 
+import net.epsilony.geom.Coordinate;
 import net.epsilony.simpmeshfree.model.Boundary;
 
 /**
  *
  * @author epsilon
  */
-public class LineBoundary2D implements Boundary<Coordinate2D>{
-    Coordinate2D front,rear;
+public class LineBoundary2D implements Boundary{
+    Coordinate front,rear;
     @Override
-    public Coordinate2D getBoudaryElement(int index) {
+    public Coordinate getBoudaryElement(int index) {
         switch(index){
             case 0:
                 return rear;
@@ -30,7 +31,7 @@ public class LineBoundary2D implements Boundary<Coordinate2D>{
     }
 
     @Override
-    public Coordinate2D getCenterPoint(int index,Coordinate2D result) {
+    public Coordinate getCenterPoint(int index,Coordinate result) {
         result.x=(front.x+rear.x)/2;
         result.y=(front.y+rear.y)/2;
         return result;

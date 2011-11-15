@@ -4,11 +4,13 @@
  */
 package net.epsilony.simpmeshfree.utils;
 
+import net.epsilony.geom.Coordinate;
+
 /**
  *
  * @author epsilon
  */
-public class QuadraturePoint<COORD> {
+public class QuadraturePoint{
     public double weight;
-    public COORD point;
+    public Coordinate point;
 }

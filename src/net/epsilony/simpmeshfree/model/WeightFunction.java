@@ -4,13 +4,15 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import net.epsilony.geom.Coordinate;
+
 /**
  *
  * @author epsilon
  */
-public interface WeightFunction<COORD> {
+public interface WeightFunction {
 
     void setPDTypes(PartialDiffType[] types);
 
-    double[] values(Node<COORD> node, COORD point, double[] results);
+    double[] values(Node node, Coordinate point, double[] results);
 }

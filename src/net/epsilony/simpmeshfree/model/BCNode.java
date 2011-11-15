@@ -4,20 +4,21 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import net.epsilony.geom.Coordinate;
 import net.epsilony.simpmeshfree.model.BoundaryCondition.Type;
 
 /**
  *
  * @author epsilon
  */
-public class BCNode <COORD,VCOORD> extends Node<COORD>{
-    public BoundaryCondition<COORD,VCOORD> bc;
+public class BCNode extends Node{
+    public BoundaryCondition bc;
 
     public Type getType() {
         return bc.getType();
     }
 
-    public VCOORD getValue(COORD pos) {
+    public double[] getValue(Coordinate pos) {
         return bc.getValue(pos);
     }     
 }
