@@ -14,7 +14,7 @@ import net.epsilony.simpmeshfree.model.Boundary;
 public class LineBoundary2D implements Boundary{
     Coordinate front,rear;
     @Override
-    public Coordinate getBoudaryElement(int index) {
+    public Coordinate getBoudaryCoordinate(int index) {
         switch(index){
             case 0:
                 return rear;

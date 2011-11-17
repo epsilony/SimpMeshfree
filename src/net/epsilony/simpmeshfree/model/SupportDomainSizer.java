@@ -11,17 +11,22 @@ package net.epsilony.simpmeshfree.model;
 public class SupportDomainSizer {
     public double[] radiumSquares;
     public double[] radiums;
-    double getRadiumSquare(Node node){
+    public double getRadiumSquare(Node node){
         return radiumSquares[node.id];
     }
     
-    double getRadium(Node node){
+    public double getRadium(Node node){
         return radiums[node.id];
     }
-    double[] getRadiumSquares(){
+    public double[] getRadiumSquares(){
         return radiumSquares;
     }
-    double[] getRadiums(){
+    public double[] getRadiums(){
         return radiums;
+    }
+    
+    public SupportDomainSizer(int nodeNum){
+        radiumSquares=new double[nodeNum];
+        radiums=new double[nodeNum];
     }
 }

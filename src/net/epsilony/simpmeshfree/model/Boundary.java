@@ -11,14 +11,14 @@ import net.epsilony.geom.Coordinate;
  * @author epsilon
  */
 public interface Boundary{
-    Coordinate getBoudaryElement(int index);
+    Coordinate getBoudaryCoordinate(int index);
     int getBoudaryElementsSize();
     Coordinate getCenterPoint(int index,Coordinate result);
     public static class CenterPointOnlyBoundary implements Boundary{
         Coordinate centerPoint;
 
         @Override
-        public Coordinate getBoudaryElement(int index) {
+        public Coordinate getBoudaryCoordinate(int index) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 

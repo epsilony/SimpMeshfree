@@ -18,7 +18,23 @@ public class Node{
         coordinate=new Coordinate(x,y);
     }
     
+    public Node(double x,double y,double z){
+        coordinate=new Coordinate(x,y,z);
+    }
+    
+    public Node(Coordinate coord){
+        coordinate=coord;
+    }
+    
     public Node(){
         
     }
+
+    @Override
+    public String toString() {
+        Coordinate coord=coordinate;
+        return String.format("n(%f,%f,%f)", coord.x,coord.y,coord.z);
+    }
+    
+    
 }
