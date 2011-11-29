@@ -4,15 +4,13 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import java.util.Collection;
 import net.epsilony.geom.Coordinate;
 
 /**
  *
  * @author epsilonyuan@gmail.com
  */
-public interface BoundaryCondition {
-    Boundary getBoundary();
-    boolean[] valueByParameter(Coordinate parameter,double[] results);
-    boolean[] valueByCoordinate(Coordinate coord,double[] results);
-    
+public interface VolumeCondition {
+    double[] value(Coordinate pos);
 }

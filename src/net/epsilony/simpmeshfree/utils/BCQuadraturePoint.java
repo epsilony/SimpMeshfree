@@ -3,22 +3,14 @@
  * and open the template in the editor.
  */
 package net.epsilony.simpmeshfree.utils;
-import net.epsilony.geom.Coordinate;
+
+import net.epsilony.simpmeshfree.model.Boundary;
 import net.epsilony.simpmeshfree.model.BoundaryCondition;
-import net.epsilony.simpmeshfree.model.BoundaryCondition.Type;
+
 /**
  *
- * @author epsilon
+ * @author epsilonyuan@gmail.com
  */
 public class BCQuadraturePoint  extends QuadraturePoint{
-    public BoundaryCondition bc;
-
-    public double[] getValue(Coordinate pos) {
-        return bc.getValue(pos);
-    }
-
-    public Type getType() {
-        return bc.getType();
-    }
-    
+    public BoundaryCondition boundaryCondition;
 }

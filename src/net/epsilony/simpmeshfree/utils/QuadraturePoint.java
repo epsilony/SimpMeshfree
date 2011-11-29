@@ -8,9 +8,21 @@ import net.epsilony.geom.Coordinate;
 
 /**
  *
- * @author epsilon
+ * @author epsilonyuan@gmail.com
  */
 public class QuadraturePoint{
+    public double weight(){
+        return weight;
+    }
+    public Coordinate coordinate(){
+        return coordinate;
+    }
+    
     public double weight;
-    public Coordinate point;
+    public Coordinate coordinate;
+    public Coordinate parameter;
+    public QuadraturePoint(){
+        coordinate=new Coordinate();
+        parameter=new Coordinate();
+    }
 }

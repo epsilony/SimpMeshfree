@@ -12,7 +12,7 @@ import no.uib.cipr.matrix.Matrix;
 
 /**
  * 由于小数组与Object的申请速度与调用一个函数相当，因此，这个Cache对于50以内的Matrix作用不大。
- * @author epsilon
+ * @author epsilonyuan@gmail.com
  */
 public class MatrixCache {
 

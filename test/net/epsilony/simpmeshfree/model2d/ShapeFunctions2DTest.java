@@ -4,13 +4,15 @@
  */
 package net.epsilony.simpmeshfree.model2d;
 
+import net.epsilony.simpmeshfree.model.NodeSupportDomainSizer;
+import net.epsilony.simpmeshfree.model.NodeSupportDomainSizers;
 import net.epsilony.geom.Coordinate;
 import no.uib.cipr.matrix.Vector;
 import java.util.ArrayList;
 import java.util.Random;
 import net.epsilony.simpmeshfree.model2d.ShapeFunctions2D.MLS;
 import net.epsilony.simpmeshfree.model.Node;
-import net.epsilony.simpmeshfree.model.PartialDiffType;
+import net.epsilony.simpmeshfree.utils.PartDiffOrd;
 import net.epsilony.simpmeshfree.model.WeightFunction;
 import net.epsilony.simpmeshfree.utils.BivariateArrayFunction;
 import net.epsilony.simpmeshfree.utils.BivariateCompletePolynomial;
@@ -22,7 +24,7 @@ import static org.junit.Assert.*;
 
 /**
  *
- * @author epsilon
+ * @author epsilonyuan@gmail.com
  */
 public class ShapeFunctions2DTest {
 
@@ -60,7 +62,7 @@ public class ShapeFunctions2DTest {
         }
 
         @Override
-        public void setPDTypes(PartialDiffType[] types) {
+        public void setOrders(PartDiffOrd[] types) {
             
         }
     };
@@ -80,9 +82,11 @@ public class ShapeFunctions2DTest {
     public void testLinear() {
         System.out.println("start linear function reproduction test");
         int testNum = 1000;
+        NodeSupportDomainSizer supportDomainSizer=new NodeSupportDomainSizers.ConstantSizer(1000);
+        
+        MLS mls = new ShapeFunctions2D.MLS(weightFunction,new BivariateArrayFunction[]{BivariateCompletePolynomial.factory(1), BivariateCompletePolynomial.partialXFactory(1), BivariateCompletePolynomial.partialYFactory(1)},new BoundaryBasedFilters2D.Visible(supportDomainSizer));
 
-        MLS mls = new ShapeFunctions2D.MLS(weightFunction,new BivariateArrayFunction[]{BivariateCompletePolynomial.factory(1), BivariateCompletePolynomial.partialXFactory(1), BivariateCompletePolynomial.partialYFactory(1)});
-        mls.setPDTypes(new PartialDiffType[]{PartialDiffType.ORI(), PartialDiffType.X(), PartialDiffType.Y()});
+        mls.setOrders(new PartDiffOrd[]{PartDiffOrd.ORI(), PartDiffOrd.X(), PartDiffOrd.Y()});
         mls.setCacheRange(8, 10);
 
         double[] nodesXYs = new double[]{2, 3, 98, 2, 199, 4, -5, 95, 99, 95, 202, 97, 4, 210, 101, 199, 196, 206};
@@ -97,16 +101,20 @@ public class ShapeFunctions2DTest {
             Node t = new Node(nodesXYs[i], nodesXYs[i + 1]);
             nodes.add(t);
         }
-        Vector[] results = new Vector[3];
-        mls.values(new Coordinate(50, 55), nodes, null, results);
+        DenseVector[] results = new DenseVector[3];
+        ArrayList<Node> filtedNodes=new ArrayList<>();
+        mls.values(new Coordinate(50, 55), nodes, null, results,filtedNodes);
         DenseVector nodesTestValueVector = new DenseVector(nodesTestValue, false);
-        double act = results[0].dot(nodesTestValueVector);
+        DenseVector vec=new DenseVector(results[0], false);
+        double act = vec.dot(nodesTestValueVector);
         double exp = linearTestFun(50, 55);
         assertEquals(exp, act, 0.00001);
-        act = results[1].dot(nodesTestValueVector);
+         vec=new DenseVector(results[1], false);
+        act = vec.dot(nodesTestValueVector);
         exp = 3.2;
         assertEquals(exp, act, 0.00001);
-        act = results[2].dot(nodesTestValueVector);
+         vec=new DenseVector(results[2], false);
+        act = vec.dot(nodesTestValueVector);
         exp = 6.5;
         assertEquals(exp, act, 0.00001);
 
@@ -114,15 +122,18 @@ public class ShapeFunctions2DTest {
             Random rand = new Random();
             double x = rand.nextDouble() * 200;
             double y = rand.nextDouble() * 200;
-            mls.values(new Coordinate(x, y), nodes, null, results);
+            mls.values(new Coordinate(x, y), nodes, null, results,filtedNodes);
             exp = linearTestFun(x, y);
-            act = results[0].dot(nodesTestValueVector);
+            vec=new DenseVector(results[0], false);
+            act = vec.dot(nodesTestValueVector);
             assertEquals(exp, act, 0.00001);
             exp = 3.2;
-            act = results[1].dot(nodesTestValueVector);
+             vec=new DenseVector(results[1], false);
+            act = vec.dot(nodesTestValueVector);
             assertEquals(exp, act, 0.00001);
             exp = 6.5;
-            act = results[2].dot(nodesTestValueVector);
+             vec=new DenseVector(results[2], false);
+            act = vec.dot(nodesTestValueVector);
             assertEquals(exp, act, 0.00001);
         }
     }
@@ -135,10 +146,10 @@ public class ShapeFunctions2DTest {
     public void testCubic() {
         System.out.println("start cubic function reproduction test");
         int testNum = 1000;
+        NodeSupportDomainSizer supportDomainSizer=new NodeSupportDomainSizers.ConstantSizer(1000);
+        MLS mls = new ShapeFunctions2D.MLS(weightFunction,new BivariateArrayFunction[]{BivariateCompletePolynomial.factory(3), BivariateCompletePolynomial.partialXFactory(3), BivariateCompletePolynomial.partialYFactory(3)},new BoundaryBasedFilters2D.Visible(supportDomainSizer));
 
-        MLS mls = new ShapeFunctions2D.MLS(weightFunction,new BivariateArrayFunction[]{BivariateCompletePolynomial.factory(3), BivariateCompletePolynomial.partialXFactory(3), BivariateCompletePolynomial.partialYFactory(3)});
-        mls.weightFunction = weightFunction;
-        mls.setPDTypes(new PartialDiffType[]{PartialDiffType.ORI(), PartialDiffType.X(), PartialDiffType.Y()});
+        mls.setOrders(new PartDiffOrd[]{PartDiffOrd.ORI(), PartDiffOrd.X(), PartDiffOrd.Y()});
         mls.setCacheRange(8, 14);
 
         double[] nodesXYs = new double[]{2, 3, 98, 2, 199, 4, -5, 95, 99, 95, 202, 97, 4, 210, 101, 199, 196, 206, 0, 300, 100, 300, 200, 300, 300, 300, 300, 200, 300, 100, 300, 0};
@@ -153,37 +164,45 @@ public class ShapeFunctions2DTest {
             Node t = new Node(nodesXYs[i], nodesXYs[i + 1]);
             nodes.add(t);
         }
-        Vector[] results = new Vector[3];
-        mls.values(new Coordinate(50, 55), nodes, null, results);
+        DenseVector[] results = new DenseVector[3];
+        ArrayList<Node> filteredNodes=new ArrayList<>();
+        mls.values(new Coordinate(50, 55), nodes, null, results,filteredNodes);
         DenseVector nodesTestValueVector = new DenseVector(nodesTestValue, false);
         double exp, act;
-
+        System.out.println("nodesTestValueVector = " + nodesTestValueVector);
         for (int i = 0; i < testNum; i++) {
             Random rand = new Random();
             double x = rand.nextDouble() * 300;
             double y = rand.nextDouble() * 300;
-            mls.values(new Coordinate(x, y), nodes, null, results);
+            mls.values(new Coordinate(x, y), nodes, null, results,filteredNodes);
             exp = cubicTestFun(x, y);
-            act = results[0].dot(nodesTestValueVector);
+             DenseVector vec=new DenseVector(results[0], false);
+            act = vec.dot(nodesTestValueVector);
             assertEquals(exp, act, 0.00001);
             exp = cubicXTestFun(x, y);
-            act = results[1].dot(nodesTestValueVector);
+            vec=new DenseVector(results[1], false);
+            act = vec.dot(nodesTestValueVector);
             assertEquals(exp, act, 0.00001);
             exp = cubicYTestFun(x, y);
-            act = results[2].dot(nodesTestValueVector);
+            vec=new DenseVector(results[2], false);
+            act = vec.dot(nodesTestValueVector);
             assertEquals(exp, act, 0.00001);
         }
+
     }
 
     @Test
     public void testSinFun() {
         System.out.println("start sin function reproduction test");
         int testNum = 5;
-
-        MLS mls = new ShapeFunctions2D.MLS(weightFunction,new BivariateArrayFunction[]{BivariateCompletePolynomial.factory(3), BivariateCompletePolynomial.partialXFactory(3), BivariateCompletePolynomial.partialYFactory(3)});
-        mls.setPDTypes(new PartialDiffType[]{PartialDiffType.ORI(), PartialDiffType.X(), PartialDiffType.Y()});
+       NodeSupportDomainSizer supportDomainSizer=new NodeSupportDomainSizers.ConstantSizer(1000);
+        MLS mls = new ShapeFunctions2D.MLS(weightFunction,new BivariateArrayFunction[]{BivariateCompletePolynomial.factory(3), BivariateCompletePolynomial.partialXFactory(3), BivariateCompletePolynomial.partialYFactory(3)},new BoundaryBasedFilters2D.Visible(supportDomainSizer));
+        mls.setOrders(new PartDiffOrd[]{PartDiffOrd.ORI(), PartDiffOrd.X(), PartDiffOrd.Y()});
         mls.setCacheRange(8, 14);
 
+
+        mls.boundaryBasedFilter=new BoundaryBasedFilters2D.Visible(supportDomainSizer);
+ 
         double[] nodesXYs = new double[]{2, 3, 98, 2, 199, 4, -5, 95, 99, 95, 202, 97, 4, 210, 101, 199, 196, 206, 0, 300, 100, 300, 200, 300, 300, 300, 300, 200, 300, 100, 300, 0};
         double[] nodesTestValue = new double[nodesXYs.length / 2];
 
@@ -196,26 +215,30 @@ public class ShapeFunctions2DTest {
             Node t = new Node(nodesXYs[i], nodesXYs[i + 1]);
             nodes.add(t);
         }
-        Vector[] results = new Vector[3];
+        DenseVector[] results = new DenseVector[3];
         DenseVector nodesTestValueVector = new DenseVector(nodesTestValue, false);
         double exp, act;
+        ArrayList<Node> filtedNodes=new ArrayList<>();
         for (int i = 0; i < testNum; i++) {
             for (int j = 0; j < testNum; j++) {
                 double x = 300.0 / testNum * i;
                 double y = 300.0 / testNum * j;
-                mls.values(new Coordinate(x, y), nodes, null, results);
+                mls.values(new Coordinate(x, y), nodes, null, results,filtedNodes);
                 exp = sinTestFun(x, y);
-                act = results[0].dot(nodesTestValueVector);
+                DenseVector vec=new DenseVector(results[0],false);
+                act =  vec.dot(nodesTestValueVector);
                 System.out.println("ori");
                 System.out.println("exp = " + exp);
                 System.out.println("act = " + act);
                 exp = sinXTestFun(x, y);
-                act = results[1].dot(nodesTestValueVector);
+                vec=new DenseVector(results[1],false);
+                act =  vec.dot(nodesTestValueVector);
                 System.out.println("partial x");
                 System.out.println("exp = " + exp);
                 System.out.println("act = " + act);
                 exp = sinYTestFun(x, y);
-                act = results[2].dot(nodesTestValueVector);
+                vec=new DenseVector(results[2],false);
+                act =  vec.dot(nodesTestValueVector);
                 System.out.println("partial y");
                 System.out.println("exp = " + exp);
                 System.out.println("act = " + act);

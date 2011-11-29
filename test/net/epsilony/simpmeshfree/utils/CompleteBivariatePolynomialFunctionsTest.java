@@ -13,7 +13,7 @@ import static net.epsilony.simpmeshfree.utils.BivariateCompletePolynomial.*;
 
 /**
  *
- * @author epsilon
+ * @author epsilonyuan@gmail.com
  */
 public class CompleteBivariatePolynomialFunctionsTest {
     

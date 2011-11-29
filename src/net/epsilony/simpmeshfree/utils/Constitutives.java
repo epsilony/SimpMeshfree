@@ -9,7 +9,7 @@ import no.uib.cipr.matrix.UpperSymmDenseMatrix;
 
 /**
  *
- * @author epsilon
+ * @author epsilonyuan@gmail.com
  */
 public class Constitutives {
     public static UpperSymmDenseMatrix planeStressMatrix(double E,double nu){

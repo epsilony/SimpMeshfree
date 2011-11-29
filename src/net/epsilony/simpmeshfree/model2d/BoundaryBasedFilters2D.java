@@ -13,48 +13,30 @@ import net.epsilony.geom.GeometryMath;
 import net.epsilony.simpmeshfree.model.Boundary;
 import net.epsilony.simpmeshfree.model.BoundaryBasedFilter;
 import net.epsilony.simpmeshfree.model.Node;
-import net.epsilony.simpmeshfree.model.PartialDiffType;
-import net.epsilony.simpmeshfree.model.SupportDomainSizer;
+import net.epsilony.simpmeshfree.model.NodeSupportDomainSizer;
+import net.epsilony.simpmeshfree.utils.PartDiffOrd;
+import net.epsilony.simpmeshfree.model.NodeSupportDomainSizers;
 
 /**
  *
- * @author epsilon
+ * @author epsilonyuan@gmail.com
  */
 public class BoundaryBasedFilters2D {
 
-    public static class AngleComparator implements Comparator<Node> {
-
-        @Override
-        public int compare(Node o1, Node o2) {
-            Coordinate cood = o1.coordinate;
-
-            double tan1 = Math.atan2(cood.x, cood.y);
-            cood = o2.coordinate;
-            double tan2 = Math.atan2(cood.x, cood.y);
-            if (tan1 < tan2) {
-                return -1;
-            } else if (tan1 > tan2) {
-                return 1;
-            } else {
-                return 0;
-            }
-        }
-    }
-
     public static class Visible implements BoundaryBasedFilter {
 
-        SupportDomainSizer domainSizer;
+        NodeSupportDomainSizer domainSizer;
 //        Comparator<Node> angleComp = new AngleComparator();
         ArrayList<Boundary> boundarysList;
         public static int defaultBoundaryListCapacity = 50;
 
-        public Visible(SupportDomainSizer domainSizer) {
+        public Visible(NodeSupportDomainSizer domainSizer) {
             this.domainSizer = domainSizer;
             boundarysList = new ArrayList<>(defaultBoundaryListCapacity);
         }
 
         @Override
-        public void setPDTypes(PartialDiffType[] types) {
+        public void setPDTypes(PartDiffOrd[] types) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
@@ -62,42 +44,58 @@ public class BoundaryBasedFilters2D {
         public void filterNodes(Collection<Boundary> bnds, Coordinate center, List<Node> nodes, List<Node> results) {
             results.clear();
 
+            if (bnds == null||bnds.size()==0) {
+                for (Node nd : nodes) {
+                    Coordinate coord = nd.coordinate;
+                    double x = coord.x;
+                    double y = coord.y;
+                    double dx = (x - center.x);
+                    double dy = (y - center.y);
+                    double disSq = dx * dx + dy * dy;
+                    if (disSq >= domainSizer.getRadiumSquare(nd)) {
+                        continue;
+                    }
+                    results.add(nd);
+                }
+                return;
+            }
+
             ArrayList<Boundary> bounds = boundarysList;
             bounds.clear();
 
 
             double cx = center.x;
             double cy = center.y;
-            boolean centerOnBoundary=false;
-            double cFx = 0,cFy=0,cRx=0,cRy=0;
+            boolean centerOnBoundary = false;
+            double cFx = 0, cFy = 0, cRx = 0, cRy = 0;
             for (Boundary bn : bnds) {
-                Coordinate rear = bn.getBoudaryCoordinate(0);
-                Coordinate front = bn.getBoudaryCoordinate(1);
-                if(front==center){
-                    centerOnBoundary=true;
-                    cRx=rear.x;
-                    cRy=rear.y;
+                Coordinate rear = bn.getBoudaryPoint(0);
+                Coordinate front = bn.getBoudaryPoint(bn.getBoudaryPointsSize()-1);
+                if (front == center) {
+                    centerOnBoundary = true;
+                    cRx = rear.x;
+                    cRy = rear.y;
                     continue;
                 }
-                if(rear==center){
-                    cFx=front.x;
-                    cFy=front.y;
+                if (rear == center) {
+                    cFx = front.x;
+                    cFy = front.y;
                     continue;
                 }
                 double rx = rear.x;
                 double ry = rear.y;
                 double fx = front.x;
                 double fy = front.y;
-               
+
                 double t = GeometryMath.crossProduct(rx, ry, fx, fy, cx, cy);
                 if (t < 0) {
                     continue;
                 }
-                
+
                 bounds.add(bn);
             }
 
-            double[] radSqs = domainSizer.radiumSquares;
+
 
             for (Node nd : nodes) {
                 Coordinate coord = nd.coordinate;
@@ -106,33 +104,33 @@ public class BoundaryBasedFilters2D {
                 double dx = (x - cx);
                 double dy = (y - cy);
                 double disSq = dx * dx + dy * dy;
-                if (disSq >= radSqs[nd.id]) {
+                if (disSq >= domainSizer.getRadiumSquare(nd)) {
                     continue;
                 }
-                
-                if(coord==center){
+
+                if (coord == center) {
                     results.add(nd);
                     continue;
                 }
-                if(centerOnBoundary){
-                    double t1=GeometryMath.crossProduct(cx, cy, cFx, cFy, x, y);
-                    if(t1<0){
+                if (centerOnBoundary) {
+                    double t1 = GeometryMath.crossProduct(cx, cy, cFx, cFy, x, y);
+                    if (t1 < 0) {
                         continue;
                     }
-                    double t2=GeometryMath.crossProduct(cRx, cRy, cx, cy, x, y);
-                    if(t2<0){
+                    double t2 = GeometryMath.crossProduct(cRx, cRy, cx, cy, x, y);
+                    if (t2 < 0) {
                         continue;
                     }
                 }
-                
+
                 boolean add = true;
-                
-                
+
+
 
                 for (Boundary bn : bounds) {
-                    Coordinate rear = bn.getBoudaryCoordinate(0);
-                    Coordinate front = bn.getBoudaryCoordinate(1);
-                    if(coord==rear||coord==front){
+                    Coordinate rear = bn.getBoudaryPoint(0);
+                    Coordinate front = bn.getBoudaryPoint(1);
+                    if (coord == rear || coord == front) {
                         continue;
                     }
                     double rx = rear.x;
@@ -146,7 +144,7 @@ public class BoundaryBasedFilters2D {
                     double t12 = t1 * t2;
                     double t34 = t3 * t4;
 
-                    if (t12 > 0 || t34 > 0||t12>=0&&t34==0) {
+                    if (t12 > 0 || t34 > 0 || t12 >= 0 && t34 == 0) {
                         continue;
                     }
                     add = false;

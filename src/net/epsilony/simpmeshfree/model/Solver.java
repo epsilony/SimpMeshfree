@@ -9,7 +9,7 @@ import no.uib.cipr.matrix.Vector;
 
 /**
  *
- * @author epsilon
+ * @author epsilonyuan@gmail.com
  */
 public interface Solver {
     Vector Solve(Matrix mat,Vector vec,Vector result);

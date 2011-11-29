@@ -2,19 +2,19 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.epsilony.simpmeshfree.model;
+package net.epsilony.simpmeshfree.utils;
 
 import java.util.LinkedList;
 
 /**
  *
- * @author epsilon
+ * @author epsilonyuan@gmail.com
  */
-public abstract class PartialDiffType {
+public abstract class PartDiffOrd {
 
-    public static int register(PartialDiffType type) {
+    public static int register(PartDiffOrd type) {
         int i = 0;
-        for (PartialDiffType t : registered) {
+        for (PartDiffOrd t : registered) {
             if (isDeepEqual(t, type)) {
                 type.id = i;
                 return i;
@@ -26,7 +26,7 @@ public abstract class PartialDiffType {
         return i;
     }
 
-    public static boolean isDeepEqual(PartialDiffType t1, PartialDiffType t2) {
+    public static boolean isDeepEqual(PartDiffOrd t1, PartDiffOrd t2) {
         if (t1.getSumPartialOrder() != t2.getSumPartialOrder()) {
             return false;
         }
@@ -44,8 +44,8 @@ public abstract class PartialDiffType {
         return true;
     }
 
-    public static PartialDiffType ORI() {
-        PartialDiffType result = new PartialDiffType() {
+    public static PartDiffOrd ORI() {
+        PartDiffOrd result = new PartDiffOrd() {
 
             @Override
             public int getSumPartialOrder() {
@@ -59,20 +59,20 @@ public abstract class PartialDiffType {
 
             @Override
             public int getPartialDimension(int index) {
-                return -1;
+                throw new IllegalArgumentException();
             }
 
             @Override
             public int getPartialOrder(int index) {
-                return -1;
+                throw new IllegalArgumentException();
             }
         };
         register(result);
         return result;
     }
 
-    public static PartialDiffType X() {
-        return new PartialDiffType() {
+    public static PartDiffOrd X() {
+        return new PartDiffOrd() {
 
             @Override
             public int getSumPartialOrder() {
@@ -89,7 +89,7 @@ public abstract class PartialDiffType {
                 if (index == 0) {
                     return 0;
                 } else {
-                    return -1;
+                    throw new IllegalArgumentException();
                 }
             }
 
@@ -98,14 +98,14 @@ public abstract class PartialDiffType {
                 if (index == 0) {
                     return 1;
                 } else {
-                    return -1;
+                    throw new IllegalArgumentException();
                 }
             }
         };
     }
 
-    public static PartialDiffType Y() {
-        PartialDiffType result = new PartialDiffType() {
+    public static PartDiffOrd Y() {
+        PartDiffOrd result = new PartDiffOrd() {
 
             @Override
             public int getSumPartialOrder() {
@@ -122,7 +122,7 @@ public abstract class PartialDiffType {
                 if (index == 0) {
                     return 1;
                 } else {
-                    return -1;
+                    throw new IllegalArgumentException();
                 }
             }
 
@@ -131,7 +131,7 @@ public abstract class PartialDiffType {
                 if (index == 0) {
                     return 1;
                 } else {
-                    return -1;
+                    throw new IllegalArgumentException();
                 }
             }
         };
@@ -139,8 +139,8 @@ public abstract class PartialDiffType {
         return result;
     }
 
-    public static PartialDiffType X2() {
-        PartialDiffType result = new PartialDiffType() {
+    public static PartDiffOrd X2() {
+        PartDiffOrd result = new PartDiffOrd() {
 
             @Override
             public int getSumPartialOrder() {
@@ -157,7 +157,7 @@ public abstract class PartialDiffType {
                 if (index == 0) {
                     return 0;
                 } else {
-                    return -1;
+                    throw new IllegalArgumentException();
                 }
             }
 
@@ -166,7 +166,7 @@ public abstract class PartialDiffType {
                 if (index == 0) {
                     return 2;
                 } else {
-                    return -1;
+                    throw new IllegalArgumentException();
                 }
             }
         };
@@ -174,8 +174,8 @@ public abstract class PartialDiffType {
         return result;
     }
 
-    public static PartialDiffType Y2() {
-        PartialDiffType result = new PartialDiffType() {
+    public static PartDiffOrd Y2() {
+        PartDiffOrd result = new PartDiffOrd() {
 
             @Override
             public int getSumPartialOrder() {
@@ -192,7 +192,7 @@ public abstract class PartialDiffType {
                 if (index == 0) {
                     return 1;
                 } else {
-                    return -1;
+                    throw new IllegalArgumentException();
                 }
             }
 
@@ -201,7 +201,7 @@ public abstract class PartialDiffType {
                 if (index == 0) {
                     return 2;
                 } else {
-                    return -1;
+                    throw new IllegalArgumentException();
                 }
             }
         };
@@ -209,8 +209,8 @@ public abstract class PartialDiffType {
         return result;
     }
 
-    public static PartialDiffType XY() {
-        PartialDiffType result = new PartialDiffType() {
+    public static PartDiffOrd XY() {
+        PartDiffOrd result = new PartDiffOrd() {
 
             @Override
             public int getSumPartialOrder() {
@@ -230,7 +230,7 @@ public abstract class PartialDiffType {
                     case 1:
                         return 1;
                     default:
-                        return -1;
+                        throw new IllegalArgumentException();
                 }
             }
 
@@ -249,7 +249,7 @@ public abstract class PartialDiffType {
         return result;
     }
     private int id = -1;
-    static LinkedList<PartialDiffType> registered = new LinkedList<>();
+    static LinkedList<PartDiffOrd> registered = new LinkedList<>();
 
     public int getId() {
         return id;
@@ -262,5 +262,4 @@ public abstract class PartialDiffType {
     public abstract int getPartialDimension(int index);
 
     public abstract int getPartialOrder(int index);
-    
 }

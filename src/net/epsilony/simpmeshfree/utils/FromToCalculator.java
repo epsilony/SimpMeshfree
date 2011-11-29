@@ -6,7 +6,7 @@ package net.epsilony.simpmeshfree.utils;
 
 /**
  *
- * @author epsilon
+ * @author epsilonyuan@gmail.com
  */
 public interface FromToCalculator<COORD> {
     void calculate(COORD point,COORD from,COORD to);

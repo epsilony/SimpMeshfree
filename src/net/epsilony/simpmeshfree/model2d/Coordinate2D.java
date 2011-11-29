@@ -9,7 +9,7 @@ import net.epsilony.geom.Coordinate;
 
 /**
  *
- * @author epsilon
+ * @author epsilonyuan@gmail.com
  */
 public class Coordinate2D{
 

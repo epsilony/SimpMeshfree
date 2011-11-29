@@ -8,28 +8,48 @@ import net.epsilony.geom.Coordinate;
 
 /**
  *
- * @author epsilon
+ * @author epsilonyuan@gmail.com
  */
-public interface Boundary{
-    Coordinate getBoudaryCoordinate(int index);
-    int getBoudaryElementsSize();
-    Coordinate getCenterPoint(int index,Coordinate result);
-    public static class CenterPointOnlyBoundary implements Boundary{
+public interface Boundary {
+
+    Coordinate getBoudaryPoint(int index);
+
+    int getBoudaryPointsSize();
+
+    Coordinate getCenterPoint(Coordinate result);
+    
+    Coordinate valueByParameter(Coordinate par,Coordinate result);
+
+    Coordinate[] valuePartialByParameter(Coordinate par, Coordinate results[]);
+
+    public static class CenterPointOnlyBoundary implements Boundary {
+
         Coordinate centerPoint;
 
         @Override
-        public Coordinate getBoudaryCoordinate(int index) {
+        public Coordinate getBoudaryPoint(int index) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
         @Override
-        public int getBoudaryElementsSize() {
+        public int getBoudaryPointsSize() {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
         @Override
-        public Coordinate getCenterPoint(int index, Coordinate result) {
+        public Coordinate getCenterPoint(Coordinate result) {
             return centerPoint;
         }
+
+        @Override
+        public Coordinate[] valuePartialByParameter(Coordinate par, Coordinate[] results) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public Coordinate valueByParameter(Coordinate par,Coordinate result) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
     }
+    
 }

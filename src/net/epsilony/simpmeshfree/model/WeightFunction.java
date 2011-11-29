@@ -4,15 +4,15 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import net.epsilony.simpmeshfree.utils.PartDiffOrd;
 import net.epsilony.geom.Coordinate;
+import net.epsilony.simpmeshfree.utils.PartDiffOrdSettable;
 
 /**
  *
- * @author epsilon
+ * @author epsilonyuan@gmail.com
  */
-public interface WeightFunction {
-
-    void setPDTypes(PartialDiffType[] types);
+public interface WeightFunction extends PartDiffOrdSettable{
 
     double[] values(Node node, Coordinate point, double[] results);
 }

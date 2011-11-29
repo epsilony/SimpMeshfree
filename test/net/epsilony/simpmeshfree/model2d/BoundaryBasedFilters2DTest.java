@@ -4,6 +4,7 @@
  */
 package net.epsilony.simpmeshfree.model2d;
 
+import net.epsilony.simpmeshfree.model.NodeSupportDomainSizer;
 import java.util.Collections;
 import java.util.Comparator;
 import net.epsilony.simpmeshfree.model.Node;
@@ -11,7 +12,7 @@ import java.util.List;
 import net.epsilony.geom.Coordinate;
 import java.util.LinkedList;
 import net.epsilony.simpmeshfree.model.Boundary;
-import net.epsilony.simpmeshfree.model.SupportDomainSizer;
+import net.epsilony.simpmeshfree.model.NodeSupportDomainSizers;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -19,7 +20,7 @@ import static org.junit.Assert.*;
 
 /**
  *
- * @author epsilon
+ * @author epsilonyuan@gmail.com
  */
 public class BoundaryBasedFilters2DTest {
     
@@ -37,26 +38,24 @@ public class BoundaryBasedFilters2DTest {
     @Test
     public void testVisibleFilter(){        // TODO review the generated test code and remove the default call to fail.
         System.out.println("testVisibleFilter");
-        SupportDomainSizer sizer=new SupportDomainSizer(1);
-        sizer.radiumSquares[0]=100;
-        sizer.radiums[0]=10;
+        NodeSupportDomainSizer sizer=new NodeSupportDomainSizers.ConstantSizer(10);
         BoundaryBasedFilters2D.Visible visible=new BoundaryBasedFilters2D.Visible(sizer);
         double[] bndXys=new double[]{3,0.5,0,0.5,-1,2,0,1,1,1,2,1.5,3,2,2,2,1,3,1,4,2,4};
         
         List<Boundary> bounds=getBoundaries(bndXys);
         Coordinate center=new Coordinate(1, 1);
         for(Boundary bn:bounds){
-            if (bn.getBoudaryCoordinate(0).equals2D(center)){
-                center=bn.getBoudaryCoordinate(0);
+            if (bn.getBoudaryPoint(0).equals2D(center)){
+                center=bn.getBoudaryPoint(0);
                 break;
             }
         }
         double[] nodesXys=new double []{0,-1,3,3,1,5,1,2};
         List<Node> nodes=getNodes(nodesXys);
         for(Boundary bn:bounds){
-            nodes.add(new Node(bn.getBoudaryCoordinate(1)));
+            nodes.add(new Node(bn.getBoudaryPoint(1)));
         }
-        nodes.add(new Node(bounds.get(0).getBoudaryCoordinate(0)));
+        nodes.add(new Node(bounds.get(0).getBoudaryPoint(0)));
         LinkedList<Node> results=new LinkedList<>();
         visible.filterNodes(bounds, center, nodes, results);
         double expXys[]=new double[]{-1,2,0,1,1,1,1,2,1,3,2,1.5,2,2,3,2,};
