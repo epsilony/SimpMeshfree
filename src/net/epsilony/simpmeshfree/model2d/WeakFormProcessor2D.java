@@ -119,8 +119,8 @@ public class WeakFormProcessor2D {
             Iterator<Boundary> boundIter = searchedBoundaries.iterator();
             while (boundIter.hasNext()) {
                 Boundary bound = boundIter.next();
-                Coordinate front = bound.getBoudaryPoint(bound.getBoudaryPointsSize() - 1);
-                Coordinate rear = bound.getBoudaryPoint(0);
+                Coordinate front = bound.getPoint(bound.pointsSize() - 1);
+                Coordinate rear = bound.getPoint(0);
                 if (front == coord || rear == coord) {
                     break;
                 }
@@ -183,14 +183,14 @@ public class WeakFormProcessor2D {
             boundarySearcher.search(qPoint, searchedBoundaries);
 
             Boundary bound = qp.boundaryCondition.getBoundary();
-            if (qPoint != bound.getBoudaryPoint(0) && qPoint != bound.getBoudaryPoint(bound.getBoudaryPointsSize() - 1)) {
+            if (qPoint != bound.getPoint(0) && qPoint != bound.getPoint(bound.pointsSize() - 1)) {
                 Iterator<Boundary> boundIter = searchedBoundaries.iterator();
                 while (boundIter.hasNext()) {
                     if (bound == boundIter.next()) {
-                        line1.rear = bound.getBoudaryPoint(0);
+                        line1.rear = bound.getPoint(0);
                         line1.front = qp.coordinate;
                         line2.rear = qp.coordinate;
-                        line2.front = bound.getBoudaryPoint(bound.getBoudaryPointsSize() - 1);
+                        line2.front = bound.getPoint(bound.pointsSize() - 1);
                         boundIter.remove();
                         searchedBoundaries.add(line1);
                         searchedBoundaries.add(line2);
@@ -230,14 +230,14 @@ public class WeakFormProcessor2D {
             nodeSearcher.search(qPoint, searchedNodes);
             boundarySearcher.search(qPoint, searchedBoundaries);
 
-            if (qPoint != bound.getBoudaryPoint(0) && qPoint != bound.getBoudaryPoint(bound.getBoudaryPointsSize() - 1)) {
+            if (qPoint != bound.getPoint(0) && qPoint != bound.getPoint(bound.pointsSize() - 1)) {
                 Iterator<Boundary> boundIter = searchedBoundaries.iterator();
                 while (boundIter.hasNext()) {
                     if (bound == boundIter.next()) {
-                        line1.rear = bound.getBoudaryPoint(0);
+                        line1.rear = bound.getPoint(0);
                         line1.front = qp.coordinate;
                         line2.rear = qp.coordinate;
-                        line2.front = bound.getBoudaryPoint(bound.getBoudaryPointsSize() - 1);
+                        line2.front = bound.getPoint(bound.pointsSize() - 1);
                         searchedBoundaries.add(line1);
                         searchedBoundaries.add(line2);
                         break;

@@ -38,7 +38,7 @@ public class ShapeFunctions2DTest {
         double supportRadSquare = 360 * 360;
 
         @Override
-        public double[] values(Node node, Coordinate point, double[] results) {
+        public double[] values(Node node, Coordinate point, double supportRad, double[] results) {
             Coordinate coord = node.coordinate;
             double xn = coord.x;
             double yn = coord.y;
@@ -84,7 +84,23 @@ public class ShapeFunctions2DTest {
         int testNum = 1000;
         NodeSupportDomainSizer supportDomainSizer=new NodeSupportDomainSizers.ConstantSizer(1000);
         
-        MLS mls = new ShapeFunctions2D.MLS(weightFunction,new BivariateArrayFunction[]{BivariateCompletePolynomial.factory(1), BivariateCompletePolynomial.partialXFactory(1), BivariateCompletePolynomial.partialYFactory(1)},new BoundaryBasedFilters2D.Visible(supportDomainSizer));
+        MLS mls = new ShapeFunctions2D.MLS(weightFunction,new BivariateArrayFunction[]{BivariateCompletePolynomial.factory(1), BivariateCompletePolynomial.partialXFactory(1), BivariateCompletePolynomial.partialYFactory(1)},new BoundaryBasedCriterions2D.Visible(supportDomainSizer), new NodeSupportDomainSizer() {
+
+            @Override
+            public double getRadium(Node node) {
+                return 360;
+            }
+
+            @Override
+            public double getRadiumSquare(Node node) {
+                return 360*360;
+            }
+
+            @Override
+            public double getMaxRadium() {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+        });
 
         mls.setOrders(new PartDiffOrd[]{PartDiffOrd.ORI(), PartDiffOrd.X(), PartDiffOrd.Y()});
         mls.setCacheRange(8, 10);
@@ -147,7 +163,7 @@ public class ShapeFunctions2DTest {
         System.out.println("start cubic function reproduction test");
         int testNum = 1000;
         NodeSupportDomainSizer supportDomainSizer=new NodeSupportDomainSizers.ConstantSizer(1000);
-        MLS mls = new ShapeFunctions2D.MLS(weightFunction,new BivariateArrayFunction[]{BivariateCompletePolynomial.factory(3), BivariateCompletePolynomial.partialXFactory(3), BivariateCompletePolynomial.partialYFactory(3)},new BoundaryBasedFilters2D.Visible(supportDomainSizer));
+        MLS mls = new ShapeFunctions2D.MLS(weightFunction,new BivariateArrayFunction[]{BivariateCompletePolynomial.factory(3), BivariateCompletePolynomial.partialXFactory(3), BivariateCompletePolynomial.partialYFactory(3)},new BoundaryBasedCriterions2D.Visible(supportDomainSizer), new NodeSupportDomainSizers.ConstantSizer(360));
 
         mls.setOrders(new PartDiffOrd[]{PartDiffOrd.ORI(), PartDiffOrd.X(), PartDiffOrd.Y()});
         mls.setCacheRange(8, 14);
@@ -196,12 +212,12 @@ public class ShapeFunctions2DTest {
         System.out.println("start sin function reproduction test");
         int testNum = 5;
        NodeSupportDomainSizer supportDomainSizer=new NodeSupportDomainSizers.ConstantSizer(1000);
-        MLS mls = new ShapeFunctions2D.MLS(weightFunction,new BivariateArrayFunction[]{BivariateCompletePolynomial.factory(3), BivariateCompletePolynomial.partialXFactory(3), BivariateCompletePolynomial.partialYFactory(3)},new BoundaryBasedFilters2D.Visible(supportDomainSizer));
+        MLS mls = new ShapeFunctions2D.MLS(weightFunction,new BivariateArrayFunction[]{BivariateCompletePolynomial.factory(3), BivariateCompletePolynomial.partialXFactory(3), BivariateCompletePolynomial.partialYFactory(3)},new BoundaryBasedCriterions2D.Visible(supportDomainSizer), new NodeSupportDomainSizers.ConstantSizer(360));
         mls.setOrders(new PartDiffOrd[]{PartDiffOrd.ORI(), PartDiffOrd.X(), PartDiffOrd.Y()});
         mls.setCacheRange(8, 14);
 
 
-        mls.boundaryBasedFilter=new BoundaryBasedFilters2D.Visible(supportDomainSizer);
+        mls.boundaryBasedCriterion=new BoundaryBasedCriterions2D.Visible(supportDomainSizer);
  
         double[] nodesXYs = new double[]{2, 3, 98, 2, 199, 4, -5, 95, 99, 95, 202, 97, 4, 210, 101, 199, 196, 206, 0, 300, 100, 300, 200, 300, 300, 300, 300, 200, 300, 100, 300, 0};
         double[] nodesTestValue = new double[nodesXYs.length / 2];

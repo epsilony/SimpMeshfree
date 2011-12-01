@@ -8,8 +8,9 @@ import java.util.Collection;
 import java.util.List;
 import net.epsilony.geom.Coordinate;
 import net.epsilony.simpmeshfree.model.Boundary;
-import net.epsilony.simpmeshfree.model.BoundaryBasedFilter;
+import net.epsilony.simpmeshfree.model.BoundaryBasedCritieron;
 import net.epsilony.simpmeshfree.model.Node;
+import net.epsilony.simpmeshfree.model.NodeSupportDomainSizer;
 import net.epsilony.simpmeshfree.model.ShapeFunction;
 import net.epsilony.simpmeshfree.utils.PartDiffOrd;
 import net.epsilony.simpmeshfree.model.WeightFunction;
@@ -24,14 +25,36 @@ import no.uib.cipr.matrix.UpperSPDDenseMatrix;
  * @author epsilonyuan@gmail.com
  */
 public class ShapeFunctions2D {
-
+    /**
+     * 移动最小二乘法，没有通过白盒测试。测试样例证明了其的单位分解性和再生性。
+     */
     public static class MLS implements ShapeFunction {
 
-        public MLS(WeightFunction weightFunction, BivariateArrayFunction[] baseFunctions, BoundaryBasedFilter boundaryBasedFilter) {
-            setWeightFunction(weightFunction);
+        public MLS(WeightFunction weightFunction, BivariateArrayFunction[] baseFunctions, BoundaryBasedCritieron boundaryBasedCriterion, NodeSupportDomainSizer supportDomainSizer) {
+            this.weightFunction=weightFunction;
             setBaseFunctions(baseFunctions);
-            this.boundaryBasedFilter = boundaryBasedFilter;
+            setCacheRange(baseFunctions[0].valueDimension(), baseFunctions[0].valueDimension()*3);
+            this.boundaryBasedCriterion = boundaryBasedCriterion;
+            this.supportDomainSizer = supportDomainSizer;
         }
+        
+        /**
+         * 
+         * @param weightFunction
+         * @param baseFunctions
+         * @param boundaryBasedFilter
+         * @param supportDomainSizer
+         * @param maxCacheDim default is (1~3)*dim of baseFunction
+         */
+        public MLS(WeightFunction weightFunction, BivariateArrayFunction[] baseFunctions, BoundaryBasedCritieron boundaryBasedFilter, NodeSupportDomainSizer supportDomainSizer,int maxCacheDim) {
+            this.weightFunction=weightFunction;
+            setBaseFunctions(baseFunctions);
+            maxCacheDim=(maxCacheDim>baseFunctions[0].valueDimension()*3?maxCacheDim:baseFunctions[0].valueDimension()*2);
+            setCacheRange(baseFunctions[0].valueDimension(), maxCacheDim);
+            this.boundaryBasedCriterion = boundaryBasedFilter;
+            this.supportDomainSizer = supportDomainSizer;
+        }
+        
         WeightFunction weightFunction;       // [权函数 作x偏微分 作y偏微分]
         double[] weights = new double[3];                   //用于承载权函数s的返回信息
         /**
@@ -47,18 +70,32 @@ public class ShapeFunctions2D {
         BivariateArrayFunction[] baseFunctions;
         int baseValueDim;                //基函数的基数，即其返回的数组的有效长度
         Cache cache = new Cache();
-        BoundaryBasedFilter boundaryBasedFilter;
+        BoundaryBasedCritieron boundaryBasedCriterion;
+        NodeSupportDomainSizer supportDomainSizer;
 
-        void setCacheRange(int minSize, int maxSize) {
+        public final void setCacheRange(int minSize, int maxSize) {
             cache.setCacheRange(minSize, maxSize);
         }
 
         @Override
         public DenseVector[] values(Coordinate center, List<Node> nodes, DenseVector[] results) {
+            /** 
+             * attention:
+             * pV,pM actually is just a wrapper of p
+             * pXV,pXM just wrapps pX
+             * pYV,pYM just wrapps pY
+             * p means base function values (commonly are complemet polynomial bases)
+             * pX means partial dirivative respect to x
+             * pY means partail dirivative respect to y
+             */
+            
             double[] p, pX, pY, ws;
             DenseVector pV, pXV, pYV, tV;
             DenseMatrix pM, pXM, pYM;
 
+            /**
+             * A and B matrix is defined in Page 16. of Zhang Xiong, Liu Yan, Meshless Methods
+             */
             UpperSPDDenseMatrix mA, mAx, mAy;
             DenseMatrix mB, mBx, mBy, resM, resXM, resYM;
             DenseVector resV, resXV, resYV;
@@ -67,6 +104,7 @@ public class ShapeFunctions2D {
             Cache cc = cache;
             DenseCholesky dcomA = cc.decomp;
             int funDim = baseValueDim;
+            NodeSupportDomainSizer domainSizer=supportDomainSizer;
 
             int nodesSize = nodes.size();
             switch (opt) {
@@ -93,7 +131,7 @@ public class ShapeFunctions2D {
                         Coordinate coord = nd.coordinate;
                         double x = coord.x;
                         double y = coord.y;
-                        weightFunction.values(nd, center, ws);
+                        weightFunction.values(nd, center, domainSizer.getRadium(nd), ws);
                         pFun.value(x, y, p);
                         double weight = ws[0];
                         for (int i = 0; i < funDim; i++) {
@@ -165,7 +203,7 @@ public class ShapeFunctions2D {
                         Coordinate coord = nd.coordinate;
                         double x = coord.x;
                         double y = coord.y;
-                        weightFunction.values(nd, center, ws);
+                        weightFunction.values(nd, center, domainSizer.getRadium(nd), ws);
                         pFun.value(x, y, p);
 
                         double weight = ws[0];
@@ -265,7 +303,7 @@ public class ShapeFunctions2D {
                         Coordinate coord = nd.coordinate;
                         double x = coord.x;
                         double y = coord.y;
-                        weightFunction.values(nd, center, ws);
+                        weightFunction.values(nd, center, domainSizer.getRadium(nd), ws);
                         pFun.value(x, y, p);
 
                         double weight = ws[0];
@@ -324,6 +362,7 @@ public class ShapeFunctions2D {
             return results;
         }
 
+        //the Cache for speed up only
         static class Cache {
 
             void setValueDimension(int dimension) {
@@ -391,14 +430,9 @@ public class ShapeFunctions2D {
             setValueDimension(baseFunctions[0].valueDimension());
         }
 
-        private void setWeightFunction(WeightFunction weightFun) {
-            this.weightFunction = weightFun;
-        }
-
         private void setValueDimension(int dimension) {
             this.baseValueDim = dimension;
             cache.setValueDimension(dimension);
-//            tMat=new DenseMatrix(tVec,false);
         }
         int oriI, xI, yI = -1;
         int opt = 0;
@@ -406,7 +440,7 @@ public class ShapeFunctions2D {
         @Override
         public DenseVector[] values(Coordinate center, List<Node> nodes, Collection<Boundary> boundaries, DenseVector[] results, List<Node> filteredNodes) {
 
-            boundaryBasedFilter.filterNodes(boundaries, center, nodes, filteredNodes);
+            boundaryBasedCriterion.filterNodes(boundaries, center, nodes, filteredNodes);
 
             return values(center, filteredNodes, results);
         }
@@ -419,12 +453,12 @@ public class ShapeFunctions2D {
             yI = -1;
             for (int i = 0; i < types.length; i++) {
                 PartDiffOrd type = types[i];
-                switch (type.getSumPartialOrder()) {
+                switch (type.sumOrder()) {
                     case 0:
                         oriI = i;
                         break;
                     case 1:
-                        switch (type.getPartialDimension(0)) {
+                        switch (type.respectDimension(0)) {
                             case 0:
                                 xI = i;
                                 break;

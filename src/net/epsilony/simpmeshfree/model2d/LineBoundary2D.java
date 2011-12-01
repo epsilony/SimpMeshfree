@@ -27,7 +27,7 @@ public class LineBoundary2D implements Boundary {
     public Coordinate rear, front;
 
     @Override
-    public Coordinate getBoudaryPoint(int index) {
+    public Coordinate getPoint(int index) {
         switch (index) {
             case 0:
                 return rear;
@@ -39,12 +39,12 @@ public class LineBoundary2D implements Boundary {
     }
 
     @Override
-    public int getBoudaryPointsSize() {
+    public int pointsSize() {
         return 2;
     }
 
     @Override
-    public Coordinate getCenterPoint(Coordinate result) {
+    public Coordinate centerPoint(Coordinate result) {
         result.x = (front.x + rear.x) / 2;
         result.y = (front.y + rear.y) / 2;
         return result;

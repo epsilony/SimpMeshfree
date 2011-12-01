@@ -6,27 +6,28 @@ package net.epsilony.simpmeshfree.model2d;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import net.epsilony.geom.Coordinate;
 import net.epsilony.geom.GeometryMath;
 import net.epsilony.simpmeshfree.model.Boundary;
-import net.epsilony.simpmeshfree.model.BoundaryBasedFilter;
+import net.epsilony.simpmeshfree.model.BoundaryBasedCritieron;
 import net.epsilony.simpmeshfree.model.Node;
 import net.epsilony.simpmeshfree.model.NodeSupportDomainSizer;
 import net.epsilony.simpmeshfree.utils.PartDiffOrd;
-import net.epsilony.simpmeshfree.model.NodeSupportDomainSizers;
 
 /**
  *
  * @author epsilonyuan@gmail.com
  */
-public class BoundaryBasedFilters2D {
+public class BoundaryBasedCriterions2D {
 
-    public static class Visible implements BoundaryBasedFilter {
+    /**
+     * 可视准则，详见：{@link http://epsilony.net/mywiki/SimpMeshfree/VisibleCriterion}
+     */
+    public static class Visible implements BoundaryBasedCritieron {
 
         NodeSupportDomainSizer domainSizer;
-//        Comparator<Node> angleComp = new AngleComparator();
+
         ArrayList<Boundary> boundarysList;
         public static int defaultBoundaryListCapacity = 50;
 
@@ -36,15 +37,10 @@ public class BoundaryBasedFilters2D {
         }
 
         @Override
-        public void setPDTypes(PartDiffOrd[] types) {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
         public void filterNodes(Collection<Boundary> bnds, Coordinate center, List<Node> nodes, List<Node> results) {
             results.clear();
 
-            if (bnds == null||bnds.size()==0) {
+            if (bnds == null||bnds.isEmpty()) {
                 for (Node nd : nodes) {
                     Coordinate coord = nd.coordinate;
                     double x = coord.x;
@@ -69,8 +65,8 @@ public class BoundaryBasedFilters2D {
             boolean centerOnBoundary = false;
             double cFx = 0, cFy = 0, cRx = 0, cRy = 0;
             for (Boundary bn : bnds) {
-                Coordinate rear = bn.getBoudaryPoint(0);
-                Coordinate front = bn.getBoudaryPoint(bn.getBoudaryPointsSize()-1);
+                Coordinate rear = bn.getPoint(0);
+                Coordinate front = bn.getPoint(bn.pointsSize()-1);
                 if (front == center) {
                     centerOnBoundary = true;
                     cRx = rear.x;
@@ -88,7 +84,7 @@ public class BoundaryBasedFilters2D {
                 double fy = front.y;
 
                 double t = GeometryMath.crossProduct(rx, ry, fx, fy, cx, cy);
-                if (t < 0) {
+                if (t <= 0) {
                     continue;
                 }
 
@@ -112,6 +108,10 @@ public class BoundaryBasedFilters2D {
                     results.add(nd);
                     continue;
                 }
+                
+                //与{@link http://epsilony.net/mywiki/SimpMeshfree/VisibleCriterion#2dprep}一样的道理
+                //与wiki不同的是，这preprocess 2步放在了算法的结点循环内
+                //如center point 在边界上，则center point 为端点的边界严格外侧的点要去除
                 if (centerOnBoundary) {
                     double t1 = GeometryMath.crossProduct(cx, cy, cFx, cFy, x, y);
                     if (t1 < 0) {
@@ -126,10 +126,10 @@ public class BoundaryBasedFilters2D {
                 boolean add = true;
 
 
-
+                //过滤结点
                 for (Boundary bn : bounds) {
-                    Coordinate rear = bn.getBoudaryPoint(0);
-                    Coordinate front = bn.getBoudaryPoint(1);
+                    Coordinate rear = bn.getPoint(0);
+                    Coordinate front = bn.getPoint(bn.pointsSize()-1);
                     if (coord == rear || coord == front) {
                         continue;
                     }
@@ -144,6 +144,7 @@ public class BoundaryBasedFilters2D {
                     double t12 = t1 * t2;
                     double t34 = t3 * t4;
 
+                    //似可以再改进
                     if (t12 > 0 || t34 > 0 || t12 >= 0 && t34 == 0) {
                         continue;
                     }
@@ -157,27 +158,18 @@ public class BoundaryBasedFilters2D {
         }
 
         @Override
-        public double distanceSqure(Node node, Coordinate center) {
-            Coordinate coord = node.coordinate;
-            double x1 = coord.x;
-            double y1 = coord.y;
-            double x2 = center.x;
-            double y2 = center.y;
-            double dx = x1 - x2;
-            double dy = y1 - y2;
-            return dx * dx + dy * dy;
+        public double[] distance(Node node, Coordinate center, double[] result) {
+            throw new UnsupportedOperationException("Not supported yet.");
         }
 
         @Override
-        public double distance(Node node, Coordinate center) {
-            Coordinate coord = node.coordinate;
-            double x1 = coord.x;
-            double y1 = coord.y;
-            double x2 = center.x;
-            double y2 = center.y;
-            double dx = x1 - x2;
-            double dy = y1 - y2;
-            return Math.sqrt(dx * dx + dy * dy);
+        public void setOrders(PartDiffOrd[] orders) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public boolean isDistanceTrans() {
+            return false;
         }
     }
 }

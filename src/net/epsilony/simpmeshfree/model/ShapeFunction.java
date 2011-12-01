@@ -4,12 +4,10 @@
  */
 package net.epsilony.simpmeshfree.model;
 
-import net.epsilony.simpmeshfree.utils.PartDiffOrd;
 import java.util.Collection;
 import java.util.List;
 import net.epsilony.geom.Coordinate;
 import net.epsilony.simpmeshfree.utils.PartDiffOrdSettable;
-import net.epsilony.simpmeshfree.model2d.ShapeFunctions2D;
 import no.uib.cipr.matrix.DenseVector;
 
 /**

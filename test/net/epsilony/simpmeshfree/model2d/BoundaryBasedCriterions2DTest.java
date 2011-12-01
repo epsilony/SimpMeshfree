@@ -22,9 +22,9 @@ import static org.junit.Assert.*;
  *
  * @author epsilonyuan@gmail.com
  */
-public class BoundaryBasedFilters2DTest {
+public class BoundaryBasedCriterions2DTest {
     
-    public BoundaryBasedFilters2DTest() {
+    public BoundaryBasedCriterions2DTest() {
     }
 
     @BeforeClass
@@ -39,23 +39,23 @@ public class BoundaryBasedFilters2DTest {
     public void testVisibleFilter(){        // TODO review the generated test code and remove the default call to fail.
         System.out.println("testVisibleFilter");
         NodeSupportDomainSizer sizer=new NodeSupportDomainSizers.ConstantSizer(10);
-        BoundaryBasedFilters2D.Visible visible=new BoundaryBasedFilters2D.Visible(sizer);
+        BoundaryBasedCriterions2D.Visible visible=new BoundaryBasedCriterions2D.Visible(sizer);
         double[] bndXys=new double[]{3,0.5,0,0.5,-1,2,0,1,1,1,2,1.5,3,2,2,2,1,3,1,4,2,4};
         
         List<Boundary> bounds=getBoundaries(bndXys);
         Coordinate center=new Coordinate(1, 1);
         for(Boundary bn:bounds){
-            if (bn.getBoudaryPoint(0).equals2D(center)){
-                center=bn.getBoudaryPoint(0);
+            if (bn.getPoint(0).equals2D(center)){
+                center=bn.getPoint(0);
                 break;
             }
         }
         double[] nodesXys=new double []{0,-1,3,3,1,5,1,2};
         List<Node> nodes=getNodes(nodesXys);
         for(Boundary bn:bounds){
-            nodes.add(new Node(bn.getBoudaryPoint(1)));
+            nodes.add(new Node(bn.getPoint(1)));
         }
-        nodes.add(new Node(bounds.get(0).getBoudaryPoint(0)));
+        nodes.add(new Node(bounds.get(0).getPoint(0)));
         LinkedList<Node> results=new LinkedList<>();
         visible.filterNodes(bounds, center, nodes, results);
         double expXys[]=new double[]{-1,2,0,1,1,1,1,2,1,3,2,1.5,2,2,3,2,};

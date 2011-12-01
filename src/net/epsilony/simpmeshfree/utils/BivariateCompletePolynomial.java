@@ -5,11 +5,20 @@
 package net.epsilony.simpmeshfree.utils;
 
 /**
- *
+ * 完备多项式，对于order=n阶的完备多项式，{@link BivariateArrayFunction#value(double, double, double[]) value()}函数的输出应为：</br>
+ * <img src="http://epsilony.net/cgi-bin/mathtex.cgi?(1,x,y,x^2,xy,y^2,x^3,x^2y,xy^2,y^3,\dots,x^n,x^{n-1}y,x^{n-2}y^2,\dots,y^n)" alt="(1,x,y,x^2,xy,y^2,x^3,x^2y,xy^2,y^3,\dots,x^n,x^{n-1}y,x^{n-2}y^2,\dots,y^n)">
  * @author epsilonyuan@gmail.com
  */
 public class BivariateCompletePolynomial {
 
+    private BivariateCompletePolynomial() {
+    }
+
+    /**
+     * 获取0到order阶完备多项式的实例
+     * @param order
+     * @return a new instance of <img src="http://epsilony.net/cgi-bin/mathtex.cgi?(1,x,y,x^2,xy,y^2,x^3,x^2y,xy^2,y^3,\dots,x^n,x^{n-1}y,x^{n-2}y^2,\dots,y^n)" alt="(1,x,y,x^2,xy,y^2,x^3,x^2y,xy^2,y^3,\dots,x^n,x^{n-1}y,x^{n-2}y^2,\dots,y^n)">
+     */
     public static BivariateArrayFunction factory(final int order) {
         switch (order) {
             case 0:
@@ -20,7 +29,7 @@ public class BivariateCompletePolynomial {
                         result[0] = 1;
                         return result;
                     }
-                    final int dimension = getArrayLength(order);
+                    final int dimension = calculateDimension(order);
 
                     @Override
                     public int valueDimension() {
@@ -37,7 +46,7 @@ public class BivariateCompletePolynomial {
                         result[2] = y;
                         return result;
                     }
-                    final int dimension = getArrayLength(order);
+                    final int dimension = calculateDimension(order);
 
                     @Override
                     public int valueDimension() {
@@ -57,7 +66,7 @@ public class BivariateCompletePolynomial {
                         result[5] = y * y;
                         return result;
                     }
-                    final int dimension = getArrayLength(order);
+                    final int dimension = calculateDimension(order);
 
                     @Override
                     public int valueDimension() {
@@ -81,7 +90,7 @@ public class BivariateCompletePolynomial {
                         result[9] = y * result[5];
                         return result;
                     }
-                    final int dimension = getArrayLength(order);
+                    final int dimension = calculateDimension(order);
 
                     @Override
                     public int valueDimension() {
@@ -106,7 +115,7 @@ public class BivariateCompletePolynomial {
                         }
                         return result;
                     }
-                    final int dimension = getArrayLength(order);
+                    final int dimension = calculateDimension(order);
 
                     @Override
                     public int valueDimension() {
@@ -116,6 +125,11 @@ public class BivariateCompletePolynomial {
         }
     }
 
+    /**
+     * 获取<img src="http://epsilony.net/cgi-bin/mathtex.cgi?(1,x,y,x^2,xy,y^2,x^3,x^2y,xy^2,y^3,\dots,x^n,x^{n-1}y,x^{n-2}y^2,\dots,y^n)" alt="(1,x,y,x^2,xy,y^2,x^3,x^2y,xy^2,y^3,\dots,x^n,x^{n-1}y,x^{n-2}y^2,\dots,y^n)"> 对x的偏导数
+     * @param order
+     * @return 一个新的实例
+     */
     public static BivariateArrayFunction partialXFactory(final int order) {
         switch (order) {
             case 0:
@@ -126,7 +140,7 @@ public class BivariateCompletePolynomial {
                         result[0] = 0;
                         return result;
                     }
-                    final int dimension = getArrayLength(order);
+                    final int dimension = calculateDimension(order);
 
                     @Override
                     public int valueDimension() {
@@ -143,7 +157,7 @@ public class BivariateCompletePolynomial {
                         result[2] = 0;
                         return result;
                     }
-                    final int dimension = getArrayLength(order);
+                    final int dimension = calculateDimension(order);
 
                     @Override
                     public int valueDimension() {
@@ -163,7 +177,7 @@ public class BivariateCompletePolynomial {
                         result[5] = 0;
                         return result;
                     }
-                    final int dimension = getArrayLength(order);
+                    final int dimension = calculateDimension(order);
 
                     @Override
                     public int valueDimension() {
@@ -187,7 +201,7 @@ public class BivariateCompletePolynomial {
                         result[9] = 0;
                         return result;
                     }
-                    final int dimension = getArrayLength(order);
+                    final int dimension = calculateDimension(order);
 
                     @Override
                     public int valueDimension() {
@@ -222,7 +236,7 @@ public class BivariateCompletePolynomial {
                         }
                         return result;
                     }
-                    final int dimension = getArrayLength(order);
+                    final int dimension = calculateDimension(order);
 
                     @Override
                     public int valueDimension() {
@@ -233,6 +247,11 @@ public class BivariateCompletePolynomial {
         }
     }
 
+    /**
+     * 获取<img src="http://epsilony.net/cgi-bin/mathtex.cgi?(1,x,y,x^2,xy,y^2,x^3,x^2y,xy^2,y^3,\dots,x^n,x^{n-1}y,x^{n-2}y^2,\dots,y^n)" alt="(1,x,y,x^2,xy,y^2,x^3,x^2y,xy^2,y^3,\dots,x^n,x^{n-1}y,x^{n-2}y^2,\dots,y^n)"> 对y的偏导数
+     * @param order
+     * @return 一个新的实例
+     */
     public static BivariateArrayFunction partialYFactory(final int order) {
         switch (order) {
             case 0:
@@ -243,7 +262,7 @@ public class BivariateCompletePolynomial {
                         result[0] = 0;
                         return result;
                     }
-                    final int dimension = getArrayLength(order);
+                    final int dimension = calculateDimension(order);
 
                     @Override
                     public int valueDimension() {
@@ -260,7 +279,7 @@ public class BivariateCompletePolynomial {
                         result[2] = 1;
                         return result;
                     }
-                    final int dimension = getArrayLength(order);
+                    final int dimension = calculateDimension(order);
 
                     @Override
                     public int valueDimension() {
@@ -280,7 +299,7 @@ public class BivariateCompletePolynomial {
                         result[5] = 2 * y;
                         return result;
                     }
-                    final int dimension = getArrayLength(order);
+                    final int dimension = calculateDimension(order);
 
                     @Override
                     public int valueDimension() {
@@ -304,7 +323,7 @@ public class BivariateCompletePolynomial {
                         result[9] = 3 * y * y;
                         return result;
                     }
-                    final int dimension = getArrayLength(order);
+                    final int dimension = calculateDimension(order);
 
                     @Override
                     public int valueDimension() {
@@ -340,7 +359,7 @@ public class BivariateCompletePolynomial {
                         }
                         return result;
                     }
-                    final int dimension = getArrayLength(order);
+                    final int dimension = calculateDimension(order);
 
                     @Override
                     public int valueDimension() {
@@ -351,7 +370,7 @@ public class BivariateCompletePolynomial {
         }
     }
 
-    public static int getArrayLength(int order) {
+    public static int calculateDimension(int order) {
         if (order < 0) {
             throw new IllegalArgumentException();
         }

@@ -4,12 +4,16 @@
  */
 package net.epsilony.simpmeshfree.model;
 
-import net.epsilony.geom.Coordinate;
-
 /**
  *
  * @author epsilonyuan@gmail.com
  */
-public interface VolumeCondition {
-    double[] value(Coordinate pos);
+public interface NodeSupportDomainSizer {
+
+    double getRadium(Node node);
+
+    double getRadiumSquare(Node node);
+    
+    double getMaxRadium();
+    
 }
