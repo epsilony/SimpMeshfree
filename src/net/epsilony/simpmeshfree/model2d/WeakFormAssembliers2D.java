@@ -4,6 +4,7 @@
  */
 package net.epsilony.simpmeshfree.model2d;
 
+import java.util.LinkedList;
 import java.util.List;
 import net.epsilony.geom.Coordinate;
 import net.epsilony.simpmeshfree.model.BoundaryCondition;
@@ -15,6 +16,8 @@ import net.epsilony.simpmeshfree.utils.QuadraturePoint;
 import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
+import no.uib.cipr.matrix.MatrixEntry;
+import no.uib.cipr.matrix.VectorEntry;
 import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
 
 /**
@@ -350,6 +353,27 @@ public class WeakFormAssembliers2D {
         @Override
         public DenseVector getEquationVector() {
             return mainVector;
+        }
+
+        LinkedList<SimpAssemblier> avators=new LinkedList<>();
+        @Override
+        synchronized public WeakFormAssemblier divisionInstance() {
+            SimpAssemblier avator=new SimpAssemblier(constitutiveLaw, neumannPenalty, mainVector.size()/2);
+            avators.add(avator);
+            return avator;
+        }
+
+        @Override
+        public void uniteAvators() {
+            for(SimpAssemblier avator:avators){
+                for(MatrixEntry me:avator.mainMatrix){
+                    mainMatrix.add(me.row(), me.column(), me.get());
+                }
+                for(VectorEntry ve:avator.mainVector){
+                    mainVector.add(ve.index(),ve.get());
+                }
+            }
+            avators.clear();  
         }
     }
 }

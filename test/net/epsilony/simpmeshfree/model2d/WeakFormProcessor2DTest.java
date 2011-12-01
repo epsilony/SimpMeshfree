@@ -25,6 +25,7 @@ import net.epsilony.math.util.EquationSolvers;
 import net.epsilony.math.util.MatrixUtils;
 import net.epsilony.simpmeshfree.model.NodeSupportDomainSizers;
 import net.epsilony.simpmeshfree.model.ShapeFunction;
+import net.epsilony.simpmeshfree.model.ShapeFunctionFactory;
 import net.epsilony.simpmeshfree.model.WeightFunction;
 import net.epsilony.simpmeshfree.model.WorkProblem;
 import net.epsilony.simpmeshfree.model2d.ui.SimpPanel;
@@ -159,35 +160,39 @@ public class WeakFormProcessor2DTest {
      */
     @Test
     public void testTimoshenkoBeam() {
-        double releps=0.01; //relative error assert can be approved
-        double abeps=4e-6;  //absolute
-        
+        double releps = 0.01; //relative error assert can be approved
+        double abeps = 4e-6;  //absolute
+
         double nodesGap = 2;
-        double supportDomainRadiu = 6;
+        final double supportDomainRadiu = 6;
         double width = 48;
         double height = 12;
         double E = 3e7;
         double v = 0.3;
         double P = 1000;
 
-        WorkProblem workProblem = WorkProblems2D.timoshenkoCantilevel(nodesGap, supportDomainRadiu, width, height, E, v, P);
-
-        ShapeFunction shapeFunction = new ShapeFunctions2D.MLS(
-                new WeightFunctions2D.SimpPower(2),
-                new BivariateArrayFunction[]{
-                    BivariateCompletePolynomial.factory(2),
-                    BivariateCompletePolynomial.partialXFactory(2),
-                    BivariateCompletePolynomial.partialYFactory(2)
-                },
-                new BoundaryBasedCriterions2D.Visible(workProblem.nodeSupportDomainSizer()),
-                new NodeSupportDomainSizers.ConstantSizer(supportDomainRadiu));
-
+        final WorkProblem workProblem = WorkProblems2D.timoshenkoCantilevel(nodesGap, supportDomainRadiu, width, height, E, v, P);
+        ShapeFunctionFactory shapeFunFactory = new ShapeFunctionFactory() {
+            
+            @Override
+            public ShapeFunction factory() {
+                return new ShapeFunctions2D.MLS(
+                        new WeightFunctions2D.SimpPower(2),
+                        new BivariateArrayFunction[]{
+                            BivariateCompletePolynomial.factory(2),
+                            BivariateCompletePolynomial.partialXFactory(2),
+                            BivariateCompletePolynomial.partialYFactory(2)
+                        },
+                        new BoundaryBasedCriterions2D.Visible(workProblem.nodeSupportDomainSizer()),
+                        new NodeSupportDomainSizers.ConstantSizer(supportDomainRadiu));
+            }
+        };
 
         EquationSolver equationSolver = new EquationSolvers.FlexCompRowMatrixSolver(MatrixUtils.UNSYMMETRICAL_BUT_MIRROR_FROM_UP_HALF);
 
         WeakFormAssemblier weakFromAssemblier = new WeakFormAssembliers2D.SimpAssemblier(ConstitutiveLaws2D.getPlaneStress(E, v), E * 1e7, workProblem.getNodes().size());
 
-        WeakFormProcessor2D weakFormProcessor2D = new WeakFormProcessor2D(shapeFunction, weakFromAssemblier, workProblem, 3, equationSolver);
+        WeakFormProcessor2D weakFormProcessor2D = new WeakFormProcessor2D(shapeFunFactory, weakFromAssemblier, workProblem, 3, equationSolver);
 
         weakFormProcessor2D.process();
 
@@ -227,38 +232,44 @@ public class WeakFormProcessor2DTest {
             double y = nd.coordinate.y;
             double[] actResult = resultsIter.next();
             double[] expU = exact.getDisplacement(x, y, new double[2]);
-            System.out.println(String.format("(% 5f,% 5f):n(% 5f,% 5f):act(% 5f,% 5f):exp(% 5f,% 5f)", x, y, result.get(nd.id*2),result.get(nd.id*2+1),actResult[0], actResult[1], expU[0], expU[1]));
-             assertEquals(expU[0],actResult[0],(expU[0]*releps>abeps?expU[0]*releps:abeps));
-             assertEquals(expU[1],actResult[1],(expU[1]*releps>abeps?expU[1]*releps:abeps));
+            System.out.println(String.format("(% 5f,% 5f):n(% 5f,% 5f):act(% 5f,% 5f):exp(% 5f,% 5f)", x, y, result.get(nd.id * 2), result.get(nd.id * 2 + 1), actResult[0], actResult[1], expU[0], expU[1]));
+            assertEquals(expU[0], actResult[0], (expU[0] * releps > abeps ? expU[0] * releps : abeps));
+            assertEquals(expU[1], actResult[1], (expU[1] * releps > abeps ? expU[1] * releps : abeps));
         }
     }
 
 //    @Test
     public void testTensionBar() {
         double nodesGap = 2;
-        double supportDomainRadiu = 6;
+        final double supportDomainRadiu = 6;
         double width = 100;
         double height = 8;
         double E = 200e7;
         double v = 0.3;
         double P = 1000;
-        WorkProblem workProblem = WorkProblems2D.tensionBarHorizontal(nodesGap, supportDomainRadiu, width, height, E, v, P);
+        final WorkProblem workProblem = WorkProblems2D.tensionBarHorizontal(nodesGap, supportDomainRadiu, width, height, E, v, P);
 
-        ShapeFunction shapeFunction = new ShapeFunctions2D.MLS(
-                new TempWeightFunction(supportDomainRadiu),
-                new BivariateArrayFunction[]{
-                    BivariateCompletePolynomial.factory(2),
-                    BivariateCompletePolynomial.partialXFactory(2),
-                    BivariateCompletePolynomial.partialYFactory(2)
-                },
-                new BoundaryBasedCriterions2D.Visible(workProblem.nodeSupportDomainSizer()),
-                new NodeSupportDomainSizers.ConstantSizer(supportDomainRadiu));
+        ShapeFunctionFactory shapeFunFactory = new ShapeFunctionFactory() {
+            
+            @Override
+            public ShapeFunction factory() {
+                return new ShapeFunctions2D.MLS(
+                        new WeightFunctions2D.SimpPower(2),
+                        new BivariateArrayFunction[]{
+                            BivariateCompletePolynomial.factory(2),
+                            BivariateCompletePolynomial.partialXFactory(2),
+                            BivariateCompletePolynomial.partialYFactory(2)
+                        },
+                        new BoundaryBasedCriterions2D.Visible(workProblem.nodeSupportDomainSizer()),
+                        new NodeSupportDomainSizers.ConstantSizer(supportDomainRadiu));
+            }
+        };
 
         EquationSolver equationSolver = new EquationSolvers.FlexCompRowMatrixSolver(MatrixUtils.UNSYMMETRICAL_BUT_MIRROR_FROM_UP_HALF);
 
-        WeakFormAssemblier weakFromAssemblier = new WeakFormAssembliers2D.SimpAssemblier(ConstitutiveLaws2D.getPlaneStress(E, v), E * 1e5, workProblem.getNodes().size());
+        WeakFormAssemblier weakFromAssemblier = new WeakFormAssembliers2D.SimpAssemblier(ConstitutiveLaws2D.getPlaneStress(E, v), E * 1e7, workProblem.getNodes().size());
 
-        WeakFormProcessor2D weakFormProcessor2D = new WeakFormProcessor2D(shapeFunction, weakFromAssemblier, workProblem, 3, equationSolver);
+        WeakFormProcessor2D weakFormProcessor2D = new WeakFormProcessor2D(shapeFunFactory, weakFromAssemblier, workProblem, 3, equationSolver);
 
         weakFormProcessor2D.process();
 
@@ -298,29 +309,35 @@ public class WeakFormProcessor2DTest {
 //    @Test
     public void testTensionBar2() {
         double nodesGap = 2;
-        double supportDomainRadiu = 6;
+        final double supportDomainRadiu = 6;
         double width = 8;
         double height = 100;
         double E = 200e7;
         double v = 0.3;
         double P = 1000;
-        WorkProblem workProblem = WorkProblems2D.tensionBarVertical(nodesGap, supportDomainRadiu, width, height, E, v, P);
+        final WorkProblem workProblem = WorkProblems2D.tensionBarVertical(nodesGap, supportDomainRadiu, width, height, E, v, P);
 
-        ShapeFunction shapeFunction = new ShapeFunctions2D.MLS(
-                new TempWeightFunction(supportDomainRadiu),
-                new BivariateArrayFunction[]{
-                    BivariateCompletePolynomial.factory(2),
-                    BivariateCompletePolynomial.partialXFactory(2),
-                    BivariateCompletePolynomial.partialYFactory(2)
-                },
-                new BoundaryBasedCriterions2D.Visible(workProblem.nodeSupportDomainSizer()), 
-                new NodeSupportDomainSizers.ConstantSizer(supportDomainRadiu));
+           ShapeFunctionFactory shapeFunFactory = new ShapeFunctionFactory() {
+            
+            @Override
+            public ShapeFunction factory() {
+                return new ShapeFunctions2D.MLS(
+                        new WeightFunctions2D.SimpPower(2),
+                        new BivariateArrayFunction[]{
+                            BivariateCompletePolynomial.factory(2),
+                            BivariateCompletePolynomial.partialXFactory(2),
+                            BivariateCompletePolynomial.partialYFactory(2)
+                        },
+                        new BoundaryBasedCriterions2D.Visible(workProblem.nodeSupportDomainSizer()),
+                        new NodeSupportDomainSizers.ConstantSizer(supportDomainRadiu));
+            }
+        };
 
         EquationSolver equationSolver = new EquationSolvers.FlexCompRowMatrixSolver(MatrixUtils.UNSYMMETRICAL_BUT_MIRROR_FROM_UP_HALF);
 
-        WeakFormAssemblier weakFromAssemblier = new WeakFormAssembliers2D.SimpAssemblier(ConstitutiveLaws2D.getPlaneStress(E, v), E * 1e5, workProblem.getNodes().size());
+        WeakFormAssemblier weakFromAssemblier = new WeakFormAssembliers2D.SimpAssemblier(ConstitutiveLaws2D.getPlaneStress(E, v), E * 1e7, workProblem.getNodes().size());
 
-        WeakFormProcessor2D weakFormProcessor2D = new WeakFormProcessor2D(shapeFunction, weakFromAssemblier, workProblem, 3, equationSolver);
+        WeakFormProcessor2D weakFormProcessor2D = new WeakFormProcessor2D(shapeFunFactory, weakFromAssemblier, workProblem, 3, equationSolver);
 
         weakFormProcessor2D.process();
 
@@ -342,14 +359,14 @@ public class WeakFormProcessor2DTest {
 
             }
         });
-        
-        
+
+
         LinkedList<Coordinate> coords = new LinkedList<>();
         for (Node nd : nodes) {
             coords.add(nd.coordinate);
         }
-        
-        
+
+
         List<double[]> resultsAtNodes = weakFormProcessor2D.result(coords);
 
         Iterator<double[]> resultsIter = resultsAtNodes.iterator();
@@ -360,13 +377,13 @@ public class WeakFormProcessor2DTest {
             System.out.println(String.format("(% 3.0f,% 3.0f):act(%5e,%5e)", x, y, actResult[0], actResult[1]));
         }
     }
-    
+
 //    @Test
     public void testDisplacementTensionBar() {
         boolean visible = false;  //设为true则可见位移图   
 
         double nodesGap = 10;
-        double supportDomainRadiu = 25;
+        final double supportDomainRadiu = 25;
         double width = 100;
         double height = 40;
         double E = 200;
@@ -374,21 +391,27 @@ public class WeakFormProcessor2DTest {
         double displace = 10;
         final WorkProblem workProblem = WorkProblems2D.displacementTensionBar(nodesGap, supportDomainRadiu, width, height, E, v, displace);
 
-        ShapeFunction shapeFunction = new ShapeFunctions2D.MLS(
-                new TempWeightFunction(supportDomainRadiu),
-                new BivariateArrayFunction[]{
-                    BivariateCompletePolynomial.factory(2),
-                    BivariateCompletePolynomial.partialXFactory(2),
-                    BivariateCompletePolynomial.partialYFactory(2)
-                },
-                new BoundaryBasedCriterions2D.Visible(workProblem.nodeSupportDomainSizer()), 
-                new NodeSupportDomainSizers.ConstantSizer(supportDomainRadiu));
+         ShapeFunctionFactory shapeFunFactory = new ShapeFunctionFactory() {
+            
+            @Override
+            public ShapeFunction factory() {
+                return new ShapeFunctions2D.MLS(
+                        new WeightFunctions2D.SimpPower(2),
+                        new BivariateArrayFunction[]{
+                            BivariateCompletePolynomial.factory(2),
+                            BivariateCompletePolynomial.partialXFactory(2),
+                            BivariateCompletePolynomial.partialYFactory(2)
+                        },
+                        new BoundaryBasedCriterions2D.Visible(workProblem.nodeSupportDomainSizer()),
+                        new NodeSupportDomainSizers.ConstantSizer(supportDomainRadiu));
+            }
+        };
 
         EquationSolver equationSolver = new EquationSolvers.FlexCompRowMatrixSolver(MatrixUtils.UNSYMMETRICAL_BUT_MIRROR_FROM_UP_HALF);
 
         WeakFormAssemblier weakFromAssemblier = new WeakFormAssembliers2D.SimpAssemblier(ConstitutiveLaws2D.getPlaneStress(E, v), E * 1e7, workProblem.getNodes().size());
 
-        WeakFormProcessor2D weakFormProcessor2D = new WeakFormProcessor2D(shapeFunction, weakFromAssemblier, workProblem, 3, equationSolver);
+        WeakFormProcessor2D weakFormProcessor2D = new WeakFormProcessor2D(shapeFunFactory, weakFromAssemblier, workProblem, 3, equationSolver);
 
         weakFormProcessor2D.process();
 
