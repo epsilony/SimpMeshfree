@@ -7,12 +7,13 @@ package net.epsilony.simpmeshfree.model2d;
 import java.util.ArrayList;
 import java.util.Arrays;
 import net.epsilony.simpmeshfree.model.NodeSupportDomainSizer;
-import net.epsilony.simpmeshfree.model.WorkProblem;
+import net.epsilony.simpmeshfree.model.WeakFormProblem;
 import java.util.LinkedList;
 import java.util.List;
 import net.epsilony.geom.Coordinate;
 import net.epsilony.geom.Quadrangle;
 import net.epsilony.geom.Triangle;
+import net.epsilony.math.util.TriangleSymmetricQuadrature;
 import net.epsilony.simpmeshfree.model.Boundary;
 import net.epsilony.simpmeshfree.model.BoundaryCondition;
 import net.epsilony.simpmeshfree.model.VolumeCondition;
@@ -36,13 +37,13 @@ import no.uib.cipr.matrix.DenseMatrix;
  * </ul>
  * @author epsilonyuan@gmail.com
  */
-public class WorkProblems2D {
+public class WeakFormProblems2D {
 
-    private WorkProblems2D() {
+    private WeakFormProblems2D() {
     }
 
     /**
-     * 根据输入的数组创建一个{@link WorkProblem}
+     * 根据输入的数组创建一个{@link WeakFormWorkProblem}
      * Only support for these situations:</br>
      * <ul>
      * <li>constant constitutive law</li>
@@ -54,7 +55,7 @@ public class WorkProblems2D {
      * @see NodeSupportDomainSizer
      * @see NodeSupportDomainSizers
      */
-    public static class ByArrays implements WorkProblem {
+    public static class ByArrays implements WeakFormProblem {
 
         public Node[] nodes;
         double[] NodeSupportDomainRadiums;
@@ -146,6 +147,32 @@ public class WorkProblems2D {
         public List<Boundary> getBoundaries() {
             List<LineBoundary2D> list = Arrays.asList(boundaries);
             return new ArrayList<Boundary>(list);
+        }
+
+        @Override
+        public int dirichletQuadraturePointsNum(int power) {
+            int numPoint=(int) Math.ceil((power+1)/2.0);
+            return dirichletBCs.length*numPoint;
+        }
+
+        @Override
+        public int neumannQudaraturePointsNum(int power) {
+            int numPoint=(int) Math.ceil((power+1)/2.0);
+            return neumannBCs.length*numPoint;
+        }
+
+        @Override
+        public int balanceQuadraturePointsNum(int power) {
+            int sum=0;
+            int pointNum=(int) Math.ceil((power+1)/2.0);
+            pointNum*=pointNum;
+            if(null!=triangleQuadratureDomains){
+                sum+=triangleQuadratureDomains.length*TriangleSymmetricQuadrature.getNumPoints(power);
+            }
+            if(null!=quadrangleQuadratureDomains){
+                sum+=quadrangleQuadratureDomains.length*pointNum;
+            }
+            return sum;
         }
 
         /**
@@ -256,7 +283,7 @@ public class WorkProblems2D {
      * @param P the total force applied on the right border &lt;0: upward &gt;0: downward
      * @return a new instance of {@link ByArrays}
      */
-    public static WorkProblem timoshenkoCantilevel(double nodesGap, double supportDomainRadiu, double width, double height, final double E, final double v, final double P) {
+    public static WeakFormProblem timoshenkoCantilevel(double nodesGap, double supportDomainRadiu, double width, double height, final double E, final double v, final double P) {
         TimoshenkoExactBeam exact = new TimoshenkoExactBeam(width, height, E, v, P);
         DenseMatrix constitutiveLaw = ConstitutiveLaws2D.getPlaneStress(E, v);
         int nodeColsNum = (int) Math.ceil(width / nodesGap) + 1;
@@ -353,7 +380,7 @@ public class WorkProblems2D {
      * @param P the distributing force that are applied on the right side of the bar, the total force is P*height
      * @return A new instance.
      */
-    public static WorkProblem tensionBarHorizontal(double nodesGap, double supportDomainRadiu, double width, double height, final double E, final double v, final double P) {
+    public static WeakFormProblem tensionBarHorizontal(double nodesGap, double supportDomainRadiu, double width, double height, final double E, final double v, final double P) {
         DenseMatrix constitutiveLaw = ConstitutiveLaws2D.getPlaneStress(E, v);
         int nodeColsNum = (int) Math.ceil(width / nodesGap) + 1;
         int nodeRowsNum = (int) Math.ceil(height / nodesGap) + 1;
@@ -492,7 +519,7 @@ public class WorkProblems2D {
      * @param P the distributing force that are applied on the top side of the bar, the total force is P*width
      * @return A new instance.
      */
-    public static WorkProblem tensionBarVertical(double nodesGap, double supportDomainRadiu, double width, double height, final double E, final double v, final double P) {
+    public static WeakFormProblem tensionBarVertical(double nodesGap, double supportDomainRadiu, double width, double height, final double E, final double v, final double P) {
         DenseMatrix constitutiveLaw = ConstitutiveLaws2D.getPlaneStress(E, v);
         int nodeColsNum = (int) Math.ceil(width / nodesGap) + 1;
         int nodeRowsNum = (int) Math.ceil(height / nodesGap) + 1;
@@ -626,7 +653,7 @@ public class WorkProblems2D {
      * @param P the displacement that are applied on the right side of the bar.
      * @return A new instance.
      */
-    public static WorkProblem displacementTensionBar(double nodesGap, double supportDomainRadiu, final double width, double height, final double E,
+    public static WeakFormProblem displacementTensionBar(double nodesGap, double supportDomainRadiu, final double width, double height, final double E,
             final double v,
             final double displace) {
         DenseMatrix constitutiveLaw = ConstitutiveLaws2D.getPlaneStress(E, v);

@@ -27,7 +27,7 @@ import net.epsilony.simpmeshfree.model.NodeSupportDomainSizers;
 import net.epsilony.simpmeshfree.model.ShapeFunction;
 import net.epsilony.simpmeshfree.model.ShapeFunctionFactory;
 import net.epsilony.simpmeshfree.model.WeightFunction;
-import net.epsilony.simpmeshfree.model.WorkProblem;
+import net.epsilony.simpmeshfree.model.WeakFormProblem;
 import net.epsilony.simpmeshfree.model2d.ui.SimpPanel;
 import net.epsilony.simpmeshfree.utils.BivariateArrayFunction;
 import net.epsilony.simpmeshfree.utils.BivariateCompletePolynomial;
@@ -171,7 +171,7 @@ public class WeakFormProcessor2DTest {
         double v = 0.3;
         double P = 1000;
 
-        final WorkProblem workProblem = WorkProblems2D.timoshenkoCantilevel(nodesGap, supportDomainRadiu, width, height, E, v, P);
+        final WeakFormProblem workProblem = WeakFormProblems2D.timoshenkoCantilevel(nodesGap, supportDomainRadiu, width, height, E, v, P);
         ShapeFunctionFactory shapeFunFactory = new ShapeFunctionFactory() {
             
             @Override
@@ -237,6 +237,8 @@ public class WeakFormProcessor2DTest {
             assertEquals(expU[1], actResult[1], (expU[1] * releps > abeps ? expU[1] * releps : abeps));
         }
     }
+    
+    
 
 //    @Test
     public void testTensionBar() {
@@ -247,7 +249,7 @@ public class WeakFormProcessor2DTest {
         double E = 200e7;
         double v = 0.3;
         double P = 1000;
-        final WorkProblem workProblem = WorkProblems2D.tensionBarHorizontal(nodesGap, supportDomainRadiu, width, height, E, v, P);
+        final WeakFormProblem workProblem = WeakFormProblems2D.tensionBarHorizontal(nodesGap, supportDomainRadiu, width, height, E, v, P);
 
         ShapeFunctionFactory shapeFunFactory = new ShapeFunctionFactory() {
             
@@ -315,7 +317,7 @@ public class WeakFormProcessor2DTest {
         double E = 200e7;
         double v = 0.3;
         double P = 1000;
-        final WorkProblem workProblem = WorkProblems2D.tensionBarVertical(nodesGap, supportDomainRadiu, width, height, E, v, P);
+        final WeakFormProblem workProblem = WeakFormProblems2D.tensionBarVertical(nodesGap, supportDomainRadiu, width, height, E, v, P);
 
            ShapeFunctionFactory shapeFunFactory = new ShapeFunctionFactory() {
             
@@ -389,7 +391,7 @@ public class WeakFormProcessor2DTest {
         double E = 200;
         double v = 0.3;
         double displace = 10;
-        final WorkProblem workProblem = WorkProblems2D.displacementTensionBar(nodesGap, supportDomainRadiu, width, height, E, v, displace);
+        final WeakFormProblem workProblem = WeakFormProblems2D.displacementTensionBar(nodesGap, supportDomainRadiu, width, height, E, v, displace);
 
          ShapeFunctionFactory shapeFunFactory = new ShapeFunctionFactory() {
             

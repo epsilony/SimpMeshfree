@@ -14,18 +14,24 @@ import net.epsilony.util.CenterSearcher;
  *
  * @author epsilonyuan@gmail.com
  */
-public interface WorkProblem {
+public interface WeakFormProblem {
     List<Boundary> getBoundaries();
     
     CenterSearcher<Coordinate, Boundary> boundarySearcher();
     
     Iterable<BCQuadraturePoint> dirichletIterable(int power);
+    
+    int dirichletQuadraturePointsNum(int power);
 
     Iterable<BCQuadraturePoint> neumannIterable(int power);
 
+    int neumannQudaraturePointsNum(int power);
+    
     CenterSearcher<Coordinate, Node> nodeSearcher();
 
     Iterable<QuadraturePoint> volumeIterable(int power);
+    
+    int balanceQuadraturePointsNum(int power);
 
     VolumeCondition getVolumeCondition();
     
