@@ -19,11 +19,11 @@ public interface WeakFormProblem {
     
     CenterSearcher<Coordinate, Boundary> boundarySearcher();
     
-    Iterable<BCQuadraturePoint> dirichletIterable(int power);
+    Iterable<BCQuadraturePoint> neumannIterable(int power);
     
     int dirichletQuadraturePointsNum(int power);
 
-    Iterable<BCQuadraturePoint> neumannIterable(int power);
+    Iterable<BCQuadraturePoint> dirichletIterable(int power);
 
     int neumannQudaraturePointsNum(int power);
     

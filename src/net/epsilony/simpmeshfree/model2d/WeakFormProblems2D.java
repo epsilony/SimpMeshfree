@@ -120,12 +120,12 @@ public class WeakFormProblems2D {
         }
 
         @Override
-        public Iterable<BCQuadraturePoint> dirichletIterable(int power) {
+        public Iterable<BCQuadraturePoint> neumannIterable(int power) {
             return new BCQuadratureIterables2D.ArrayIterable(boundaryConditionValueDim, power, dirichletBCs);
         }
 
         @Override
-        public Iterable<BCQuadraturePoint> neumannIterable(int power) {
+        public Iterable<BCQuadraturePoint> dirichletIterable(int power) {
             return new BCQuadratureIterables2D.ArrayIterable(boundaryConditionValueDim, power, neumannBCs);
         }
 

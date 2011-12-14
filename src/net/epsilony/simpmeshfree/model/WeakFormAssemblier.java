@@ -21,9 +21,9 @@ public interface WeakFormAssemblier extends Avatar<WeakFormAssemblier>{
 
     void asmBalance(QuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunctions, VolumeCondition volBc);
 
-    void asmDirichlet(BCQuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunctions);
-
     void asmNeumann(BCQuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunctions);
+
+    void asmDirichlet(BCQuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunctions);
 
     DenseMatrix getConstitutiveLaw(Coordinate pos);
 

@@ -177,7 +177,7 @@ public class WeakFormAssembliers2D {
         }
 
         @Override
-        public void asmDirichlet(BCQuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunctions) {
+        public void asmNeumann(BCQuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunctions) {
 
 
             DenseVector vec = mainVector;
@@ -239,7 +239,7 @@ public class WeakFormAssembliers2D {
         }
 
         @Override
-        public void asmNeumann(BCQuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunctions) {
+        public void asmDirichlet(BCQuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunctions) {
             double factor = qp.weight * neumannPenalty;
             FlexCompRowMatrix mat = mainMatrix;
             DenseVector vec = mainVector;
@@ -528,7 +528,7 @@ public class WeakFormAssembliers2D {
         }
 
         @Override
-        public void asmDirichlet(BCQuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunctions) {
+        public void asmNeumann(BCQuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunctions) {
 
 
             DenseVector vec = mainVector;
@@ -590,7 +590,7 @@ public class WeakFormAssembliers2D {
         }
 
         @Override
-        public void asmNeumann(BCQuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunctions) {
+        public void asmDirichlet(BCQuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunctions) {
             double factor = qp.weight * neumannPenalty;
             SparseRealMatrix mat = mainMatrix;
             DenseVector vec = mainVector;

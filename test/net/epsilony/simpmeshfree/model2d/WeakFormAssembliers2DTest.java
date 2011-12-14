@@ -207,7 +207,7 @@ public class WeakFormAssembliers2DTest {
         System.out.println("shapeFunVals:");
         System.out.println(shapeFunVals[0]);
         System.out.println("");
-//        assemblier.asmNeumann();
+//        assemblier.asmDirichlet();
         FlexCompRowMatrix mat = (FlexCompRowMatrix) assemblier.getEquationMatrix();
         DenseVector vec = assemblier.getEquationVector();
         StringBuilder sb = new StringBuilder();
