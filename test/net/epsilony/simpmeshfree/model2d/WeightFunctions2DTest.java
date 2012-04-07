@@ -4,15 +4,15 @@
  */
 package net.epsilony.simpmeshfree.model2d;
 
-import net.epsilony.geom.Coordinate;
 import net.epsilony.simpmeshfree.model.Node;
-import net.epsilony.simpmeshfree.utils.PartDiffOrd;
 import net.epsilony.simpmeshfree.model.WeightFunction;
+import net.epsilony.simpmeshfree.utils.PartDiffOrd;
+import net.epsilony.utils.geom.Coordinate;
 import org.junit.After;
 import org.junit.AfterClass;
+import static org.junit.Assert.assertArrayEquals;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *

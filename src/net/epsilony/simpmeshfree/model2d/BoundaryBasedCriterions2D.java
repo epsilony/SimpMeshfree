@@ -7,13 +7,13 @@ package net.epsilony.simpmeshfree.model2d;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import net.epsilony.geom.Coordinate;
-import net.epsilony.geom.GeometryMath;
 import net.epsilony.simpmeshfree.model.Boundary;
 import net.epsilony.simpmeshfree.model.BoundaryBasedCritieron;
 import net.epsilony.simpmeshfree.model.Node;
 import net.epsilony.simpmeshfree.model.NodeSupportDomainSizer;
 import net.epsilony.simpmeshfree.utils.PartDiffOrd;
+import net.epsilony.utils.geom.Coordinate;
+import net.epsilony.utils.geom.GeometryMath;
 
 /**
  *

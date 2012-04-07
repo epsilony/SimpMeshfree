@@ -4,7 +4,7 @@
  */
 package net.epsilony.simpmeshfree.model;
 
-import net.epsilony.geom.Coordinate;
+import net.epsilony.utils.geom.Coordinate;
 
 /**
  *

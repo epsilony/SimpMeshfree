@@ -8,13 +8,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
-import net.epsilony.geom.Coordinate;
-import net.epsilony.geom.GeometryMath;
-import net.epsilony.geom.Quadrangle;
-import net.epsilony.geom.Triangle;
-import net.epsilony.math.util.GaussLegendreQuadratureUtils;
-import net.epsilony.math.util.QuadrangleMapper;
-import net.epsilony.math.util.TriangleSymmetricQuadrature;
+import net.epsilony.utils.geom.Coordinate;
+import net.epsilony.utils.geom.GeometryMath;
+import net.epsilony.utils.geom.Quadrangle;
+import net.epsilony.utils.geom.Triangle;
+import net.epsilony.utils.math.GaussLegendreQuadratureUtils;
+import net.epsilony.utils.math.QuadrangleMapper;
+import net.epsilony.utils.math.TriangleSymmetricQuadrature;
 
 /**
  *

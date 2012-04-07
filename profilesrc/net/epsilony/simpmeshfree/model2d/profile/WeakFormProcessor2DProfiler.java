@@ -4,23 +4,13 @@
  */
 package net.epsilony.simpmeshfree.model2d.profile;
 
-import net.epsilony.math.util.EquationSolver;
-import net.epsilony.math.util.EquationSolvers;
-import net.epsilony.math.util.MatrixUtils;
-import net.epsilony.simpmeshfree.model.NodeSupportDomainSizers;
-import net.epsilony.simpmeshfree.model.ShapeFunction;
-import net.epsilony.simpmeshfree.model.ShapeFunctionFactory;
-import net.epsilony.simpmeshfree.model.WeakFormAssemblier;
-import net.epsilony.simpmeshfree.model.WeakFormProblem;
-import net.epsilony.simpmeshfree.model2d.BoundaryBasedCriterions2D;
-import net.epsilony.simpmeshfree.model2d.ConstitutiveLaws2D;
-import net.epsilony.simpmeshfree.model2d.ShapeFunctions2D;
-import net.epsilony.simpmeshfree.model2d.WeakFormAssembliers2D;
-import net.epsilony.simpmeshfree.model2d.WeakFormProblems2D;
-import net.epsilony.simpmeshfree.model2d.WeakFormProcessor2D;
-import net.epsilony.simpmeshfree.model2d.WeightFunctions2D;
+import net.epsilony.simpmeshfree.model.*;
+import net.epsilony.simpmeshfree.model2d.*;
 import net.epsilony.simpmeshfree.utils.BivariateArrayFunction;
 import net.epsilony.simpmeshfree.utils.BivariateCompletePolynomial;
+import net.epsilony.utils.math.EquationSolver;
+import net.epsilony.utils.math.EquationSolvers;
+import net.epsilony.utils.math.MatrixUtils;
 
 /**
  *

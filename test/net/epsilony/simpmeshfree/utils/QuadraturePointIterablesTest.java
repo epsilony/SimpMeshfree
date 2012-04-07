@@ -4,16 +4,17 @@
  */
 package net.epsilony.simpmeshfree.utils;
 
-import net.epsilony.geom.Quadrangle;
-import net.epsilony.simpmeshfree.utils.QuadraturePointIterables.TriangleArrayIterable;
-import net.epsilony.geom.Triangle;
 import java.util.Arrays;
-import net.epsilony.util.TriangleJna;
+import net.epsilony.simpmeshfree.utils.QuadraturePointIterables.TriangleArrayIterable;
+import net.epsilony.utils.TriangleJna;
+import net.epsilony.utils.geom.Quadrangle;
+import net.epsilony.utils.geom.Triangle;
 import org.junit.After;
 import org.junit.AfterClass;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *
@@ -157,41 +158,41 @@ public class QuadraturePointIterablesTest {
         System.out.println("triangles maybe fail");
         System.out.println(Arrays.toString(triangles));
     }
-    
+
     @Test
-    public void testWrapper(){
+    public void testWrapper() {
         System.out.println("test empty triangle quadrature iterable");
-        for(QuadraturePoint qp:new TriangleArrayIterable(3, new Triangle[0], true)){
+        for (QuadraturePoint qp : new TriangleArrayIterable(3, new Triangle[0], true)) {
             fail("should not be here");
         }
-        
-        for(QuadraturePoint qp:new QuadraturePointIterables.QuadrangleArrayIterable(3, new Quadrangle[0])){
+
+        for (QuadraturePoint qp : new QuadraturePointIterables.QuadrangleArrayIterable(3, new Quadrangle[0])) {
             fail("shoudl not be here quad");
         }
-        Iterable<QuadraturePoint>[] iterables=new Iterable<>[2];
-        iterables[0]=new TriangleArrayIterable(3, new Triangle[0]);
-        iterables[1]=new QuadraturePointIterables.QuadrangleArrayIterable(3, new Quadrangle[0]);
-        for(QuadraturePoint gp:new QuadraturePointIterables.IterablesWrapper(iterables)){
+        Iterable<QuadraturePoint>[] iterables = new Iterable<>[2];
+        iterables[0] = new TriangleArrayIterable(3, new Triangle[0]);
+        iterables[1] = new QuadraturePointIterables.QuadrangleArrayIterable(3, new Quadrangle[0]);
+        for (QuadraturePoint gp : new QuadraturePointIterables.IterablesWrapper(iterables)) {
             fail("shoudl not be here quad");
         }
-        iterables[0]=new TriangleArrayIterable(3, new Triangle[0]);
-        iterables[1]=new QuadraturePointIterables.QuadrangleArrayIterable(3, new Quadrangle[]{new Quadrangle()});
-        int count=0;
-        for(QuadraturePoint gp:new QuadraturePointIterables.IterablesWrapper(iterables)){
+        iterables[0] = new TriangleArrayIterable(3, new Triangle[0]);
+        iterables[1] = new QuadraturePointIterables.QuadrangleArrayIterable(3, new Quadrangle[]{new Quadrangle()});
+        int count = 0;
+        for (QuadraturePoint gp : new QuadraturePointIterables.IterablesWrapper(iterables)) {
             count++;
         }
         System.out.println("count1 = " + count);
-        iterables[0]=new TriangleArrayIterable(3, new Triangle[]{new Triangle()});
-        iterables[1]=new QuadraturePointIterables.QuadrangleArrayIterable(3, new Quadrangle[0]);
-        count=0;
-        for(QuadraturePoint gp:new QuadraturePointIterables.IterablesWrapper(iterables)){
+        iterables[0] = new TriangleArrayIterable(3, new Triangle[]{new Triangle()});
+        iterables[1] = new QuadraturePointIterables.QuadrangleArrayIterable(3, new Quadrangle[0]);
+        count = 0;
+        for (QuadraturePoint gp : new QuadraturePointIterables.IterablesWrapper(iterables)) {
             count++;
         }
         System.out.println("count2 = " + count);
-        iterables[0]=new TriangleArrayIterable(3, new Triangle[]{new Triangle()});
-        iterables[1]=new QuadraturePointIterables.QuadrangleArrayIterable(3, new Quadrangle[]{new Quadrangle()});
-        count=0;
-        for(QuadraturePoint gp:new QuadraturePointIterables.IterablesWrapper(iterables)){
+        iterables[0] = new TriangleArrayIterable(3, new Triangle[]{new Triangle()});
+        iterables[1] = new QuadraturePointIterables.QuadrangleArrayIterable(3, new Quadrangle[]{new Quadrangle()});
+        count = 0;
+        for (QuadraturePoint gp : new QuadraturePointIterables.IterablesWrapper(iterables)) {
             count++;
         }
         System.out.println("count3 = " + count);

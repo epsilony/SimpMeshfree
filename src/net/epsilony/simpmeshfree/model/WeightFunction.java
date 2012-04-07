@@ -5,8 +5,8 @@
 package net.epsilony.simpmeshfree.model;
 
 import net.epsilony.simpmeshfree.utils.PartDiffOrd;
-import net.epsilony.geom.Coordinate;
 import net.epsilony.simpmeshfree.utils.PartDiffOrdSettable;
+import net.epsilony.utils.geom.Coordinate;
 
 /**
  * 权函数接口，由{@link PartDiffOrdSettable#setOrders(net.epsilony.simpmeshfree.utils.PartDiffOrd[]) }指定{@link #values(net.epsilony.simpmeshfree.model.Node, net.epsilony.geom.Coordinate, double[]) }的返回值

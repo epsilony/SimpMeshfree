@@ -6,36 +6,26 @@ package net.epsilony.simpmeshfree.model2d;
 
 import java.awt.EventQueue;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Collections;
-import java.util.Comparator;
-import javax.swing.JLayer;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import javax.swing.JFrame;
+import javax.swing.JLayer;
 import javax.swing.JPanel;
 import javax.swing.plaf.LayerUI;
-import no.uib.cipr.matrix.DenseVector;
-import net.epsilony.simpmeshfree.model.WeakFormAssemblier;
-import net.epsilony.math.util.EquationSolver;
-import net.epsilony.simpmeshfree.utils.PartDiffOrd;
-import net.epsilony.simpmeshfree.model.Node;
-import net.epsilony.geom.Coordinate;
-import net.epsilony.math.util.EquationSolvers;
-import net.epsilony.math.util.MatrixUtils;
-import net.epsilony.simpmeshfree.model.NodeSupportDomainSizers;
-import net.epsilony.simpmeshfree.model.ShapeFunction;
-import net.epsilony.simpmeshfree.model.ShapeFunctionFactory;
-import net.epsilony.simpmeshfree.model.WeightFunction;
-import net.epsilony.simpmeshfree.model.WeakFormProblem;
+import net.epsilony.simpmeshfree.model.*;
 import net.epsilony.simpmeshfree.model2d.ui.SimpPanel;
 import net.epsilony.simpmeshfree.utils.BivariateArrayFunction;
 import net.epsilony.simpmeshfree.utils.BivariateCompletePolynomial;
+import net.epsilony.simpmeshfree.utils.PartDiffOrd;
+import net.epsilony.utils.geom.Coordinate;
+import net.epsilony.utils.math.EquationSolver;
+import net.epsilony.utils.math.EquationSolvers;
+import net.epsilony.utils.math.MatrixUtils;
+import no.uib.cipr.matrix.DenseVector;
 import org.junit.After;
 import org.junit.AfterClass;
+import static org.junit.Assert.assertEquals;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  * 目前，该算例还没有使用标准的assert机制

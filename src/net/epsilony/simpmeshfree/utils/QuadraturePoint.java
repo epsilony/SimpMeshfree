@@ -4,9 +4,9 @@
  */
 package net.epsilony.simpmeshfree.utils;
 
-import net.epsilony.geom.Coordinate;
-import net.epsilony.math.util.GaussLegendreQuadratureUtils;
-import net.epsilony.math.util.TriangleSymmetricQuadrature;
+import net.epsilony.utils.geom.Coordinate;
+import net.epsilony.utils.math.GaussLegendreQuadratureUtils;
+import net.epsilony.utils.math.TriangleSymmetricQuadrature;
 
 /**
  * used for quadrature a field not more complex than 3D

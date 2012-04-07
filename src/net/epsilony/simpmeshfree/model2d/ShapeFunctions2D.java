@@ -6,15 +6,10 @@ package net.epsilony.simpmeshfree.model2d;
 
 import java.util.Collection;
 import java.util.List;
-import net.epsilony.geom.Coordinate;
-import net.epsilony.simpmeshfree.model.Boundary;
-import net.epsilony.simpmeshfree.model.BoundaryBasedCritieron;
-import net.epsilony.simpmeshfree.model.Node;
-import net.epsilony.simpmeshfree.model.NodeSupportDomainSizer;
-import net.epsilony.simpmeshfree.model.ShapeFunction;
-import net.epsilony.simpmeshfree.utils.PartDiffOrd;
-import net.epsilony.simpmeshfree.model.WeightFunction;
+import net.epsilony.simpmeshfree.model.*;
 import net.epsilony.simpmeshfree.utils.BivariateArrayFunction;
+import net.epsilony.simpmeshfree.utils.PartDiffOrd;
+import net.epsilony.utils.geom.Coordinate;
 import no.uib.cipr.matrix.DenseCholesky;
 import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;

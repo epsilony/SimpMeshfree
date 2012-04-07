@@ -5,7 +5,7 @@
 package net.epsilony.simpmeshfree.model;
 
 import java.util.List;
-import net.epsilony.geom.Coordinate;
+import net.epsilony.utils.geom.Coordinate;
 import net.epsilony.simpmeshfree.utils.Avatar;
 import net.epsilony.simpmeshfree.utils.BCQuadraturePoint;
 import net.epsilony.simpmeshfree.utils.QuadraturePoint;
