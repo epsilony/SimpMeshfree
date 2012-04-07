@@ -5,11 +5,11 @@
 package net.epsilony.simpmeshfree.model2d;
 
 import java.util.Iterator;
-import net.epsilony.geom.Coordinate;
-import net.epsilony.math.util.GaussLegendreQuadratureUtils;
 import net.epsilony.simpmeshfree.model.Boundary;
 import net.epsilony.simpmeshfree.model.BoundaryCondition;
 import net.epsilony.simpmeshfree.utils.BCQuadraturePoint;
+import net.epsilony.utils.geom.Coordinate;
+import net.epsilony.utils.math.GaussLegendreQuadratureUtils;
 
 /**
  *

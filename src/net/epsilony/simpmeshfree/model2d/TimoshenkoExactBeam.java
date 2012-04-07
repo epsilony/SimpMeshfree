@@ -4,9 +4,9 @@
  */
 package net.epsilony.simpmeshfree.model2d;
 
-import net.epsilony.geom.Coordinate;
 import net.epsilony.simpmeshfree.model.Boundary;
 import net.epsilony.simpmeshfree.model.BoundaryCondition;
+import net.epsilony.utils.geom.Coordinate;
 
 /**
  *

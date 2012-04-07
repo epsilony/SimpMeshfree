@@ -4,11 +4,11 @@
  */
 package net.epsilony.simpmeshfree.model2d;
 
-import net.epsilony.geom.Coordinate;
 import net.epsilony.simpmeshfree.model.BoundaryBasedCritieron;
 import net.epsilony.simpmeshfree.model.Node;
-import net.epsilony.simpmeshfree.utils.PartDiffOrd;
 import net.epsilony.simpmeshfree.model.WeightFunction;
+import net.epsilony.simpmeshfree.utils.PartDiffOrd;
+import net.epsilony.utils.geom.Coordinate;
 
 /**
  *

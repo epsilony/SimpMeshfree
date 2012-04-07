@@ -4,26 +4,17 @@
  */
 package net.epsilony.simpmeshfree.model2d.ui;
 
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.Shape;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Area;
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.Line2D;
-import java.awt.geom.Path2D;
-import java.awt.geom.Rectangle2D;
+import java.awt.*;
+import java.awt.geom.*;
 import java.util.Iterator;
 import java.util.List;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.plaf.LayerUI;
-import net.epsilony.geom.Coordinate;
 import net.epsilony.simpmeshfree.model.Boundary;
 import net.epsilony.simpmeshfree.model.Node;
 import net.epsilony.simpmeshfree.model2d.LineBoundary2D;
+import net.epsilony.utils.geom.Coordinate;
 
 /**
  *

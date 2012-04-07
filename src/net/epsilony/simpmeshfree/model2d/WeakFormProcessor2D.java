@@ -5,7 +5,6 @@
 package net.epsilony.simpmeshfree.model2d;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -13,20 +12,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import net.epsilony.geom.Coordinate;
-import net.epsilony.geom.GeometryMath;
-import net.epsilony.math.util.EquationSolver;
-import net.epsilony.simpmeshfree.model.Boundary;
-import net.epsilony.simpmeshfree.model.Node;
-import net.epsilony.simpmeshfree.utils.PartDiffOrd;
-import net.epsilony.simpmeshfree.model.ShapeFunction;
-import net.epsilony.simpmeshfree.model.ShapeFunctionFactory;
-import net.epsilony.simpmeshfree.model.VolumeCondition;
-import net.epsilony.simpmeshfree.model.WeakFormAssemblier;
-import net.epsilony.simpmeshfree.model.WeakFormProblem;
+import net.epsilony.simpmeshfree.model.*;
 import net.epsilony.simpmeshfree.utils.BCQuadraturePoint;
+import net.epsilony.simpmeshfree.utils.PartDiffOrd;
 import net.epsilony.simpmeshfree.utils.QuadraturePoint;
-import net.epsilony.util.CenterSearcher;
+import net.epsilony.utils.CenterSearcher;
+import net.epsilony.utils.geom.Coordinate;
+import net.epsilony.utils.geom.GeometryMath;
+import net.epsilony.utils.math.EquationSolver;
 import no.uib.cipr.matrix.DenseVector;
 import org.apache.log4j.Logger;
 

@@ -4,13 +4,13 @@
  */
 package net.epsilony.simpmeshfree.model;
 
-import net.epsilony.simpmeshfree.utils.PartDiffOrd;
 import java.util.Collection;
 import java.util.List;
-import net.epsilony.geom.Coordinate;
 import net.epsilony.simpmeshfree.model2d.ShapeFunctions2D;
 import net.epsilony.simpmeshfree.model2d.WeightFunctions2D;
+import net.epsilony.simpmeshfree.utils.PartDiffOrd;
 import net.epsilony.simpmeshfree.utils.PartDiffOrdSettable;
+import net.epsilony.utils.geom.Coordinate;
 
 /**
  * 用于可视(visible),衍射(diffraction)以即透明度(transparency)准则(criterion)</br>

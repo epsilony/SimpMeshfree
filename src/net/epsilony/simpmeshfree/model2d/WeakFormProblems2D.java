@@ -6,25 +6,19 @@ package net.epsilony.simpmeshfree.model2d;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import net.epsilony.simpmeshfree.model.NodeSupportDomainSizer;
-import net.epsilony.simpmeshfree.model.WeakFormProblem;
 import java.util.LinkedList;
 import java.util.List;
-import net.epsilony.geom.Coordinate;
-import net.epsilony.geom.Quadrangle;
-import net.epsilony.geom.Triangle;
-import net.epsilony.math.util.TriangleSymmetricQuadrature;
-import net.epsilony.simpmeshfree.model.Boundary;
-import net.epsilony.simpmeshfree.model.BoundaryCondition;
-import net.epsilony.simpmeshfree.model.VolumeCondition;
-import net.epsilony.simpmeshfree.model.Node;
-import net.epsilony.simpmeshfree.model.NodeSupportDomainSizers;
+import net.epsilony.simpmeshfree.model.*;
 import net.epsilony.simpmeshfree.utils.BCQuadraturePoint;
 import net.epsilony.simpmeshfree.utils.QuadraturePoint;
 import net.epsilony.simpmeshfree.utils.QuadraturePointIterables;
-import net.epsilony.util.ArrayUtils;
-import net.epsilony.util.LayeredRangeTree;
-import net.epsilony.util.CenterSearcher;
+import net.epsilony.utils.ArrayUtils;
+import net.epsilony.utils.CenterSearcher;
+import net.epsilony.utils.LayeredRangeTree;
+import net.epsilony.utils.geom.Coordinate;
+import net.epsilony.utils.geom.Quadrangle;
+import net.epsilony.utils.geom.Triangle;
+import net.epsilony.utils.math.TriangleSymmetricQuadrature;
 import no.uib.cipr.matrix.DenseMatrix;
 
 /**

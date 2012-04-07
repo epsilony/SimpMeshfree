@@ -4,7 +4,7 @@
  */
 package net.epsilony.simpmeshfree.utils;
 
-import net.epsilony.geom.Coordinate;
+import net.epsilony.utils.geom.Coordinate;
 import net.epsilony.simpmeshfree.model.BoundaryCondition;
 import net.epsilony.simpmeshfree.model.VolumeCondition;
 import net.epsilony.simpmeshfree.model2d.BCQuadratureIterables2D;

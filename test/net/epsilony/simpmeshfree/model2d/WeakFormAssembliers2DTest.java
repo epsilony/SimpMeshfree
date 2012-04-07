@@ -4,31 +4,19 @@
  */
 package net.epsilony.simpmeshfree.model2d;
 
-import net.epsilony.simpmeshfree.model.Boundary;
-import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
-import no.uib.cipr.matrix.DenseVector;
-import net.epsilony.simpmeshfree.model.ShapeFunction;
-import java.util.List;
-import net.epsilony.simpmeshfree.model.Node;
 import java.util.LinkedList;
-import net.epsilony.geom.Coordinate;
-import net.epsilony.simpmeshfree.model.BoundaryCondition;
-import net.epsilony.simpmeshfree.model.NodeSupportDomainSizer;
-import net.epsilony.simpmeshfree.model.NodeSupportDomainSizers;
-import net.epsilony.simpmeshfree.utils.PartDiffOrd;
-import net.epsilony.simpmeshfree.model.WeakFormAssemblier;
-import net.epsilony.simpmeshfree.utils.BCQuadraturePoint;
-import net.epsilony.simpmeshfree.utils.BivariateArrayFunction;
-import net.epsilony.simpmeshfree.utils.BivariateCompletePolynomial;
-import net.epsilony.simpmeshfree.utils.QuadraturePoint;
+import java.util.List;
+import net.epsilony.simpmeshfree.model.*;
+import net.epsilony.simpmeshfree.utils.*;
+import net.epsilony.utils.geom.Coordinate;
 import no.uib.cipr.matrix.DenseMatrix;
-import no.uib.cipr.matrix.sparse.FlexCompColMatrix;
+import no.uib.cipr.matrix.DenseVector;
+import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
 import org.junit.After;
 import org.junit.AfterClass;
+import static org.junit.Assert.assertEquals;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import sun.awt.image.ImageWatched.Link;
-import static org.junit.Assert.*;
 
 /**
  *

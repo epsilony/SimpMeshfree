@@ -6,8 +6,8 @@ package net.epsilony.simpmeshfree.model;
 
 import java.util.Collection;
 import java.util.List;
-import net.epsilony.geom.Coordinate;
 import net.epsilony.simpmeshfree.utils.PartDiffOrdSettable;
+import net.epsilony.utils.geom.Coordinate;
 import no.uib.cipr.matrix.DenseVector;
 
 /**

@@ -5,8 +5,8 @@
 package net.epsilony.simpmeshfree.model2d;
 
 import java.util.Comparator;
-import net.epsilony.geom.Coordinate;
 import net.epsilony.simpmeshfree.model.Boundary;
+import net.epsilony.utils.geom.Coordinate;
 
 /**
  *

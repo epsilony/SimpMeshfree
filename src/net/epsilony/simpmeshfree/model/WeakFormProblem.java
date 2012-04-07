@@ -5,10 +5,10 @@
 package net.epsilony.simpmeshfree.model;
 
 import java.util.List;
-import net.epsilony.geom.Coordinate;
+import net.epsilony.utils.geom.Coordinate;
 import net.epsilony.simpmeshfree.utils.BCQuadraturePoint;
 import net.epsilony.simpmeshfree.utils.QuadraturePoint;
-import net.epsilony.util.CenterSearcher;
+import net.epsilony.utils.CenterSearcher;
 
 /**
  *

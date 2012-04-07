@@ -4,23 +4,22 @@
  */
 package net.epsilony.simpmeshfree.model2d;
 
-import net.epsilony.simpmeshfree.model.NodeSupportDomainSizer;
-import net.epsilony.simpmeshfree.model.NodeSupportDomainSizers;
-import net.epsilony.geom.Coordinate;
-import no.uib.cipr.matrix.Vector;
 import java.util.ArrayList;
 import java.util.Random;
-import net.epsilony.simpmeshfree.model2d.ShapeFunctions2D.MLS;
 import net.epsilony.simpmeshfree.model.Node;
-import net.epsilony.simpmeshfree.utils.PartDiffOrd;
+import net.epsilony.simpmeshfree.model.NodeSupportDomainSizer;
+import net.epsilony.simpmeshfree.model.NodeSupportDomainSizers;
 import net.epsilony.simpmeshfree.model.WeightFunction;
+import net.epsilony.simpmeshfree.model2d.ShapeFunctions2D.MLS;
 import net.epsilony.simpmeshfree.utils.BivariateArrayFunction;
 import net.epsilony.simpmeshfree.utils.BivariateCompletePolynomial;
+import net.epsilony.simpmeshfree.utils.PartDiffOrd;
+import net.epsilony.utils.geom.Coordinate;
 import no.uib.cipr.matrix.DenseVector;
 import org.junit.AfterClass;
+import static org.junit.Assert.assertEquals;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *

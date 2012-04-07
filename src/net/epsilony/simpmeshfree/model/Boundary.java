@@ -4,9 +4,9 @@
  */
 package net.epsilony.simpmeshfree.model;
 
-import net.epsilony.geom.Coordinate;
 import net.epsilony.simpmeshfree.model2d.WeakFormProcessor2D;
-import net.epsilony.util.CenterSearcher;
+import net.epsilony.utils.CenterSearcher;
+import net.epsilony.utils.geom.Coordinate;
 
 /**
  * 边界是由一系列的控制点张成的参数曲线或曲面</br>

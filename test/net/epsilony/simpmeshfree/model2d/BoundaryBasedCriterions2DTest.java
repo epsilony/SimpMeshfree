@@ -4,19 +4,20 @@
  */
 package net.epsilony.simpmeshfree.model2d;
 
-import net.epsilony.simpmeshfree.model.NodeSupportDomainSizer;
 import java.util.Collections;
 import java.util.Comparator;
-import net.epsilony.simpmeshfree.model.Node;
-import java.util.List;
-import net.epsilony.geom.Coordinate;
 import java.util.LinkedList;
+import java.util.List;
 import net.epsilony.simpmeshfree.model.Boundary;
+import net.epsilony.simpmeshfree.model.Node;
+import net.epsilony.simpmeshfree.model.NodeSupportDomainSizer;
 import net.epsilony.simpmeshfree.model.NodeSupportDomainSizers;
+import net.epsilony.utils.geom.Coordinate;
 import org.junit.AfterClass;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *
