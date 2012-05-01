@@ -4,12 +4,10 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import net.epsilony.simpmeshfree.model2d.ShapeFunctions2D;
-import net.epsilony.simpmeshfree.model2d.WeightFunctions2D;
-import net.epsilony.simpmeshfree.utils.PartDiffOrd;
-import net.epsilony.simpmeshfree.utils.PartDiffOrdSettable;
+import net.epsilony.simpmeshfree.utils.PartDiffCoordinateFunction;
 import net.epsilony.utils.geom.Coordinate;
 
 /**
@@ -22,28 +20,14 @@ import net.epsilony.utils.geom.Coordinate;
  * @see ShapeFunctions2D
  * @author epsilonyuan@gmail.com
  */
-public interface BoundaryBasedCritieron extends PartDiffOrdSettable {
+public interface BoundaryBasedCritieron{
     /**
-     * filter the nodes which are conflict to the criterion
-     * @param boundaries
      * @param center
-     * @param nodes nodes to be filtered
-     * @param results the filtered results list
+     * @param centerBound 
+     * @param outputNodes
+     * @return supportDomainRadius 
      */
-    void filterNodes(Collection<Boundary> boundaries,Coordinate center,List<Node> nodes,List<Node> results);
+    double setCenter(Coordinate center,Boundary centerBound,List<Node> outputNodes);
     
-    /**
-     * calculate the distance betwean center and node or the distance partial dirivatives respect to center's coordinates
-     * @param node
-     * @param center
-     * @param result
-     * @return result, the content is set by {@link PartDiffOrdSettable#setOrders(net.epsilony.simpmeshfree.utils.PartDiffOrd[]) }
-     */
-    double[] distance(Node node,Coordinate center,double[] result);  
-    
-    /**
-     * 
-     * @return true if {@link #setOrders(net.epsilony.simpmeshfree.utils.PartDiffOrd[]) } and {@link #distance(net.epsilony.simpmeshfree.model.Node, net.epsilony.geom.Coordinate, double[]) } are avilable
-     */
-    boolean isDistanceTrans();
+    DistanceFunction distanceFunction();
 }

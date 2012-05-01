@@ -4,9 +4,10 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import net.epsilony.simpmeshfree.utils.PartDiffOrdSettable;
+import net.epsilony.simpmeshfree.utils.PartDiffOrdered;
 import net.epsilony.utils.geom.Coordinate;
 import no.uib.cipr.matrix.DenseVector;
 
@@ -21,9 +22,6 @@ import no.uib.cipr.matrix.DenseVector;
  * @see PartialDiffType
  * @author epsilonyuan@gmail.com
  */
-public interface ShapeFunction extends PartDiffOrdSettable{
-    
-    DenseVector[] values(Coordinate center,List<Node> nodes,DenseVector[] results);
-
-    DenseVector[] values(Coordinate center, List<Node> nodes, Collection<Boundary> boundaries, DenseVector[] results,List<Node> filteredNodes);
+public interface ShapeFunction extends PartDiffOrdered{   
+    DenseVector[] values(Coordinate center,Boundary centerBnd, DenseVector[] results,ArrayList<Node> resNodes);
 }

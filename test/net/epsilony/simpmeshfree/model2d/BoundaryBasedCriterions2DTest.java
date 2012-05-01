@@ -4,6 +4,7 @@
  */
 package net.epsilony.simpmeshfree.model2d;
 
+import net.epsilony.simpmeshfree.model.LineBoundary;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -113,9 +114,9 @@ public class BoundaryBasedCriterions2DTest {
         Coordinate rear=coordinates.poll();
         do{
             Coordinate front=coordinates.poll();
-            LineBoundary2D tb=new LineBoundary2D();
-            tb.rear=rear;
-            tb.front=front;
+            LineBoundary tb=new LineBoundary();
+            tb.start=rear;
+            tb.end=front;
             bounds.add(tb);
             rear=front;
         }

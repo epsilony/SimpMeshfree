@@ -11,7 +11,7 @@ import net.epsilony.utils.geom.Coordinate;
  *
  * @author epsilonyuan@gmail.com
  */
-public class Coordinate2D{
+public class Coordinate2Ds{
 
     public static Comparator<Coordinate> compX;
     public static Comparator<Coordinate> compY;

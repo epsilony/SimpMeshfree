@@ -4,6 +4,7 @@
  */
 package net.epsilony.simpmeshfree.model2d;
 
+import net.epsilony.simpmeshfree.model.LineBoundary;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -54,20 +55,20 @@ public class WeakFormProblems2D {
         public Node[] nodes;
         double[] NodeSupportDomainRadiums;
         private final double constantDomainRadium;
-        LineBoundary2D[] boundaries;
+        LineBoundary[] boundaries;
         Triangle[] triangleQuadratureDomains;
         Quadrangle[] quadrangleQuadratureDomains;
         VolumeCondition volumeCondition;
         BoundaryCondition[] neumannBCs, dirichletBCs;
         LayeredRangeTree<Node> nodesTree;
-        LayeredRangeTree<LineBoundary2D> boundariesTree;
+        LayeredRangeTree<LineBoundary> boundariesTree;
         int boundaryConditionValueDim;
         double longestBoundaryLength;
         double maxNodeSupportDomainRadium;
         DenseMatrix constitutiveLaw;
 
         /**
-         * @param nodes 所有的结点，作用{@link Node#id}不得重复，其值在区间[0,nodes.size())里
+         * @param nodes 所有的结点，作用{@link Node#id}不得重复，其值在区间[0,nodes.num())里
          * @param nodeSupportDomainRadiums 用于{@link #nodeSupportDomainSizer()}，若为null则所有的结点支持域半径为constantDomainRadium; 若非null,一个Node nd所对应的支持域半径应为nodesSupportDomainRadiums[nd.id]
          * @param constantDomainRadium 用于{@link #nodeSupportDomainSizer()}，当nodeSupportDomainRadiums==null时起作用。
          * @param boundaries 所有的边界
@@ -79,7 +80,7 @@ public class WeakFormProblems2D {
          * @param boundaryConditionValueDim 边界条件的维数，对于二维力学:2
          * @param constitutiveLaw 本构模型 Stress=constitutiveLaw*Strain
          */
-        public ByArrays(Node[] nodes, double[] nodeSupportDomainRadiums, double constantDomainRadium, LineBoundary2D[] boundaries, Triangle[] triangleQuadratureDomains, Quadrangle[] quadrangleQuadratureDomains, VolumeCondition volumeCondition, BoundaryCondition[] neumannBCs, BoundaryCondition[] dirichletBCs, int boundaryConditionValueDim, DenseMatrix constitutiveLaw) {
+        public ByArrays(Node[] nodes, double[] nodeSupportDomainRadiums, double constantDomainRadium, LineBoundary[] boundaries, Triangle[] triangleQuadratureDomains, Quadrangle[] quadrangleQuadratureDomains, VolumeCondition volumeCondition, BoundaryCondition[] neumannBCs, BoundaryCondition[] dirichletBCs, int boundaryConditionValueDim, DenseMatrix constitutiveLaw) {
             this.nodes = nodes;
             this.NodeSupportDomainRadiums = nodeSupportDomainRadiums;
             this.constantDomainRadium = constantDomainRadium;
@@ -91,8 +92,8 @@ public class WeakFormProblems2D {
             this.dirichletBCs = dirichletBCs;
             this.boundaryConditionValueDim = boundaryConditionValueDim;
             nodesTree = new LayeredRangeTree<>(Arrays.asList(nodes), Arrays.asList(Node.comparatorByDim(0), Node.comparatorByDim(1)));
-            boundariesTree = new LayeredRangeTree<>(Arrays.asList(boundaries), Arrays.asList(LineBoundary2D.comparatorByDim(0), LineBoundary2D.comparatorByDim(1)));
-            longestBoundaryLength = LineBoundary2D.longestLength(boundaries);
+            boundariesTree = new LayeredRangeTree<>(Arrays.asList(boundaries), Arrays.asList(LineBoundary.comparatorByDim(0), LineBoundary.comparatorByDim(1)));
+            longestBoundaryLength = LineBoundary.longestLength(boundaries);
             if (null != nodeSupportDomainRadiums) {
                 maxNodeSupportDomainRadium = ArrayUtils.max(nodeSupportDomainRadiums);
             } else {
@@ -139,7 +140,7 @@ public class WeakFormProblems2D {
 
         @Override
         public List<Boundary> getBoundaries() {
-            List<LineBoundary2D> list = Arrays.asList(boundaries);
+            List<LineBoundary> list = Arrays.asList(boundaries);
             return new ArrayList<Boundary>(list);
         }
 
@@ -185,7 +186,7 @@ public class WeakFormProblems2D {
             double distance;
             
             /**
-             * @param distance should be the max support domain radiu of all the nodes
+             * @param projection should be the max support domain radiu of all the nodes
              */
             protected NodeSearcher(double distance) {
                 this.distance = distance;
@@ -223,18 +224,18 @@ public class WeakFormProblems2D {
          */
         public class BoundarySearcher implements CenterSearcher<Coordinate, Boundary> {
 
-            LineBoundary2D fromBoundary = new LineBoundary2D();
-            LineBoundary2D toBoundary = new LineBoundary2D();
+            LineBoundary fromBoundary = new LineBoundary();
+            LineBoundary toBoundary = new LineBoundary();
             Coordinate from = new Coordinate();
             Coordinate to = new Coordinate();
             double distance;
 
             public BoundarySearcher(double distance) {
 
-                fromBoundary.front = from;
-                fromBoundary.rear = from;
-                toBoundary.front = to;
-                toBoundary.rear = to;
+                fromBoundary.end = from;
+                fromBoundary.start = from;
+                toBoundary.end = to;
+                toBoundary.start = to;
                 this.distance = distance;
             }
 
@@ -268,7 +269,7 @@ public class WeakFormProblems2D {
      * 构造一个标准Timoshenko闭合解的结点均匀分布的算例，该算例为一中轴在x轴上的矩型结构，
      * 矩型左端与y轴共线，为Neumann边界。The right side of the rectangle is at line x=width,
      * and the dirichlet boundary condition is applied on the right border
-     * @param nodesGap the maximum x or y distance betwean a node and its nearest neigbor
+     * @param nodesGap the maximum x or y projection betwean a node and its nearest neigbor
      * @param supportDomainRadiu the support domain radiu of all the nodes
      * @param width the width of the cantilever
      * @param height the height of the cantilever
@@ -290,10 +291,10 @@ public class WeakFormProblems2D {
             neumannNodes[i] = new Node(0, height / 2 - rowsGap * i);
         }
         
-        LinkedList<LineBoundary2D> boundaries = new LinkedList<>();
+        LinkedList<LineBoundary> boundaries = new LinkedList<>();
         LinkedList<BoundaryCondition> neumannBcs = new LinkedList<>();
         for (int i = 0; i < neumannNodes.length - 1; i++) {
-            LineBoundary2D bound = new LineBoundary2D(neumannNodes[i].coordinate, neumannNodes[i + 1].coordinate);
+            LineBoundary bound = new LineBoundary(neumannNodes[i].coordinate, neumannNodes[i + 1].coordinate);
             boundaries.add(bound);
             neumannBcs.add(exact.new NeumannBoundaryCondition(bound));
         }
@@ -305,7 +306,7 @@ public class WeakFormProblems2D {
         }
         dirichletNodes[dirichletNodes.length - 1] = new Node(width, height / 2);
         for (int i = 0; i < dirichletNodes.length - 1; i++) {
-            LineBoundary2D bound = new LineBoundary2D(dirichletNodes[i].coordinate, dirichletNodes[i + 1].coordinate);
+            LineBoundary bound = new LineBoundary(dirichletNodes[i].coordinate, dirichletNodes[i + 1].coordinate);
             boundaries.add(bound);
             dirichletBCs.add(exact.new DirichletBoundaryCondition(bound));
         }
@@ -317,13 +318,13 @@ public class WeakFormProblems2D {
             lowBoundaryNodes[i] = new Node((i + 1) * colsGap, -height / 2);
         }
         for (int i = 0; i < upBoundaryNodes.length - 1; i++) {
-            boundaries.add(new LineBoundary2D(upBoundaryNodes[i].coordinate, upBoundaryNodes[i + 1].coordinate));
-            boundaries.add(new LineBoundary2D(lowBoundaryNodes[i].coordinate, lowBoundaryNodes[i + 1].coordinate));
+            boundaries.add(new LineBoundary(upBoundaryNodes[i].coordinate, upBoundaryNodes[i + 1].coordinate));
+            boundaries.add(new LineBoundary(lowBoundaryNodes[i].coordinate, lowBoundaryNodes[i + 1].coordinate));
         }
-        boundaries.add(new LineBoundary2D(neumannNodes[neumannNodes.length - 1].coordinate, lowBoundaryNodes[0].coordinate));
-        boundaries.add(new LineBoundary2D(lowBoundaryNodes[lowBoundaryNodes.length - 1].coordinate, dirichletNodes[0].coordinate));
-        boundaries.add(new LineBoundary2D(dirichletNodes[dirichletNodes.length - 1].coordinate, upBoundaryNodes[0].coordinate));
-        boundaries.add(new LineBoundary2D(upBoundaryNodes[upBoundaryNodes.length - 1].coordinate, neumannNodes[0].coordinate));
+        boundaries.add(new LineBoundary(neumannNodes[neumannNodes.length - 1].coordinate, lowBoundaryNodes[0].coordinate));
+        boundaries.add(new LineBoundary(lowBoundaryNodes[lowBoundaryNodes.length - 1].coordinate, dirichletNodes[0].coordinate));
+        boundaries.add(new LineBoundary(dirichletNodes[dirichletNodes.length - 1].coordinate, upBoundaryNodes[0].coordinate));
+        boundaries.add(new LineBoundary(upBoundaryNodes[upBoundaryNodes.length - 1].coordinate, neumannNodes[0].coordinate));
 
         LinkedList<Node> nodes = new LinkedList<>();
         nodes.addAll(Arrays.asList(neumannNodes));
@@ -357,7 +358,7 @@ public class WeakFormProblems2D {
             }
         }
 
-        return new ByArrays(nodes.toArray(new Node[0]), null, supportDomainRadiu, boundaries.toArray(new LineBoundary2D[0]), null, quadrangles.toArray(new Quadrangle[0]), null, neumannBcs.toArray(new BoundaryCondition[0]), dirichletBCs.toArray(new BoundaryCondition[0]), 2, constitutiveLaw);
+        return new ByArrays(nodes.toArray(new Node[0]), null, supportDomainRadiu, boundaries.toArray(new LineBoundary[0]), null, quadrangles.toArray(new Quadrangle[0]), null, neumannBcs.toArray(new BoundaryCondition[0]), dirichletBCs.toArray(new BoundaryCondition[0]), 2, constitutiveLaw);
     }
 
     /**
@@ -365,8 +366,8 @@ public class WeakFormProblems2D {
      * The Neumann B.C. is simply fixing x and y freedom as 0, at the y axis.
      * The Dirichlet B.C. is simply a horizontal distributing force applyed on the 
      * right side of the bar (x=widith)
-     * @param nodesGap the max distance betwean a node and its nearest neighbor must be no bigger than nodesGap
-     * @param supportDomainRadiu the constant support domain size of all the nodes
+     * @param nodesGap the max projection betwean a node and its nearest neighbor must be no bigger than nodesGap
+     * @param supportDomainRadiu the constant support domain num of all the nodes
      * @param width bar's width, commonly means 'length'
      * @param height the max and min y dimension inside the bar is height/2 and -height/2
      * @param E Young's modulus
@@ -386,10 +387,10 @@ public class WeakFormProblems2D {
             neumannNodes[i] = new Node(0, height / 2 - rowsGap * i);
         }
         neumannNodes[neumannNodes.length - 1] = new Node(0, -height / 2);
-        LinkedList<LineBoundary2D> boundaries = new LinkedList<>();
+        LinkedList<LineBoundary> boundaries = new LinkedList<>();
         LinkedList<BoundaryCondition> neumannBcs = new LinkedList<>();
         for (int i = 0; i < neumannNodes.length - 1; i++) {
-            final LineBoundary2D bound = new LineBoundary2D(neumannNodes[i].coordinate, neumannNodes[i + 1].coordinate);
+            final LineBoundary bound = new LineBoundary(neumannNodes[i].coordinate, neumannNodes[i + 1].coordinate);
             boundaries.add(bound);
             neumannBcs.add(new BoundaryCondition() {
 
@@ -425,7 +426,7 @@ public class WeakFormProblems2D {
         }
         dirichletNodes[dirichletNodes.length - 1] = new Node(width, height / 2);
         for (int i = 0; i < dirichletNodes.length - 1; i++) {
-            final LineBoundary2D bound = new LineBoundary2D(dirichletNodes[i].coordinate, dirichletNodes[i + 1].coordinate);
+            final LineBoundary bound = new LineBoundary(dirichletNodes[i].coordinate, dirichletNodes[i + 1].coordinate);
             boundaries.add(bound);
             dirichletBCs.add(new BoundaryCondition() {
 
@@ -456,13 +457,13 @@ public class WeakFormProblems2D {
             lowBoundaryNodes[i] = new Node((i + 1) * colsGap, -height / 2);
         }
         for (int i = 0; i < upBoundaryNodes.length - 1; i++) {
-            boundaries.add(new LineBoundary2D(upBoundaryNodes[i].coordinate, upBoundaryNodes[i + 1].coordinate));
-            boundaries.add(new LineBoundary2D(lowBoundaryNodes[i].coordinate, lowBoundaryNodes[i + 1].coordinate));
+            boundaries.add(new LineBoundary(upBoundaryNodes[i].coordinate, upBoundaryNodes[i + 1].coordinate));
+            boundaries.add(new LineBoundary(lowBoundaryNodes[i].coordinate, lowBoundaryNodes[i + 1].coordinate));
         }
-        boundaries.add(new LineBoundary2D(neumannNodes[neumannNodes.length - 1].coordinate, lowBoundaryNodes[0].coordinate));
-        boundaries.add(new LineBoundary2D(lowBoundaryNodes[lowBoundaryNodes.length - 1].coordinate, dirichletNodes[0].coordinate));
-        boundaries.add(new LineBoundary2D(dirichletNodes[dirichletNodes.length - 1].coordinate, upBoundaryNodes[0].coordinate));
-        boundaries.add(new LineBoundary2D(upBoundaryNodes[upBoundaryNodes.length - 1].coordinate, neumannNodes[0].coordinate));
+        boundaries.add(new LineBoundary(neumannNodes[neumannNodes.length - 1].coordinate, lowBoundaryNodes[0].coordinate));
+        boundaries.add(new LineBoundary(lowBoundaryNodes[lowBoundaryNodes.length - 1].coordinate, dirichletNodes[0].coordinate));
+        boundaries.add(new LineBoundary(dirichletNodes[dirichletNodes.length - 1].coordinate, upBoundaryNodes[0].coordinate));
+        boundaries.add(new LineBoundary(upBoundaryNodes[upBoundaryNodes.length - 1].coordinate, neumannNodes[0].coordinate));
 
         LinkedList<Node> nodes = new LinkedList<>();
         nodes.addAll(Arrays.asList(neumannNodes));
@@ -496,7 +497,7 @@ public class WeakFormProblems2D {
             }
         }
 
-        return new ByArrays(nodes.toArray(new Node[0]), null, supportDomainRadiu, boundaries.toArray(new LineBoundary2D[0]), null, quadrangles.toArray(new Quadrangle[0]), null, neumannBcs.toArray(new BoundaryCondition[0]), dirichletBCs.toArray(new BoundaryCondition[0]), 2, constitutiveLaw);
+        return new ByArrays(nodes.toArray(new Node[0]), null, supportDomainRadiu, boundaries.toArray(new LineBoundary[0]), null, quadrangles.toArray(new Quadrangle[0]), null, neumannBcs.toArray(new BoundaryCondition[0]), dirichletBCs.toArray(new BoundaryCondition[0]), 2, constitutiveLaw);
     }
 
      /**
@@ -504,8 +505,8 @@ public class WeakFormProblems2D {
      * The Neumann B.C. is simply fixing x and y freedom as 0, at the x axis.
      * The Dirichlet B.C. is simply a vertical distributing force applyed on the 
      * top side of the bar (y=height)
-     * @param nodesGap the max distance betwean a node and its nearest neighbor must be no bigger than nodesGap
-     * @param supportDomainRadiu the constant support domain size of all the nodes
+     * @param nodesGap the max projection betwean a node and its nearest neighbor must be no bigger than nodesGap
+     * @param supportDomainRadiu the constant support domain num of all the nodes
      * @param width the max and min x dimension inside the bar is -width/2 and width/2
      * @param height commonly means 'length' of the bar
      * @param E Young's modulus
@@ -524,10 +525,10 @@ public class WeakFormProblems2D {
         for (int i = 0; i < neumannNodes.length; i++) {
             neumannNodes[i] = new Node(-width / 2 + colsGap * i, 0);
         }
-        LinkedList<LineBoundary2D> boundaries = new LinkedList<>();
+        LinkedList<LineBoundary> boundaries = new LinkedList<>();
         LinkedList<BoundaryCondition> neumannBcs = new LinkedList<>();
         for (int i = 0; i < neumannNodes.length - 1; i++) {
-            final LineBoundary2D bound = new LineBoundary2D(neumannNodes[i].coordinate, neumannNodes[i + 1].coordinate);
+            final LineBoundary bound = new LineBoundary(neumannNodes[i].coordinate, neumannNodes[i + 1].coordinate);
             boundaries.add(bound);
             neumannBcs.add(new BoundaryCondition() {
 
@@ -559,7 +560,7 @@ public class WeakFormProblems2D {
             dirichletNodes[i] = new Node(width / 2 - colsGap * i, height);
         }
         for (int i = 0; i < dirichletNodes.length - 1; i++) {
-            final LineBoundary2D bound = new LineBoundary2D(dirichletNodes[i].coordinate, dirichletNodes[i + 1].coordinate);
+            final LineBoundary bound = new LineBoundary(dirichletNodes[i].coordinate, dirichletNodes[i + 1].coordinate);
             boundaries.add(bound);
             dirichletBCs.add(new BoundaryCondition() {
 
@@ -590,13 +591,13 @@ public class WeakFormProblems2D {
             rightBoundaryNodes[i] = new Node(width / 2, (i + 1) * rowsGap);
         }
         for (int i = 0; i < leftBoundaryNodes.length - 1; i++) {
-            boundaries.add(new LineBoundary2D(leftBoundaryNodes[i].coordinate, leftBoundaryNodes[i + 1].coordinate));
-            boundaries.add(new LineBoundary2D(rightBoundaryNodes[i].coordinate, rightBoundaryNodes[i + 1].coordinate));
+            boundaries.add(new LineBoundary(leftBoundaryNodes[i].coordinate, leftBoundaryNodes[i + 1].coordinate));
+            boundaries.add(new LineBoundary(rightBoundaryNodes[i].coordinate, rightBoundaryNodes[i + 1].coordinate));
         }
-        boundaries.add(new LineBoundary2D(neumannNodes[neumannNodes.length - 1].coordinate, rightBoundaryNodes[0].coordinate));
-        boundaries.add(new LineBoundary2D(rightBoundaryNodes[rightBoundaryNodes.length - 1].coordinate, dirichletNodes[0].coordinate));
-        boundaries.add(new LineBoundary2D(dirichletNodes[dirichletNodes.length - 1].coordinate, leftBoundaryNodes[0].coordinate));
-        boundaries.add(new LineBoundary2D(leftBoundaryNodes[leftBoundaryNodes.length - 1].coordinate, neumannNodes[0].coordinate));
+        boundaries.add(new LineBoundary(neumannNodes[neumannNodes.length - 1].coordinate, rightBoundaryNodes[0].coordinate));
+        boundaries.add(new LineBoundary(rightBoundaryNodes[rightBoundaryNodes.length - 1].coordinate, dirichletNodes[0].coordinate));
+        boundaries.add(new LineBoundary(dirichletNodes[dirichletNodes.length - 1].coordinate, leftBoundaryNodes[0].coordinate));
+        boundaries.add(new LineBoundary(leftBoundaryNodes[leftBoundaryNodes.length - 1].coordinate, neumannNodes[0].coordinate));
 
         LinkedList<Node> nodes = new LinkedList<>();
         nodes.addAll(Arrays.asList(neumannNodes));
@@ -630,7 +631,7 @@ public class WeakFormProblems2D {
             }
         }
 
-        return new ByArrays(nodes.toArray(new Node[0]), null, supportDomainRadiu, boundaries.toArray(new LineBoundary2D[0]), null, quadrangles.toArray(new Quadrangle[0]), null, neumannBcs.toArray(new BoundaryCondition[0]), dirichletBCs.toArray(new BoundaryCondition[0]), 2, constitutiveLaw);
+        return new ByArrays(nodes.toArray(new Node[0]), null, supportDomainRadiu, boundaries.toArray(new LineBoundary[0]), null, quadrangles.toArray(new Quadrangle[0]), null, neumannBcs.toArray(new BoundaryCondition[0]), dirichletBCs.toArray(new BoundaryCondition[0]), 2, constitutiveLaw);
     }
 
     /**
@@ -638,8 +639,8 @@ public class WeakFormProblems2D {
      * One Neumann B.C. is simply fixing x and y freedom as 0, at the y axis.
      * The othe Neumann B.C. is simply a horizontal displacement of y freedom applyed on the 
      * right side of the bar (x=widith)
-     * @param nodesGap the max distance betwean a node and its nearest neighbor must be no bigger than nodesGap
-     * @param supportDomainRadiu the constant support domain size of all the nodes
+     * @param nodesGap the max projection betwean a node and its nearest neighbor must be no bigger than nodesGap
+     * @param supportDomainRadiu the constant support domain num of all the nodes
      * @param width bar's width, commonly means 'length'
      * @param height the max and min y dimension inside the bar is height/2 and -height/2
      * @param E Young's modulus
@@ -661,10 +662,10 @@ public class WeakFormProblems2D {
             neumannNodes[i] = new Node(0, height / 2 - rowsGap * i);
         }
         neumannNodes[neumannNodes.length - 1] = new Node(0, -height / 2);
-        LinkedList<LineBoundary2D> boundaries = new LinkedList<>();
+        LinkedList<LineBoundary> boundaries = new LinkedList<>();
         LinkedList<BoundaryCondition> neumannBcs = new LinkedList<>();
         for (int i = 0; i < neumannNodes.length - 1; i++) {
-            final LineBoundary2D bound = new LineBoundary2D(neumannNodes[i].coordinate, neumannNodes[i + 1].coordinate);
+            final LineBoundary bound = new LineBoundary(neumannNodes[i].coordinate, neumannNodes[i + 1].coordinate);
             boundaries.add(bound);
             neumannBcs.add(new BoundaryCondition() {
 
@@ -698,7 +699,7 @@ public class WeakFormProblems2D {
         }
         neumannRightNodes[neumannRightNodes.length - 1] = new Node(width, height / 2);
         for (int i = 0; i < neumannRightNodes.length - 1; i++) {
-            final LineBoundary2D bound = new LineBoundary2D(neumannRightNodes[i].coordinate, neumannRightNodes[i + 1].coordinate);
+            final LineBoundary bound = new LineBoundary(neumannRightNodes[i].coordinate, neumannRightNodes[i + 1].coordinate);
             boundaries.add(bound);
             neumannRightBCs.add(new BoundaryCondition() {
 
@@ -735,13 +736,13 @@ public class WeakFormProblems2D {
             lowBoundaryNodes[i] = new Node((i + 1) * colsGap, -height / 2);
         }
         for (int i = 0; i < upBoundaryNodes.length - 1; i++) {
-            boundaries.add(new LineBoundary2D(upBoundaryNodes[i].coordinate, upBoundaryNodes[i + 1].coordinate));
-            boundaries.add(new LineBoundary2D(lowBoundaryNodes[i].coordinate, lowBoundaryNodes[i + 1].coordinate));
+            boundaries.add(new LineBoundary(upBoundaryNodes[i].coordinate, upBoundaryNodes[i + 1].coordinate));
+            boundaries.add(new LineBoundary(lowBoundaryNodes[i].coordinate, lowBoundaryNodes[i + 1].coordinate));
         }
-        boundaries.add(new LineBoundary2D(neumannNodes[neumannNodes.length - 1].coordinate, lowBoundaryNodes[0].coordinate));
-        boundaries.add(new LineBoundary2D(lowBoundaryNodes[lowBoundaryNodes.length - 1].coordinate, neumannRightNodes[0].coordinate));
-        boundaries.add(new LineBoundary2D(neumannRightNodes[neumannRightNodes.length - 1].coordinate, upBoundaryNodes[0].coordinate));
-        boundaries.add(new LineBoundary2D(upBoundaryNodes[upBoundaryNodes.length - 1].coordinate, neumannNodes[0].coordinate));
+        boundaries.add(new LineBoundary(neumannNodes[neumannNodes.length - 1].coordinate, lowBoundaryNodes[0].coordinate));
+        boundaries.add(new LineBoundary(lowBoundaryNodes[lowBoundaryNodes.length - 1].coordinate, neumannRightNodes[0].coordinate));
+        boundaries.add(new LineBoundary(neumannRightNodes[neumannRightNodes.length - 1].coordinate, upBoundaryNodes[0].coordinate));
+        boundaries.add(new LineBoundary(upBoundaryNodes[upBoundaryNodes.length - 1].coordinate, neumannNodes[0].coordinate));
 
         LinkedList<Node> nodes = new LinkedList<>();
         nodes.addAll(Arrays.asList(neumannNodes));
@@ -780,7 +781,7 @@ public class WeakFormProblems2D {
                 nodes.toArray(new Node[0]),
                 null,
                 supportDomainRadiu,
-                boundaries.toArray(new LineBoundary2D[0]),
+                boundaries.toArray(new LineBoundary[0]),
                 null,
                 quadrangles.toArray(new Quadrangle[0]),
                 null,

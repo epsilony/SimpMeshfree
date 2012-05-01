@@ -6,7 +6,7 @@ package net.epsilony.simpmeshfree.model;
 
 import java.util.List;
 import net.epsilony.utils.geom.Coordinate;
-import net.epsilony.simpmeshfree.utils.Avatar;
+import net.epsilony.simpmeshfree.utils.Avatarable;
 import net.epsilony.simpmeshfree.utils.BCQuadraturePoint;
 import net.epsilony.simpmeshfree.utils.QuadraturePoint;
 import no.uib.cipr.matrix.DenseMatrix;
@@ -17,7 +17,7 @@ import no.uib.cipr.matrix.Matrix;
  *
  * @author epsilonyuan@gmail.com
  */
-public interface WeakFormAssemblier extends Avatar<WeakFormAssemblier>{
+public interface WeakFormAssemblier extends Avatarable<WeakFormAssemblier>{
 
     void asmBalance(QuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunctions, VolumeCondition volBc);
 

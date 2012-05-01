@@ -20,8 +20,8 @@ public class CenterSearchers2D {
         double maxRadiu;
         Node fromNode=new Node();
         Node toNode=new Node();
-        Coordinate from=fromNode.coordinate;
-        Coordinate to=fromNode.coordinate;
+        Coordinate from=fromNode;
+        Coordinate to=fromNode;
         
         public NodesMaxSupportDomainRadium(double maxRadiu,LayeredRangeTree<Node> nodesTree){
             this.maxRadiu=maxRadiu;

@@ -4,6 +4,7 @@
  */
 package net.epsilony.simpmeshfree.model2d;
 
+import net.epsilony.simpmeshfree.model.LineBoundary;
 import java.util.LinkedList;
 import java.util.List;
 import net.epsilony.simpmeshfree.model.*;
@@ -167,7 +168,7 @@ public class WeakFormAssembliers2DTest {
         qp.coordinate.y = 34;
         qp.weight = 3;
         double supRad = 14;
-        final LineBoundary2D line=new LineBoundary2D(new Coordinate(0,0), new Coordinate(0,50));
+        final LineBoundary line=new LineBoundary(new Coordinate(0,0), new Coordinate(0,50));
         qp.boundaryCondition=new BoundaryCondition() {
 
             @Override

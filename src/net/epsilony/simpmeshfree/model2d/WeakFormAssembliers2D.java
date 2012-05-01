@@ -358,7 +358,7 @@ public class WeakFormAssembliers2D {
 
         LinkedList<SimpAssemblier> avators=new LinkedList<>();
         @Override
-        synchronized public WeakFormAssemblier divisionInstance() {
+        synchronized public WeakFormAssemblier avatorInstance() {
             SimpAssemblier avator=new SimpAssemblier(constitutiveLaw, neumannPenalty, mainVector.size()/2);
             avators.add(avator);
             return avator;
@@ -709,7 +709,7 @@ public class WeakFormAssembliers2D {
 
         LinkedList<ApacheSpareSimpAssemblier> avators=new LinkedList<>();
         @Override
-        synchronized public WeakFormAssemblier divisionInstance() {
+        synchronized public WeakFormAssemblier avatorInstance() {
             ApacheSpareSimpAssemblier avator=new ApacheSpareSimpAssemblier(constitutiveLaw, neumannPenalty, mainVector.size()/2);
             avators.add(avator);
             return avator;

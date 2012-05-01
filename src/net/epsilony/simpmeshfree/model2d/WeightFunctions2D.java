@@ -2,12 +2,18 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.epsilony.simpmeshfree.model2d;
+package net.epsilony.simpmeshfree.vectorMultTDoubleArrayLists;
 
-import net.epsilony.simpmeshfree.model.BoundaryBasedCritieron;
+import gnu.trove.list.array.TDoubleArrayList;
+import static java.lang.Math.min;
+import static java.lang.Math.pow;
+import java.util.ArrayList;
+import java.util.List;
+import net.epsilony.simpmeshfree.model.DistanceFunction;
 import net.epsilony.simpmeshfree.model.Node;
 import net.epsilony.simpmeshfree.model.WeightFunction;
-import net.epsilony.simpmeshfree.utils.PartDiffOrd;
+import static net.epsilony.simpmeshfree.utils.CommonUtils.len2DBase;
+import net.epsilony.simpmeshfree.utils.PartDiffUnivariateFunction;
 import net.epsilony.utils.geom.Coordinate;
 
 /**
@@ -16,219 +22,160 @@ import net.epsilony.utils.geom.Coordinate;
  */
 public class WeightFunctions2D {
 
-    public static abstract class Abstract implements WeightFunction {
+    public static WeightFunction factory(PartDiffUnivariateFunction coreFun, DistanceFunction distFun) {
+        WeightFunctionImp imp=new WeightFunctionImp(coreFun,distFun);
+        return imp;
+    }
 
-        public Abstract() {
-            this.critieron = null;
-        }
-        private final BoundaryBasedCritieron critieron;
+    static class WeightFunctionImp implements WeightFunction {
 
-        protected Abstract(BoundaryBasedCritieron critieron) {
-            this.critieron = critieron;
-        }
-        private int opt, oriIndex, partialXIndex, partialYIndex;
+        private int order;
+        private int baseLen;
+        PartDiffUnivariateFunction coreFun;
+        DistanceFunction distFun;
 
-        @Override
-        public void setOrders(PartDiffOrd[] types) {
-            opt = 0;
-            for (int i = 0; i < types.length; i++) {
-                PartDiffOrd type = types[i];
-                switch (type.sumOrder()) {
-                    case 0:
-                        oriIndex = i;
-                        opt += 1;
-                        break;
-                    case 1:
-                        switch (type.respectDimension(0)) {
-                            case 0:
-                                opt += 2;
-                                partialXIndex = i;
-                                break;
-                            case 1:
-                                opt += 4;
-                                partialYIndex = i;
-                                break;
-                            default:
-                                throw new IllegalArgumentException();
-                        }
-                        break;
-                    default:
-                        throw new IllegalArgumentException();
-                }
-            }
-            if (null != critieron && critieron.isDistanceTrans()) {
-                critieron.setOrders(types);
-            }
-        }
-        double[] distanceResults = new double[3];
-
-        private double[] valuesWithCriterion(Node node, Coordinate point, double supportRad, double[] results) {
-            double nx = node.coordinate.x;
-            double ny = node.coordinate.y;
-            double px = point.x;
-            double py = point.y;
-            double dltX = px - nx;
-            double dltY = py - ny;
-            double[] dists = distanceResults;
-            critieron.distance(node, point, dists);
-            double dis = dists[oriIndex];
-            double r = dis / supportRad;
-            if (r > 1) {
-                switch (opt) {
-                    case 1:
-                        results[oriIndex] = 0;
-                        break;
-                    case 7:
-                        results[oriIndex] = 0;
-                        results[partialXIndex] = 0;
-                        results[partialYIndex] = 0;
-                        break;
-                    default:
-                        throw new UnsupportedOperationException();
-                }
-                return results;
-            }
-            double t;
-            switch (opt) {
-                case 1:
-                    results[oriIndex] = value(r, 0);
-                    break;
-                case 7:
-                    results[oriIndex] = value(r, 0);
-                    t = value(r, 1);
-                    results[partialXIndex] = t * dists[partialXIndex];
-                    results[partialYIndex] = t * dists[partialYIndex];
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
-            }
-
-            return results;
-        }
-
-        private double[] valuesWithoutCriterion(Node node, Coordinate point, double supportRad, double[] results) {
-            double nx = node.coordinate.x;
-            double ny = node.coordinate.y;
-            double px = point.x;
-            double py = point.y;
-            double dltX = px - nx;
-            double dltY = py - ny;
-            double dis = Math.sqrt(dltX * dltX + dltY * dltY);
-            double r = dis / supportRad;
-            if (r > 1) {
-                switch (opt) {
-                    case 1:
-                        results[oriIndex] = 0;
-                        break;
-                    case 7:
-                        results[oriIndex] = 0;
-                        results[partialXIndex] = 0;
-                        results[partialYIndex] = 0;
-                        break;
-                    default:
-                        throw new UnsupportedOperationException();
-                }
-                return results;
-            }
-            double t;
-            switch (opt) {
-                case 1:
-                    results[oriIndex] = value(r, 0);
-                    break;
-                case 7:
-                    results[oriIndex] = value(r, 0);
-                    t = value(r, 1);
-                    results[partialXIndex] = t * dltX / supportRad / dis;
-                    results[partialYIndex] = t * dltY / supportRad / dis;
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
-            }
-
-            return results;
+        private WeightFunctionImp(PartDiffUnivariateFunction coreFun, DistanceFunction distFun) {
+            this.coreFun=coreFun;
+            this.distFun=distFun;
         }
 
         @Override
-        public double[] values(Node node, Coordinate point, double supportRad, double[] results) {
-            if (null == critieron || critieron.isDistanceTrans() == false) {
-                return valuesWithoutCriterion(node, point, supportRad, results);
+        public ArrayList<TDoubleArrayList> values(List<Node> nodes, double supportRad, ArrayList<TDoubleArrayList> results) {
+            initResults(results, nodes);
+            int index=0;
+            TDoubleArrayList coreVals=new TDoubleArrayList(order);
+            TDoubleArrayList dists=new TDoubleArrayList(order);
+            for (Node node :nodes){
+                TDoubleArrayList res=results.get(index++);
+                distFun.values(node,dists);
+                coreFun.values(dists.get(0)/supportRad, coreVals);
+                res.add(coreVals.get(0));
+                
+                if(order>=1){
+                    res.add(coreVals.get(1)*dists.get(1)/supportRad);
+                    res.add(coreVals.get(1)*dists.get(2)/supportRad);
+                }
+            }
+            return results;
+        }
+
+        private void initResults(ArrayList<TDoubleArrayList> results, List<Node> nodes) {
+            for (int i = 0; i < min(nodes.size(), results.size()); i++) {
+                TDoubleArrayList res = results.get(i);
+                res.resetQuick();
+                res.ensureCapacity(baseLen);
+            }
+
+            for (int i = 0; i < nodes.size() - results.size(); i++) {
+                results.add(new TDoubleArrayList(baseLen));
+            }
+        }
+
+        @Override
+        public void setOrder(int order) {
+            if (order < 0 || order >= 2) {
+                throw new UnsupportedOperationException();
+            }
+            this.order = order;
+            baseLen = len2DBase(order);
+        }
+
+        @Override
+        public int getOrder() {
+            return order;
+        }
+    }
+
+    public static class TriSpline implements PartDiffUnivariateFunction {
+
+        private int order;
+
+        @Override
+        public TDoubleArrayList values(double dis, TDoubleArrayList results) {
+            results.resetQuick();
+            
+
+            if (dis > 1) {
+                for (int i = 0; i < order + 1; i++) {
+                    results.add(0);
+                }
+                return results;
+            }
+            if (dis <= 0.5) {
+                results.add(2 / 3.0 + 4 * dis * dis * (-1 + dis));
+                //2/3.0-4*r*r+4*r*r*r;
             } else {
-                return valuesWithCriterion(node, point, supportRad, results);
+                double d = 1 - dis;
+                results.add(4 / 3.0 * d * d * d);
+                //4/3.0-4*r+4*r*r-4/3.0*r*r*r;
             }
-        }
 
-        abstract double value(double r, int partialOrder);
-    }
-
-    public static class TriSpline extends Abstract {
-
-        public TriSpline(BoundaryBasedCritieron criterion) {
-            super(criterion);
-        }
-
-        public TriSpline() {
+            if (order >= 1) {
+                if (dis <= 0.5) {
+                    results.add(4 * dis * (-2 + 3 * dis));
+                    //return -8*r+12*r*r;
+                } else {
+                    double d = 1 - dis;
+                    results.add(-4 * d * d);
+                }
+            }
+            return results;
         }
 
         @Override
-        double value(double r, int partialOrder) {
-            if (r > 1) {
-                return 0;
+        public void setOrder(int order) {
+            if (order < 0 || order >= 2) {
+                throw new UnsupportedOperationException();
             }
-            switch (partialOrder) {
-                case 0:
-                    if (r <= 0.5) {
-                        return 2 / 3.0 + 4 * r * r * (-1 + r);
-                        //return 2/3.0-4*r*r+4*r*r*r;
-                    } else {
-                        double d = 1 - r;
-                        return 4 / 3.0 * d * d * d;
-                        //return 4/3.0-4*r+4*r*r-4/3.0*r*r*r;
-                    }
-                case 1:
-                    if (r <= 0.5) {
-                        return 4 * r * (-2 + 3 * r);
-                        //return -8*r+12*r*r;
-                    } else {
-                        double d = 1 - r;
-                        return -4 * d * d;
-                    }
-                default:
-                    throw new UnsupportedOperationException();
-            }
+            this.order = order;
+        }
+
+        @Override
+        public int getOrder() {
+            return order;
         }
     }
 
-    public static class SimpPower extends Abstract {
+    public static class SimpPower implements PartDiffUnivariateFunction {
 
-        int power;
+        private int power;
+        private int order;
 
         public SimpPower(int power) {
-            super();
-            this.power = power;
-            if (power < 2) {
-                throw new IllegalArgumentException();
-            }
-        }
-
-        public SimpPower(int power, BoundaryBasedCritieron critieron) {
-            super(critieron);
             this.power = power;
         }
 
         @Override
-        double value(double r, int partialOrder) {
+        public TDoubleArrayList values(double r, TDoubleArrayList results) {
+            results.resetQuick();
+
             if (r > 1) {
-                return 0;
+                for (int i = 0; i <= order; i++) {
+                    results.add(0);
+                }
+                return results;
             }
+
             double t = r * r - 1;
-            switch (partialOrder) {
-                case 0:
-                    return Math.pow(t, power);
-                case 1:
-                    return Math.pow(t, power - 1) * power * 2 * r;
-                default:
-                    throw new UnsupportedOperationException();
+            results.add(pow(t, power));
+
+            if (order >= 1) {
+                results.add(pow(t, power - 1) * power * 2 * r);
             }
+            return results;
+        }
+
+        @Override
+        public void setOrder(int order) {
+            if (order < 0 || order >= 2) {
+                throw new UnsupportedOperationException();
+            }
+            this.order = order;
+        }
+
+        @Override
+        public int getOrder() {
+            return order;
         }
     }
 }

@@ -4,6 +4,7 @@
  */
 package net.epsilony.simpmeshfree.model2d;
 
+import net.epsilony.simpmeshfree.model.LineBoundary;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -14,7 +15,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import net.epsilony.simpmeshfree.model.*;
 import net.epsilony.simpmeshfree.utils.BCQuadraturePoint;
-import net.epsilony.simpmeshfree.utils.PartDiffOrd;
 import net.epsilony.simpmeshfree.utils.QuadraturePoint;
 import net.epsilony.utils.CenterSearcher;
 import net.epsilony.utils.geom.Coordinate;
@@ -87,7 +87,7 @@ public class WeakFormProcessor2D {
                 @Override
                 public void run() {
                     ShapeFunction shapeFun = shapeFunFactory.factory();
-                    WeakFormAssemblier assemblierAvator = assemblier.divisionInstance();
+                    WeakFormAssemblier assemblierAvator = assemblier.avatorInstance();
 
                     assemblyBalanceEquation(shapeFun, assemblierAvator);
 
@@ -142,31 +142,25 @@ public class WeakFormProcessor2D {
     void assemblyBalanceEquation(ShapeFunction shapeFun, WeakFormAssemblier assemblierAvator) {
 
         ArrayList<Node> searchedNodes = new ArrayList<>(arrayListSize);
-        ArrayList<Node> filteredNodes = new ArrayList<>(arrayListSize);
+        ArrayList<Node> shapeFunNodes = new ArrayList<>(arrayListSize);
         ArrayList<Boundary> searchedBoundaries = new ArrayList<>(arrayListSize);
 
         VolumeCondition volumnBoundaryCondition = workProblem.getVolumeCondition();
-        Iterable<QuadraturePoint> volIter = workProblem.volumeIterable(quadraturePower);
+        balanceIterator = workProblem.volumeIterable(quadraturePower).iterator();
         CenterSearcher<Coordinate, Node> nodeSearcher = workProblem.nodeSearcher();
         CenterSearcher<Coordinate, Boundary> boundarySearcher = workProblem.boundarySearcher();
 
-        PartDiffOrd[] types;
-        if (null == volumnBoundaryCondition) {
-            types = new PartDiffOrd[]{PartDiffOrd.X(), PartDiffOrd.Y()};
+        shapeFun.setOrder(1);
 
-        } else {
-            types = new PartDiffOrd[]{PartDiffOrd.ORI(), PartDiffOrd.X(), PartDiffOrd.Y()};
-        }
-        shapeFun.setOrders(types);
-
-        DenseVector[] shapeFunctions = new DenseVector[types.length];
+        DenseVector[] shapeFunctions = new DenseVector[3];
         QuadraturePoint qp = new QuadraturePoint();
         Coordinate qPoint = qp.coordinate;
         while (nextBalanceQuadraturePoint(qp)) {
             nodeSearcher.search(qPoint, searchedNodes);
             boundarySearcher.search(qPoint, searchedBoundaries);
-            shapeFun.values(qPoint, searchedNodes, searchedBoundaries, shapeFunctions, filteredNodes);
-            assemblierAvator.asmBalance(qp, filteredNodes, shapeFunctions, volumnBoundaryCondition);
+            shapeFun.values(qPoint, null, shapeFunctions,shapeFunNodes);
+//            shapeFun.values(qPoint, searchedNodes, searchedBoundaries, shapeFunctions, filteredNodes);
+            assemblierAvator.asmBalance(qp, shapeFunNodes, shapeFunctions, volumnBoundaryCondition);
             balanceCount.incrementAndGet();
         }
     }
@@ -187,7 +181,7 @@ public class WeakFormProcessor2D {
 
         DenseVector[] shapeFunctions = new DenseVector[types.length];
 
-        LineBoundary2D line1 = new LineBoundary2D(), line2 = new LineBoundary2D();
+        LineBoundary line1 = new LineBoundary(), line2 = new LineBoundary();
         LinkedList<double[]> results = new LinkedList<>();
         for (Coordinate coord : coords) {
 
@@ -197,12 +191,12 @@ public class WeakFormProcessor2D {
             Iterator<Boundary> boundIter = searchedBoundaries.iterator();
             while (boundIter.hasNext()) {
                 Boundary bound = boundIter.next();
-                Coordinate front = bound.getPoint(bound.pointsSize() - 1);
+                Coordinate front = bound.getPoint(bound.num() - 1);
                 Coordinate rear = bound.getPoint(0);
                 if (front == coord || rear == coord) {
                     break;
                 }
-                if (GeometryMath.crossProduct(rear.x, rear.y, front.x, front.y, coord.x, coord.y) == 0) {
+                if (GeometryMath.pt3Cross2D(rear.x, rear.y, front.x, front.y, coord.x, coord.y) == 0) {
                     double cx = coord.x;
                     double cy = coord.y;
                     double t = (cx - rear.x) * (cx - front.x) + (cy - front.y) * (cy - rear.y);
@@ -210,10 +204,10 @@ public class WeakFormProcessor2D {
                         continue;
                     }
 
-                    line1.rear = rear;
-                    line1.front = coord;
-                    line2.rear = coord;
-                    line2.front = front;
+                    line1.start = rear;
+                    line1.end = coord;
+                    line2.start = coord;
+                    line2.end = front;
                     boundIter.remove();
                     searchedBoundaries.add(line1);
                     searchedBoundaries.add(line2);
@@ -254,7 +248,7 @@ public class WeakFormProcessor2D {
 
         DenseVector[] shapeFunctions = new DenseVector[types.length];
 
-        LineBoundary2D line1 = new LineBoundary2D(), line2 = new LineBoundary2D();
+        LineBoundary line1 = new LineBoundary(), line2 = new LineBoundary();
 
         BCQuadraturePoint qp = new BCQuadraturePoint();
 
@@ -264,14 +258,14 @@ public class WeakFormProcessor2D {
             boundarySearcher.search(qPoint, searchedBoundaries);
 
             Boundary bound = qp.boundaryCondition.getBoundary();
-            if (qPoint != bound.getPoint(0) && qPoint != bound.getPoint(bound.pointsSize() - 1)) {
+            if (qPoint != bound.getPoint(0) && qPoint != bound.getPoint(bound.num() - 1)) {
                 Iterator<Boundary> boundIter = searchedBoundaries.iterator();
                 while (boundIter.hasNext()) {
                     if (bound == boundIter.next()) {
-                        line1.rear = bound.getPoint(0);
-                        line1.front = qp.coordinate;
-                        line2.rear = qp.coordinate;
-                        line2.front = bound.getPoint(bound.pointsSize() - 1);
+                        line1.start = bound.getPoint(0);
+                        line1.end = qp.coordinate;
+                        line2.start = qp.coordinate;
+                        line2.end = bound.getPoint(bound.num() - 1);
                         boundIter.remove();
                         searchedBoundaries.add(line1);
                         searchedBoundaries.add(line2);
@@ -304,7 +298,7 @@ public class WeakFormProcessor2D {
         PartDiffOrd[] types = new PartDiffOrd[]{PartDiffOrd.ORI()};
         shapeFun.setOrders(types);
         DenseVector[] shapeFunctions = new DenseVector[types.length];
-        LineBoundary2D line1 = new LineBoundary2D(), line2 = new LineBoundary2D();
+        LineBoundary line1 = new LineBoundary(), line2 = new LineBoundary();
         BCQuadraturePoint qp = new BCQuadraturePoint();
         while (nextDirichletQuadraturePoint(qp)) {
             Coordinate qPoint = qp.coordinate;
@@ -313,14 +307,14 @@ public class WeakFormProcessor2D {
             nodeSearcher.search(qPoint, searchedNodes);
             boundarySearcher.search(qPoint, searchedBoundaries);
 
-            if (qPoint != bound.getPoint(0) && qPoint != bound.getPoint(bound.pointsSize() - 1)) {
+            if (qPoint != bound.getPoint(0) && qPoint != bound.getPoint(bound.num() - 1)) {
                 Iterator<Boundary> boundIter = searchedBoundaries.iterator();
                 while (boundIter.hasNext()) {
                     if (bound == boundIter.next()) {
-                        line1.rear = bound.getPoint(0);
-                        line1.front = qp.coordinate;
-                        line2.rear = qp.coordinate;
-                        line2.front = bound.getPoint(bound.pointsSize() - 1);
+                        line1.start = bound.getPoint(0);
+                        line1.end = qp.coordinate;
+                        line2.start = qp.coordinate;
+                        line2.end = bound.getPoint(bound.num() - 1);
                         searchedBoundaries.add(line1);
                         searchedBoundaries.add(line2);
                         break;

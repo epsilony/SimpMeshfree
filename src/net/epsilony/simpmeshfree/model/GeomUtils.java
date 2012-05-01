@@ -1,0 +1,764 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package net.epsilony.simpmeshfree.model;
+
+import gnu.trove.list.array.TIntArrayList;
+import java.util.*;
+import net.epsilony.simpmeshfree.utils.Avatarable;
+import net.epsilony.utils.CenterDistanceSearcher;
+import net.epsilony.utils.LayeredRangeTree;
+import net.epsilony.utils.geom.CenterDistanceComparator;
+import net.epsilony.utils.geom.Coordinate;
+import net.epsilony.utils.geom.Coordinates;
+import net.epsilony.utils.geom.GeometryMath;
+import static net.epsilony.utils.geom.GeometryMath.*;
+import no.uib.cipr.matrix.DenseMatrix;
+import no.uib.cipr.matrix.DenseVector;
+
+/**
+ *
+ * @author epsilon
+ */
+public class GeomUtils implements Avatarable<GeomUtils> {
+
+    ArrayList<Boundary> boundaries;
+    ArrayList<Node> allNodes;
+    ArrayList<Node> spaceNodes;
+    ArrayList<Coordinate> bndNormals;
+    int[] bndStatusCache;
+    int[] nodeStatusCache;
+    int allBndNodeNum;
+    public static final int MAX_BOUNDARY_NEIGHBORS = 3;
+    public int defaultMaxNodeNumInSupportDomain = 50;
+    String indexingSetting = "default";
+    int dim = 3;
+    ArrayList<Node> bndCenters;
+    double[] bndRadius;
+    double maxBndRad;
+    Coordinate publicNormal = null;   //Only for 2D lines;
+    CenterDistanceSearcher<Coordinate, Boundary> boundarySearcher;
+    CenterDistanceSearcher<Coordinate, Node> spaceNodeSearcher;
+    CenterDistanceSearcher<Coordinate, Node> nodeSearcher;
+    CenterDistanceSearcher<Coordinate, Node> boundaryNodeSearcher;
+    TIntArrayList intCache1 = new TIntArrayList(defaultMaxNodeNumInSupportDomain);
+    TIntArrayList intCache2 = new TIntArrayList(defaultMaxNodeNumInSupportDomain);
+    private NearestKVisibleDomainSizer domainSizer;
+    int leastNodesNumInDomain = 10;
+    double initSearchRadius;
+
+    void fillNodeStatusCache(Collection<Node> nodes, int value) {
+        if (null == nodes) {
+            Arrays.fill(nodeStatusCache, value);
+            return;
+        }
+        for (Node nd : nodes) {
+            nodeStatusCache[nd.id] = value;
+        }
+    }
+
+    void fillBndStatusCache(Collection<Boundary> bnds, int value) {
+        if (null == bnds) {
+            Arrays.fill(bndStatusCache, value);
+        }
+        for (Boundary bnd : bnds) {
+            bndStatusCache[bnd.getId()] = value;
+        }
+    }
+
+    /**
+     * Searches the boundaries which has common points with a shpere.
+     *
+     * @param center sphere center
+     * @param radius 
+     * @param results
+     * @return results
+     */
+    public List<Boundary> searchBoundary(Coordinate center, double radius, List<Boundary> results) {
+        return boundarySearcher.search(center, radius, results);
+    }
+
+    public List<Node> searchSpaceNodes(Coordinate center, double radius, List<Node> results) {
+        return spaceNodeSearcher.search(center, radius, results);
+    }
+
+    public List<Node> searchNodes(Coordinate center, double radius, List<Node> results) {
+        return nodeSearcher.search(center, radius, results);
+    }
+
+    /**
+     * Gets the nodesTree at the border of
+     * <code>bnds</code>.</br>
+     * <code>bnds</code> can tiles out several pieces of shells with closed
+     * borders. Even only one {@link LineBoundary line} has a border with two
+     * nodesTree.
+     *
+     * @param bnds
+     * @return {@link Node nodesTree} on borders without duplication. The sort
+     * of these nodesTree is not definate.
+     */
+    public LinkedList<Node> getBorderNodes(Collection<Boundary> bnds) {
+
+        LinkedList<Node> result = new LinkedList<>();
+
+
+        fillBndStatusCache(bnds, 1);
+        int ndNum = 0;
+        for (Boundary bnd : bnds) {
+            for (int i = 0; i < bnd.num(); i++) {
+                if (bndStatusCache[bnd.getId()] != 1) {
+                    Node n1 = bnd.getNode(i);
+                    Node n2 = bnd.getNode((i + 1) % bnd.num());
+                    nodeStatusCache[n1.id] = n2.id;
+                    if (result.isEmpty()) {
+                        result.add(n1);
+                    }
+                    ndNum++;
+                }
+            }
+        }
+        if (result.isEmpty()) {
+            return result;
+        }
+        Node start = result.getLast();
+        Node nd = start;
+        Node ndNext;
+        do {
+            ndNext = allNodes.get(nodeStatusCache[nd.id]);
+            result.add(ndNext);
+            nd = ndNext;
+        } while (nd != start);
+        if (ndNum != result.size()) {
+            throw new IllegalStateException();
+        }
+        return result;
+
+    }
+
+    /**
+     * Established for {@link Avatarable} implementation.
+     */
+    private GeomUtils() {
+    }
+
+    public GeomUtils(ArrayList<Boundary> bounds, ArrayList<Node> spacesNodes) {
+        this.boundaries = bounds;
+        this.spaceNodes = spacesNodes;
+        indexingNodes();
+        indexingBoundaries();
+    }
+
+    @Override
+    public GeomUtils avatorInstance() {
+        GeomUtils avator = new GeomUtils();
+
+        avator.allBndNodeNum = allBndNodeNum;
+        avator.allNodes = allNodes;
+        avator.bndCenters = bndCenters;
+        avator.bndNormals = bndNormals;
+        avator.bndRadius = bndRadius;
+        avator.bndStatusCache = new int[bndStatusCache.length];
+        avator.fillBndStatusCache(null, -1);
+        avator.boundaries = boundaries;
+        avator.boundaryNodeSearcher = boundaryNodeSearcher;
+        avator.boundarySearcher = boundarySearcher;
+        avator.defaultMaxNodeNumInSupportDomain = defaultMaxNodeNumInSupportDomain;
+        avator.dim = dim;
+        avator.domainSizer=domainSizer;
+        avator.indexingSetting = indexingSetting;
+        //intCache1,intCache2 will initiated by themselves
+        avator.leastNodesNumInDomain=leastNodesNumInDomain;
+        avator.maxBndRad = maxBndRad;
+        avator.nodeSearcher = nodeSearcher;
+        avator.nodeStatusCache = new int[nodeStatusCache.length];
+        avator.fillNodeStatusCache(null, -1);
+        avator.publicNormal = publicNormal;
+        avator.spaceNodeSearcher = spaceNodeSearcher;
+        avator.spaceNodes = spaceNodes;
+
+        return avator;
+    }
+
+    /**
+     * Do nothing!
+     */
+    @Override
+    public void uniteAvators() {
+    }
+
+    public static class LayeredRangeTreeNodeSearcher implements CenterDistanceSearcher<Coordinate, Node> {
+
+        int dim;
+        LayeredRangeTree<Node> nodesTree;
+
+        public LayeredRangeTreeNodeSearcher(int dim, List<Node> nodes) {
+            this.dim = dim;
+            nodesTree = new LayeredRangeTree<>(nodes, Coordinates.genComparators(dim, new Node()));
+        }
+
+        @Override
+        public List<Node> search(Coordinate center, double radius, List<Node> results) {
+            Node from = new Node();
+            Node to = new Node();
+            for (int i = 0; i < dim; i++) {
+                double centerDim = center.getDim(dim);
+                from.setDim(dim, centerDim - radius);
+                to.setDim(dim, centerDim + radius);
+            }
+            LinkedList<Node> tlist = new LinkedList<>();
+            nodesTree.search(tlist, from, to);
+            results.clear();
+            double radiusSq = radius * radius;
+            for (Node nd : tlist) {
+                double distSq = distanceSquare(center, nd);
+                if (distSq > radiusSq) {
+                    continue;
+                } else {
+                    results.add(nd);
+                }
+            }
+            return results;
+        }
+    }
+
+    class LayeredRangeTreeBoundarySearcher implements CenterDistanceSearcher<Coordinate, Boundary> {
+
+        LayeredRangeTree<Node> boundaryTree;
+
+        @Override
+        public List<Boundary> search(Coordinate center, double radius, List<Boundary> results) {
+            Node from = new Node();
+            Node to = new Node();
+            for (int i = 0; i < dim; i++) {
+                double centerDim = center.getDim(dim);
+                from.setDim(dim, centerDim - radius - maxBndRad);
+                to.setDim(dim, centerDim + radius + maxBndRad);
+            }
+            LinkedList<Node> centerResults = new LinkedList<>();
+            boundaryTree.search(centerResults, from, to);
+            if (null == results) {
+                results = new LinkedList<>();
+            } else {
+                results.clear();
+            }
+            for (Node bndCenter : centerResults) {
+                int centerId = bndCenter.id;
+                Boundary bnd = boundaries.get(centerId);
+                double realDist = distance(bndCenter, center);
+                if (realDist - bndRadius[centerId] <= radius && BoundaryUtils.isBoundaryIntersect(bnd, center, radius)) {
+                    results.add(bnd);
+                }
+            }
+            return results;
+        }
+
+        public LayeredRangeTreeBoundarySearcher() {
+            boundaryTree = new LayeredRangeTree<>(bndCenters, Coordinates.genComparators(dim, new Node()));
+        }
+    }
+
+    private void indexingNodes() {
+        for (Boundary bnd : boundaries) {
+            for (int i = 0; i < bnd.num(); i++) {
+                Node node = bnd.getNode(i);
+                node.id = -1;
+            }
+        }
+        LinkedList<Node> tNodes = new LinkedList<>();
+        for (Boundary bnd : boundaries) {
+            for (int i = 0; i < bnd.num(); i++) {
+                Node node = bnd.getNode(i);
+                if (node.id == -1) {
+                    node.id = tNodes.size();
+                    tNodes.add(node);
+                }
+            }
+        }
+        allBndNodeNum = tNodes.size();
+
+        for (int i = 0; i < spaceNodes.size(); i++) {
+            Node node = spaceNodes.get(i);
+            node.id = tNodes.size();
+            tNodes.add(node);
+        }
+        allNodes = new ArrayList<>(tNodes);
+        nodeStatusCache = new int[tNodes.size()];
+        Arrays.fill(nodeStatusCache, -1);
+
+        spaceNodeSearcher = new LayeredRangeTreeNodeSearcher(dim, spaceNodes);
+        nodeSearcher = new LayeredRangeTreeNodeSearcher(dim, allNodes);
+        initSearchRadius = Math.sqrt(leastNodesNumInDomain / 3.0) * 1.5 * maxBndRad;
+        domainSizer = new NearestKVisibleDomainSizer(leastNodesNumInDomain, initSearchRadius);
+
+    }
+
+    private void indexingBoundaries() {
+        bndStatusCache = new int[boundaries.size()];
+        Arrays.fill(nodeStatusCache, -1);
+        bndCenters = new ArrayList<>(boundaries.size());
+        bndRadius = new double[boundaries.size()];
+        double maxR = 0;
+        for (Boundary bnd : boundaries) {
+            int i = bndCenters.size();
+            bnd.setId(i);
+            Node center = new Node();
+            center.id = i;
+            double r = bnd.circum(center);
+            bndCenters.add(center);
+            bndRadius[i] = r;
+            if (maxR < r) {
+                maxR = r;
+            }
+
+            Coordinate normal = new Coordinate();
+            if (dim == 2) {
+                BoundaryUtils.outNormal((LineBoundary) bnd, publicNormal, normal);
+            } else {
+                BoundaryUtils.outNormal((TriangleBoundary) bnd, normal);
+            }
+            bndNormals.add(normal);
+        }
+        maxBndRad = maxR;
+        switch (indexingSetting.toLowerCase()) {
+            case "layered3D":
+            case "default":
+            default:
+                boundarySearcher = new LayeredRangeTreeBoundarySearcher();
+        }
+    }
+
+    /**
+     * Given a set of boundaries (bnds), divide the set into sub sets (output)
+     * by neighborhoods that means: the Union of output is bnds, for any j
+     * output.get(j).get(neighbor)(any) is not in output.get(any but not j).
+     *
+     * @param bnds input bnds
+     * @param output
+     * @param bndToOutputIds
+     */
+    void divideContinueSets(ArrayList<Boundary> bnds, ArrayList<LinkedList<Boundary>> output, TIntArrayList bndToOutputIds) {
+        //At here the this.boundaryStatusCache should abey these rules:
+        //TRUE: boundaryStatusCache.num()>=max(bnd.num for bnd in bnds)
+        //TRUE: id == -1 for id in boundaryStatusCache 
+
+        // boundaryStatusCache.get(bnd.getId())==-1 means bnd is not in bnds 
+        output.clear();
+        output.ensureCapacity(bnds.size());
+        bndToOutputIds.ensureCapacity(bnds.size());
+
+        TIntArrayList actNeighborSetIds = new TIntArrayList(MAX_BOUNDARY_NEIGHBORS);
+        for (Boundary bnd : bnds) {
+            actNeighborSetIds.reset();
+            for (int i = 0; i < bnd.num(); i++) {
+                Boundary neighbor = bnd.getNeighbor(i);
+                if (null == neighbor) {
+                    continue;
+                }
+                int setIdOfNeighbor = bndStatusCache[neighbor.getId()];
+                if (setIdOfNeighbor != -1) {
+                    actNeighborSetIds.add(setIdOfNeighbor);
+                }
+            }
+            if (actNeighborSetIds.isEmpty()) {
+                int newSetId = output.size();
+                LinkedList<Boundary> newSetList = new LinkedList<>();
+                newSetList.add(bnd);
+                output.add(newSetList);
+                bndStatusCache[bnd.getId()] = newSetId;
+            } else {
+                int mergyAimId = actNeighborSetIds.get(0);
+                LinkedList<Boundary> mergyAimList = output.get(mergyAimId);
+                mergyAimList.add(bnd);
+                bndStatusCache[bnd.getId()] = mergyAimId;
+
+                for (int i = 1; i < actNeighborSetIds.size(); i++) {
+                    int toBeMergiedId = actNeighborSetIds.get(i);
+                    if (toBeMergiedId == mergyAimId) {
+                        continue;
+                    }
+
+                    LinkedList<Boundary> toBeMergiedList = output.get(toBeMergiedId);
+
+                    if (toBeMergiedList.size() > mergyAimList.size()) {
+                        LinkedList<Boundary> t = mergyAimList;
+                        mergyAimList = toBeMergiedList;
+                        toBeMergiedList = t;
+                        int ti = mergyAimId;
+                        mergyAimId = toBeMergiedId;
+                        toBeMergiedId = ti;
+                    }
+
+                    for (Boundary tBnds : toBeMergiedList) {
+                        bndStatusCache[tBnds.getId()] = mergyAimId;
+                    }
+                    mergyAimList.addAll(toBeMergiedList);
+                    output.set(toBeMergiedId, null);
+                }
+            }
+        }
+
+        //the output is not compact, with some null in it, remove the null items and reset the bnd set ids.
+        int realId = 0;
+        //borrow the memory of bndToOutputIds temporarily.
+        TIntArrayList oldIdToRealId = bndToOutputIds;
+
+        oldIdToRealId.reset();
+        LinkedList<LinkedList<Boundary>> tList = new LinkedList<>();
+        for (int i = 0; i < output.size(); i++) {
+            oldIdToRealId.add(realId);
+            LinkedList<Boundary> get_i = output.get(i);
+            if (get_i != null) {
+                tList.add(get_i);
+                realId++;
+            }
+        }
+        output.clear();
+        output.addAll(tList);
+
+        for (Boundary bnd : bnds) {
+            int oriSetId = bndStatusCache[bnd.getId()];
+            bndStatusCache[bnd.getId()] = oldIdToRealId.getQuick(oriSetId);
+        }
+
+        bndToOutputIds.reset();
+        for (Boundary bnd : bnds) {
+            int bndSetId = bndStatusCache[bnd.getId()];
+            bndToOutputIds.add(bndSetId);
+            bndStatusCache[bnd.getId()] = -1;
+        }
+    }
+
+    /**
+     *
+     * @param bnds
+     * @param pt
+     * @param results
+     * @return
+     */
+    public List<Boundary> filterOutsideBnds(List<Boundary> bnds, Coordinate pt, List<Boundary> results) {
+        if (null == results) {
+            results = new LinkedList<>();
+        } else {
+            results.clear();
+        }
+
+        Coordinate tc = new Coordinate();
+        for (Boundary bnd : bnds) {
+            if (isPtInSideBnd(bnd, pt, tc)) {
+                results.add(bnd);
+            }
+        }
+
+        return results;
+    }
+
+    /**
+     * Determines whether pt is inside of bnd
+     *
+     * @param bnd
+     * @param pt
+     * @param tCache for accelarating cache, can be null
+     * @return
+     */
+    public boolean isPtInSideBnd(Boundary bnd, Coordinate pt, Coordinate tCache) {
+        if (null == tCache) {
+            tCache = new Coordinate();
+        }
+        int id = bnd.getId();
+        Coordinate normal = bndNormals.get(id);
+        Node minDisNode = BoundaryUtils.nearestBoundaryNode(pt, bnd);
+        double d = dot(minus(pt, minDisNode, tCache), normal);
+        if (d < 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public void compVisibleFilter(Coordinate center, ArrayList<Node> spaceNds, ArrayList<Boundary> bnds, TIntArrayList nodeBlockNums, TIntArrayList nodeBlockBndIdx, ArrayList<Node> outNds) {
+        List<Node> bndNds = getBndsNodes(bnds, null);
+        int nodeSize = bndNds.size() + spaceNds.size();
+        if (outNds == null) {
+            outNds = new ArrayList<>(nodeSize);
+        } else {
+            outNds.clear();
+            outNds.ensureCapacity(nodeSize);
+        }
+
+
+        nodeBlockNums.reset();
+        nodeBlockNums.ensureCapacity(nodeSize);
+        nodeBlockBndIdx.reset();
+        nodeBlockBndIdx.ensureCapacity(nodeSize);
+
+        intCache1.reset();
+        intCache1.ensureCapacity(bndNds.size());
+        intCache2.reset();
+        intCache2.ensureCapacity(bndNds.size());
+
+        visibleStatus(center, bndNds, bnds, nodeBlockNums, nodeBlockBndIdx, true);
+        visibleStatus(center, spaceNds, bnds, intCache1, intCache2, false);
+
+        outNds.addAll(bndNds);
+        outNds.addAll(spaceNds);
+        nodeBlockNums.addAll(intCache1);
+        nodeBlockBndIdx.addAll(intCache2);
+    }
+
+    /**
+     * Determines the visiability of
+     * <code>nds</code> from
+     * <code>center</code>. A boundary in
+     * <code>bnds</code> may blocks the visiability betwean
+     * <code>center</code> and
+     * <code>nds</code> A boundary node will not blocked by the boundaries that
+     * the node belongs to.
+     *
+     * @param center
+     * @param nds should all be space nodesTree or should all be boundary
+     * nodesTree
+     * @param bnds
+     * @param nodeBlockNums There is
+     * <code>nodeBlockNums.get(i)</code> boundaries blocked betwean
+     * <code>nds.get(i)</code> and
+     * <code>center</code>. For acceleration, if the
+     * <code>nds.get(i)</code> is blocked by twice, it won't be considered
+     * later. So that the max item in this will not > 2.
+     * @param nodeBlockBndIdx The the boundary which
+     * <code>getId</code> is
+     * <code>nodeBlockBndIdx</code> blocks betwean
+     * <code>center</code> and
+     * <code>nds.get(i)</code>. </br> If there are not only one boundary blocks
+     * betwean
+     * <code>center</code> and
+     * <code>nds.get(i)</code> , that is
+     * <code>nodeBlockNums</code> >=2 , only one of the blocking boundary's id
+     * will be recorded here.
+     * @param isBoundaryNode is the
+     * <code>nds</code> are all boundary nodesTree or are all not
+     */
+    public void visibleStatus(Coordinate center, List<Node> nds, List<Boundary> bnds, TIntArrayList nodeBlockNums, TIntArrayList nodeBlockBndIdx, boolean isBoundaryNode) {
+        Coordinate t = new Coordinate();
+        DenseMatrix tMat = null;
+        DenseVector tVec = null, tVec2 = null;
+        nodeBlockNums.reset();
+        nodeBlockNums.ensureCapacity(nds.size());
+        nodeBlockBndIdx.reset();
+        nodeBlockNums.ensureCapacity(nds.size());
+        for (int i = 0; i < nds.size(); i++) {
+            nodeBlockNums.add(0);
+            nodeBlockBndIdx.add(-1);
+        }
+        if (3 == dim) {
+            tMat = new DenseMatrix(3, 3);
+            tVec = new DenseVector(3);
+            tVec2 = new DenseVector(3);
+        }
+        int bIdx = 0;
+        for (Boundary bnd : bnds) {
+            if (!isBoundaryNode && !isPtInSideBnd(bnd, center, t)) {
+                bIdx++;
+                continue;
+            }
+            int nIdx = 0;
+            for (Node nd : nds) {
+
+                if (nodeBlockNums.get(nIdx) > 1) {
+                    nIdx++;
+                    continue;
+                }
+                boolean needContinue = false;
+                for (int i = 0; isBoundaryNode && i < bnd.num(); i++) {
+                    if (nd == bnd.getNode(i)) {
+                        needContinue = true;
+                        break;
+                    }
+                }
+                if (needContinue) {
+                    nIdx++;
+                    continue;
+                }
+                boolean isNdInSide = isPtInSideBnd(bnd, nd, t);
+                if (isNdInSide) {
+                    nIdx++;
+                    continue;
+                }
+                boolean isInConvecCone;
+                switch (dim) {
+                    case 2:
+                        LineBoundary line = (LineBoundary) bnd;
+                        isInConvecCone = BoundaryUtils.isInConvexCone(line, center, nd);
+                        break;
+                    case 3:
+                        TriangleBoundary tri = (TriangleBoundary) bnd;
+                        isInConvecCone = BoundaryUtils.isInConvexCone(tri, center, nd, tMat, tVec, tVec2);
+                        break;
+                    default:
+                        throw new IllegalStateException();
+                }
+                if (isInConvecCone) {
+                    int blockNum = nodeBlockNums.get(nIdx) + 1;
+                    nodeBlockNums.setQuick(nIdx, blockNum);
+                    nodeBlockBndIdx.setQuick(nIdx, bIdx);
+                }
+                nIdx++;
+            }
+            bIdx++;
+        }
+    }
+
+    /**
+     * Gets the nodesTree of
+     * <code>bnds</code>
+     *
+     * @param bnds
+     * @param result can be null
+     * @return nodesTree without duplication
+     */
+    public List<Node> getBndsNodes(Collection<Boundary> bnds, List<Node> result) {
+        if (result == null) {
+            result = new LinkedList<>();
+        } else {
+            result.clear();
+        }
+        for (Boundary bnd : bnds) {
+            for (int i = 0; i < bnd.num(); i++) {
+                Node node = bnd.getNode(i);
+                if (nodeStatusCache[node.id] == -1) {
+                    nodeStatusCache[node.id] = 1;
+                    result.add(node);
+                }
+            }
+        }
+        for (Node nd : result) {
+            nodeStatusCache[nd.id] = -1;
+        }
+        return result;
+    }
+
+    /**
+     * Calculates a position translate from
+     * <code>pt</code> into the inside half space of
+     * <code>bnd</code> a little. The translation is along the out normal of
+     * <code>bnd</code> in opposite direction.
+     *
+     * @param pt translation begining
+     * @param bnd
+     * @param ratio the translation distance / the circument raidus of
+     * <code>bnd</code>
+     * @param result can be null
+     * @return result
+     */
+    public Coordinate bndPtTrans(Coordinate pt, Boundary bnd, double ratio, Coordinate result) {
+        if (null == result) {
+            result = new Coordinate();
+        }
+        Coordinate normal = bndNormals.get(bnd.getId());
+        double transDist = -bndRadius[bnd.getId()] * ratio;
+        GeometryMath.scale(normal, transDist, result);
+        return result;
+    }
+
+    public class VisibleCritieron implements BoundaryBasedCritieron {
+
+        public int nodeNumMin, nodeNumMax;
+        public double radiusEnlargeFactor = 1.2,
+                radiusSafeFactor = 1.1,
+                centerTranserDistanceRatio = 0.01;    //Center at Boundary Needs to transfer against boundary normal temprorily to ensure visibleFilter algorithm's robust
+
+        public VisibleCritieron(int nodeNumMin, int nodeNumMax) {
+            this.nodeNumMin = nodeNumMin;
+            this.nodeNumMax = nodeNumMax;
+        }
+        DistanceFunction distFun = new DistanceFunctions.Common();
+
+        @Override
+        public double setCenter(Coordinate center, Boundary centerBnd, List<Node> outputNodes) {
+            distFun.setCenter(center);
+            Coordinate actCenter;
+            if (centerBnd != null) {
+                actCenter = new Coordinate();
+                bndPtTrans(center, centerBnd, centerTranserDistanceRatio, actCenter);
+            } else {
+                actCenter = center;
+            }
+
+            return domainSizer.domain(actCenter, outputNodes);
+        }
+
+        @Override
+        public DistanceFunction distanceFunction() {
+            return distFun;
+        }
+    }
+
+    public class NearestKVisibleDomainSizer implements SupportDomainSizer {
+
+        int k;
+        double rInit;
+        double enlargeRatio = 1.42;
+        int maxIter = 4;
+        CenterDistanceComparator<Coordinate> comp = Coordinates.normalCenterDistanceComparator();
+        PriorityQueue<Node> pq = new PriorityQueue(defaultMaxNodeNumInSupportDomain, comp);
+        LinkedList<Boundary> bnds = new LinkedList<>();
+        LinkedList<Node> nds = new LinkedList<>();
+        LinkedList<Node> bndNds = new LinkedList<>();
+        TIntArrayList blockedNum = new TIntArrayList(defaultMaxNodeNumInSupportDomain);
+        TIntArrayList blockedBndId = new TIntArrayList(defaultMaxNodeNumInSupportDomain);
+
+        public NearestKVisibleDomainSizer(int k, double rInit) {
+            this.k = k;
+            this.rInit = rInit;
+        }
+
+        @Override
+        public double domain(Coordinate center, List<Node> outputs) {
+            double rSearch = rInit;
+            int iter = 1;
+            do {
+                searchSpaceNodes(center, rSearch, nds);
+                searchBoundary(center, rSearch, bnds);
+                visibleStatus(center, nds, bnds, blockedNum, blockedBndId, false);
+                outputs.clear();
+                int idx = 0;
+                for (Node nd : nds) {
+                    if (blockedNum.getQuick(idx) < 1) {
+                        outputs.add(nd);
+                    }
+                    idx++;
+                }
+                getBndsNodes(bnds, bndNds);
+                visibleStatus(center, bndNds, bnds, blockedNum, blockedBndId, true);
+                idx = 0;
+                for (Node nd : bndNds) {
+                    if (blockedNum.getQuick(idx) < 1) {
+                        outputs.add(nd);
+                    }
+                    idx++;
+                }
+                rSearch *= enlargeRatio;
+                iter++;
+            } while (outputs.size() < k && iter <= maxIter);
+
+            if (outputs.size() < k) {
+                throw new IllegalStateException();
+            }
+
+            pq.clear();
+            comp.setCenter(center);
+            for (Node nd : outputs) {
+                pq.add(nd);
+                if (pq.size() > k) {
+                    pq.poll();
+                }
+            }
+
+            Node nd = pq.peek();
+            double radius = distance(center, nd);
+            outputs.clear();
+            outputs.addAll(pq);
+            return radius;
+        }
+    }
+}

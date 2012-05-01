@@ -268,22 +268,21 @@ public class QuadraturePointIterables {
      */
     public static class IterablesWrapper implements Iterable<QuadraturePoint> {
 
-        Iterable<QuadraturePoint>[] iterables;
+        ArrayList<Iterable<QuadraturePoint>> iterables=new ArrayList<>();
         Iterator<QuadraturePoint> iterator;
         int index;
 
         public IterablesWrapper(Iterable<QuadraturePoint>[] iterables) {
-            this.iterables = iterables;
-            if (iterables.length > 0) {
+            this.iterables.addAll(Arrays.asList(iterables));
+            if (iterables.length>0) {
                 iterator = iterables[0].iterator();
             }
         }
 
         public IterablesWrapper(Collection<Iterable<QuadraturePoint>> iterables) {
-            ArrayList<Iterable<QuadraturePoint>> alist = new ArrayList<>(iterables);
-            this.iterables = alist.toArray(new Iterable<>[0]);
+            this.iterables.addAll(iterables);
             if (iterables.size() > 0) {
-                iterator = this.iterables[0].iterator();
+                iterator = this.iterables.get(0).iterator();
             }
         }
 
@@ -296,9 +295,9 @@ public class QuadraturePointIterables {
                     if (null == iterator) {
                         return false;
                     }
-                    while (iterator.hasNext() == false && index < iterables.length - 1) {
+                    while (iterator.hasNext() == false && index < iterables.size() - 1) {
                         index++;
-                        iterator = iterables[index].iterator();
+                        iterator = iterables.get(index).iterator();
                     }
                     return iterator.hasNext();
                 }
