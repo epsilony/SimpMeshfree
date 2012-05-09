@@ -99,4 +99,8 @@ public class Node extends Coordinate implements Indexable{
                 throw new IllegalArgumentException();
         }
     }
+    public static void main(String[] args) {
+        Node nd=new Node();
+        System.out.println("nd="+nd);
+    }
 }

@@ -4,7 +4,6 @@
  */
 package net.epsilony.simpmeshfree.model2d;
 
-import net.epsilony.simpmeshfree.model.LineBoundary;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -167,165 +166,168 @@ public class WeakFormProcessor2D {
     ShapeFunction shapeFunction;
 
     public List<double[]> result(Iterable<Coordinate> coords) {
-        LinkedList<Node> searchedNodes = new LinkedList<>();
-        LinkedList<Node> filteredNodes = new LinkedList<>();
-        LinkedList<Boundary> searchedBoundaries = new LinkedList<>();
-        CenterSearcher<Coordinate, Node> nodeSearcher = workProblem.nodeSearcher();
-        CenterSearcher<Coordinate, Boundary> boundarySearcher = workProblem.boundarySearcher();
-        PartDiffOrd[] types = new PartDiffOrd[]{PartDiffOrd.ORI(), PartDiffOrd.X(), PartDiffOrd.Y()};
-
-        if (null == shapeFunction) {
-            shapeFunction = shapeFunFactory.factory();
-        }
-        shapeFunction.setOrders(types);
-
-        DenseVector[] shapeFunctions = new DenseVector[types.length];
-
-        LineBoundary line1 = new LineBoundary(), line2 = new LineBoundary();
-        LinkedList<double[]> results = new LinkedList<>();
-        for (Coordinate coord : coords) {
-
-            nodeSearcher.search(coord, searchedNodes);
-            boundarySearcher.search(coord, searchedBoundaries);
-
-            Iterator<Boundary> boundIter = searchedBoundaries.iterator();
-            while (boundIter.hasNext()) {
-                Boundary bound = boundIter.next();
-                Coordinate front = bound.getPoint(bound.num() - 1);
-                Coordinate rear = bound.getPoint(0);
-                if (front == coord || rear == coord) {
-                    break;
-                }
-                if (GeometryMath.pt3Cross2D(rear.x, rear.y, front.x, front.y, coord.x, coord.y) == 0) {
-                    double cx = coord.x;
-                    double cy = coord.y;
-                    double t = (cx - rear.x) * (cx - front.x) + (cy - front.y) * (cy - rear.y);
-                    if (t > 0) {
-                        continue;
-                    }
-
-                    line1.start = rear;
-                    line1.end = coord;
-                    line2.start = coord;
-                    line2.end = front;
-                    boundIter.remove();
-                    searchedBoundaries.add(line1);
-                    searchedBoundaries.add(line2);
-                    break;
-                }
-            }
-
-            shapeFunction.values(coord, searchedNodes, searchedBoundaries, shapeFunctions, filteredNodes);
-
-            double[] result = new double[2];
-            int nodeCount = 0;
-            for (Node nd : filteredNodes) {
-                int index = nd.id * 2;
-                double shapeValue = shapeFunctions[0].get(nodeCount++);
-                result[0] += shapeValue * equationResultVector.get(index);
-                result[1] += shapeValue * equationResultVector.get(index + 1);
-            }
-            results.add(result);
-        }
-        return results;
+        throw new UnsupportedOperationException("Not supported yet.");
+//        LinkedList<Node> searchedNodes = new LinkedList<>();
+//        LinkedList<Node> filteredNodes = new LinkedList<>();
+//        LinkedList<Boundary> searchedBoundaries = new LinkedList<>();
+//        CenterSearcher<Coordinate, Node> nodeSearcher = workProblem.nodeSearcher();
+//        CenterSearcher<Coordinate, Boundary> boundarySearcher = workProblem.boundarySearcher();
+//        PartDiffOrd[] types = new PartDiffOrd[]{PartDiffOrd.ORI(), PartDiffOrd.X(), PartDiffOrd.Y()};
+//
+//        if (null == shapeFunction) {
+//            shapeFunction = shapeFunFactory.factory();
+//        }
+//        shapeFunction.setOrders(types);
+//
+//        DenseVector[] shapeFunctions = new DenseVector[types.length];
+//
+//        LineBoundary line1 = new LineBoundary(), line2 = new LineBoundary();
+//        LinkedList<double[]> results = new LinkedList<>();
+//        for (Coordinate coord : coords) {
+//
+//            nodeSearcher.search(coord, searchedNodes);
+//            boundarySearcher.search(coord, searchedBoundaries);
+//
+//            Iterator<Boundary> boundIter = searchedBoundaries.iterator();
+//            while (boundIter.hasNext()) {
+//                Boundary bound = boundIter.next();
+//                Coordinate front = bound.getPoint(bound.num() - 1);
+//                Coordinate rear = bound.getPoint(0);
+//                if (front == coord || rear == coord) {
+//                    break;
+//                }
+//                if (GeometryMath.pt3Cross2D(rear.x, rear.y, front.x, front.y, coord.x, coord.y) == 0) {
+//                    double cx = coord.x;
+//                    double cy = coord.y;
+//                    double t = (cx - rear.x) * (cx - front.x) + (cy - front.y) * (cy - rear.y);
+//                    if (t > 0) {
+//                        continue;
+//                    }
+//
+//                    line1.start = rear;
+//                    line1.end = coord;
+//                    line2.start = coord;
+//                    line2.end = front;
+//                    boundIter.remove();
+//                    searchedBoundaries.add(line1);
+//                    searchedBoundaries.add(line2);
+//                    break;
+//                }
+//            }
+//
+//            shapeFunction.values(coord, searchedNodes, searchedBoundaries, shapeFunctions, filteredNodes);
+//
+//            double[] result = new double[2];
+//            int nodeCount = 0;
+//            for (Node nd : filteredNodes) {
+//                int index = nd.id * 2;
+//                double shapeValue = shapeFunctions[0].get(nodeCount++);
+//                result[0] += shapeValue * equationResultVector.get(index);
+//                result[1] += shapeValue * equationResultVector.get(index + 1);
+//            }
+//            results.add(result);
+//        }
+//        return results;
     }
 
     AtomicInteger dirichletCount=new AtomicInteger();
     void assemblyNeumann(ShapeFunction shapeFun, WeakFormAssemblier assemblierAvator) {
-        Iterable<BCQuadraturePoint> dirichletIter = workProblem.neumannIterable(quadraturePower);
-        if (dirichletIter == null) {
-            return;
-        }
-
-        LinkedList<Node> searchedNodes = new LinkedList<>();
-        ArrayList<Node> filteredNodes = new ArrayList<>(arrayListSize);
-        ArrayList<Boundary> searchedBoundaries = new ArrayList<>(arrayListSize);
-        CenterSearcher<Coordinate, Node> nodeSearcher = workProblem.nodeSearcher();
-        CenterSearcher<Coordinate, Boundary> boundarySearcher = workProblem.boundarySearcher();
-
-        PartDiffOrd[] types = new PartDiffOrd[]{PartDiffOrd.ORI()};
-        shapeFun.setOrders(types);
-
-        DenseVector[] shapeFunctions = new DenseVector[types.length];
-
-        LineBoundary line1 = new LineBoundary(), line2 = new LineBoundary();
-
-        BCQuadraturePoint qp = new BCQuadraturePoint();
-
-        while (nextNeumannQuadraturePoint(qp)) {
-            Coordinate qPoint = qp.coordinate;
-            nodeSearcher.search(qPoint, searchedNodes);
-            boundarySearcher.search(qPoint, searchedBoundaries);
-
-            Boundary bound = qp.boundaryCondition.getBoundary();
-            if (qPoint != bound.getPoint(0) && qPoint != bound.getPoint(bound.num() - 1)) {
-                Iterator<Boundary> boundIter = searchedBoundaries.iterator();
-                while (boundIter.hasNext()) {
-                    if (bound == boundIter.next()) {
-                        line1.start = bound.getPoint(0);
-                        line1.end = qp.coordinate;
-                        line2.start = qp.coordinate;
-                        line2.end = bound.getPoint(bound.num() - 1);
-                        boundIter.remove();
-                        searchedBoundaries.add(line1);
-                        searchedBoundaries.add(line2);
-                        break;
-                    }
-                }
-            }
-
-            shapeFun.values(qPoint, searchedNodes, searchedBoundaries, shapeFunctions, filteredNodes);
-            assemblierAvator.asmNeumann(qp, filteredNodes, shapeFunctions);
-            dirichletCount.incrementAndGet();
-        }
+throw new UnsupportedOperationException("Not supported yet.");
+        //        Iterable<BCQuadraturePoint> dirichletIter = workProblem.neumannIterable(quadraturePower);
+//        if (dirichletIter == null) {
+//            return;
+//        }
+//
+//        LinkedList<Node> searchedNodes = new LinkedList<>();
+//        ArrayList<Node> filteredNodes = new ArrayList<>(arrayListSize);
+//        ArrayList<Boundary> searchedBoundaries = new ArrayList<>(arrayListSize);
+//        CenterSearcher<Coordinate, Node> nodeSearcher = workProblem.nodeSearcher();
+//        CenterSearcher<Coordinate, Boundary> boundarySearcher = workProblem.boundarySearcher();
+//
+//        PartDiffOrd[] types = new PartDiffOrd[]{PartDiffOrd.ORI()};
+//        shapeFun.setOrders(types);
+//
+//        DenseVector[] shapeFunctions = new DenseVector[types.length];
+//
+//        LineBoundary line1 = new LineBoundary(), line2 = new LineBoundary();
+//
+//        BCQuadraturePoint qp = new BCQuadraturePoint();
+//
+//        while (nextNeumannQuadraturePoint(qp)) {
+//            Coordinate qPoint = qp.coordinate;
+//            nodeSearcher.search(qPoint, searchedNodes);
+//            boundarySearcher.search(qPoint, searchedBoundaries);
+//
+//            Boundary bound = qp.boundaryCondition.getBoundary();
+//            if (qPoint != bound.getPoint(0) && qPoint != bound.getPoint(bound.num() - 1)) {
+//                Iterator<Boundary> boundIter = searchedBoundaries.iterator();
+//                while (boundIter.hasNext()) {
+//                    if (bound == boundIter.next()) {
+//                        line1.start = bound.getPoint(0);
+//                        line1.end = qp.coordinate;
+//                        line2.start = qp.coordinate;
+//                        line2.end = bound.getPoint(bound.num() - 1);
+//                        boundIter.remove();
+//                        searchedBoundaries.add(line1);
+//                        searchedBoundaries.add(line2);
+//                        break;
+//                    }
+//                }
+//            }
+//
+//            shapeFun.values(qPoint, searchedNodes, searchedBoundaries, shapeFunctions, filteredNodes);
+//            assemblierAvator.asmNeumann(qp, filteredNodes, shapeFunctions);
+//            dirichletCount.incrementAndGet();
+//        }
 
 
     }
 
     AtomicInteger neumannCount=new AtomicInteger();
     void assemblyDirichlet(ShapeFunction shapeFun, WeakFormAssemblier assemblierAvator) {
-        Iterable<BCQuadraturePoint> neumannIter = workProblem.dirichletIterable(quadraturePower);
-        if (null == neumannIter) {
-            return;
-        }
-
-        LinkedList<Node> searchedNodes = new LinkedList<>();
-        ArrayList<Node> filteredNodes = new ArrayList<>(arrayListSize);
-        ArrayList<Boundary> searchedBoundaries = new ArrayList<>(arrayListSize);
-        CenterSearcher<Coordinate, Node> nodeSearcher = workProblem.nodeSearcher();
-        CenterSearcher<Coordinate, Boundary> boundarySearcher = workProblem.boundarySearcher();
-
-        PartDiffOrd[] types = new PartDiffOrd[]{PartDiffOrd.ORI()};
-        shapeFun.setOrders(types);
-        DenseVector[] shapeFunctions = new DenseVector[types.length];
-        LineBoundary line1 = new LineBoundary(), line2 = new LineBoundary();
-        BCQuadraturePoint qp = new BCQuadraturePoint();
-        while (nextDirichletQuadraturePoint(qp)) {
-            Coordinate qPoint = qp.coordinate;
-            Boundary bound = qp.boundaryCondition.getBoundary();
-
-            nodeSearcher.search(qPoint, searchedNodes);
-            boundarySearcher.search(qPoint, searchedBoundaries);
-
-            if (qPoint != bound.getPoint(0) && qPoint != bound.getPoint(bound.num() - 1)) {
-                Iterator<Boundary> boundIter = searchedBoundaries.iterator();
-                while (boundIter.hasNext()) {
-                    if (bound == boundIter.next()) {
-                        line1.start = bound.getPoint(0);
-                        line1.end = qp.coordinate;
-                        line2.start = qp.coordinate;
-                        line2.end = bound.getPoint(bound.num() - 1);
-                        searchedBoundaries.add(line1);
-                        searchedBoundaries.add(line2);
-                        break;
-                    }
-                }
-            }
-
-            shapeFun.values(qPoint, searchedNodes, searchedBoundaries, shapeFunctions, filteredNodes);
-            assemblierAvator.asmDirichlet(qp, filteredNodes, shapeFunctions);
-            neumannCount.incrementAndGet();
-        }
+throw new UnsupportedOperationException("Not supported yet.");
+        //        Iterable<BCQuadraturePoint> neumannIter = workProblem.dirichletIterable(quadraturePower);
+//        if (null == neumannIter) {
+//            return;
+//        }
+//
+//        LinkedList<Node> searchedNodes = new LinkedList<>();
+//        ArrayList<Node> filteredNodes = new ArrayList<>(arrayListSize);
+//        ArrayList<Boundary> searchedBoundaries = new ArrayList<>(arrayListSize);
+//        CenterSearcher<Coordinate, Node> nodeSearcher = workProblem.nodeSearcher();
+//        CenterSearcher<Coordinate, Boundary> boundarySearcher = workProblem.boundarySearcher();
+//
+//        PartDiffOrd[] types = new PartDiffOrd[]{PartDiffOrd.ORI()};
+//        shapeFun.setOrders(types);
+//        DenseVector[] shapeFunctions = new DenseVector[types.length];
+//        LineBoundary line1 = new LineBoundary(), line2 = new LineBoundary();
+//        BCQuadraturePoint qp = new BCQuadraturePoint();
+//        while (nextDirichletQuadraturePoint(qp)) {
+//            Coordinate qPoint = qp.coordinate;
+//            Boundary bound = qp.boundaryCondition.getBoundary();
+//
+//            nodeSearcher.search(qPoint, searchedNodes);
+//            boundarySearcher.search(qPoint, searchedBoundaries);
+//
+//            if (qPoint != bound.getPoint(0) && qPoint != bound.getPoint(bound.num() - 1)) {
+//                Iterator<Boundary> boundIter = searchedBoundaries.iterator();
+//                while (boundIter.hasNext()) {
+//                    if (bound == boundIter.next()) {
+//                        line1.start = bound.getPoint(0);
+//                        line1.end = qp.coordinate;
+//                        line2.start = qp.coordinate;
+//                        line2.end = bound.getPoint(bound.num() - 1);
+//                        searchedBoundaries.add(line1);
+//                        searchedBoundaries.add(line2);
+//                        break;
+//                    }
+//                }
+//            }
+//
+//            shapeFun.values(qPoint, searchedNodes, searchedBoundaries, shapeFunctions, filteredNodes);
+//            assemblierAvator.asmDirichlet(qp, filteredNodes, shapeFunctions);
+//            neumannCount.incrementAndGet();
+//        }
 
     }
 

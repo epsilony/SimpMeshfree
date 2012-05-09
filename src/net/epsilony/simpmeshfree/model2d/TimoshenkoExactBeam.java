@@ -31,10 +31,11 @@ public class TimoshenkoExactBeam {
 
         @Override
         public boolean[] valueByParameter(Coordinate parameter, double[] results) {
-            Coordinate coordinate = new Coordinate();
-            boundary.valueByParameter(parameter, coordinate);
-            getDisplacement(coordinate.x, coordinate.y, results);
-            return b2;
+            throw new UnsupportedOperationException("Not supported yet.");
+            //            Coordinate coordinate = new Coordinate();
+//            boundary.valueByParameter(parameter, coordinate);
+//            getDisplacement(coordinate.x, coordinate.y, results);
+//            return b2;
         }
 
         @Override
@@ -60,10 +61,11 @@ public class TimoshenkoExactBeam {
 
         @Override
         public boolean[] valueByParameter(Coordinate parameter, double[] results) {
-            Coordinate coordinate = new Coordinate();
-            boundary.valueByParameter(parameter, coordinate);
-            getStress(coordinate.x, coordinate.y, results);
-            return b;
+            throw new UnsupportedOperationException("Not supported yet.");
+            //            Coordinate coordinate = new Coordinate();
+//            boundary.valueByParameter(parameter, coordinate);
+//            getStress(coordinate.x, coordinate.y, results);
+//            return b;
         }
 
         @Override

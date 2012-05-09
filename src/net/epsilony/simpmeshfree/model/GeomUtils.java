@@ -700,7 +700,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
         double enlargeRatio = 1.42;
         int maxIter = 4;
         CenterDistanceComparator<Coordinate> comp = Coordinates.normalCenterDistanceComparator();
-        PriorityQueue<Node> pq = new PriorityQueue(defaultMaxNodeNumInSupportDomain, comp);
+        PriorityQueue<Node> pq = new PriorityQueue<>(defaultMaxNodeNumInSupportDomain, comp);
         LinkedList<Boundary> bnds = new LinkedList<>();
         LinkedList<Node> nds = new LinkedList<>();
         LinkedList<Node> bndNds = new LinkedList<>();

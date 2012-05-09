@@ -75,24 +75,25 @@ public class BCQuadratureIterables2D {
 
         @Override
         public BCQuadraturePoint next() {
-            if (index >= pointSize) {
-                index = 0;
-                bcIndex++;
-                bc = bcs[bcIndex];
-                bcQP.boundaryCondition=bc;
-            }
-            double t = (points[index] + 1) / 2;
-            Coordinate par = parameter;
-            par.x = t;
-            Boundary bound=bcQP.boundaryCondition.getBoundary();
-            bound.valueByParameter(par, bcQP.coordinate);
-            bound.valuePartialByParameter(par, tempCoords);
-            double dx_dt = tempCoord.x;
-            double dy_dt = tempCoord.y;
-            bcQP.weight = weights[index] / 2 * Math.sqrt(dx_dt * dx_dt+dy_dt*dy_dt);
-
-            index++;
-            return bcQP;
+            throw new UnsupportedOperationException("Not supported yet.");
+//            if (index >= pointSize) {
+//                index = 0;
+//                bcIndex++;
+//                bc = bcs[bcIndex];
+//                bcQP.boundaryCondition=bc;
+//            }
+//            double t = (points[index] + 1) / 2;
+//            Coordinate par = parameter;
+//            par.x = t;
+//            Boundary bound=bcQP.boundaryCondition.getBoundary();
+//            bound.valueByParameter(par, bcQP.coordinate);
+//            bound.valuePartialByParameter(par, tempCoords);
+//            double dx_dt = tempCoord.x;
+//            double dy_dt = tempCoord.y;
+//            bcQP.weight = weights[index] / 2 * Math.sqrt(dx_dt * dx_dt+dy_dt*dy_dt);
+//
+//            index++;
+//            return bcQP;
         }
 
         @Override

@@ -36,15 +36,16 @@ public class WeakFormProcessor2DProfiler {
             
             @Override
             public ShapeFunction factory() {
-                return new ShapeFunctions2D.MLS(
-                        new WeightFunctions2D.SimpPower(2),
-                        new BivariateArrayFunction[]{
-                            BivariateCompletePolynomial.factory(2),
-                            BivariateCompletePolynomial.partialXFactory(2),
-                            BivariateCompletePolynomial.partialYFactory(2)
-                        },
-                        new BoundaryBasedCriterions2D.Visible(workProblem.nodeSupportDomainSizer()),
-                        new NodeSupportDomainSizers.ConstantSizer(supportDomainRadiu));
+                throw new UnsupportedOperationException("Not supported yet.");
+//                return new ShapeFunctions2D.MLS(
+//                        new WeightFunctions2D.SimpPower(2),
+//                        new BivariateArrayFunction[]{
+//                            BivariateCompletePolynomial.factory(2),
+//                            BivariateCompletePolynomial.partialXFactory(2),
+//                            BivariateCompletePolynomial.partialYFactory(2)
+//                        },
+//                        new BoundaryBasedCriterions2D.Visible(workProblem.nodeSupportDomainSizer()),
+//                        new NodeSupportDomainSizers.ConstantSizer(supportDomainRadiu));
             }
         };
 
@@ -73,15 +74,16 @@ public class WeakFormProcessor2DProfiler {
             
             @Override
             public ShapeFunction factory() {
-                return new ShapeFunctions2D.MLS(
-                        new WeightFunctions2D.SimpPower(2),
-                        new BivariateArrayFunction[]{
-                            BivariateCompletePolynomial.factory(2),
-                            BivariateCompletePolynomial.partialXFactory(2),
-                            BivariateCompletePolynomial.partialYFactory(2)
-                        },
-                        new BoundaryBasedCriterions2D.Visible(workProblem.nodeSupportDomainSizer()),
-                        new NodeSupportDomainSizers.ConstantSizer(supportDomainRadiu));
+                throw new UnsupportedOperationException("Not supported yet.");
+//                return new ShapeFunctions2D.MLS(
+//                        new WeightFunctions2D.SimpPower(2),
+//                        new BivariateArrayFunction[]{
+//                            BivariateCompletePolynomial.factory(2),
+//                            BivariateCompletePolynomial.partialXFactory(2),
+//                            BivariateCompletePolynomial.partialYFactory(2)
+//                        },
+//                        new BoundaryBasedCriterions2D.Visible(workProblem.nodeSupportDomainSizer()),
+//                        new NodeSupportDomainSizers.ConstantSizer(supportDomainRadiu));
             }
         };
 

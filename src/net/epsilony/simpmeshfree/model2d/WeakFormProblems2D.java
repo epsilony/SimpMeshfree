@@ -4,7 +4,6 @@
  */
 package net.epsilony.simpmeshfree.model2d;
 
-import net.epsilony.simpmeshfree.model.LineBoundary;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -181,8 +180,8 @@ public class WeakFormProblems2D {
 
             Node fromNode = new Node();
             Node toNode = new Node();
-            Coordinate from = fromNode.coordinate;
-            Coordinate to = toNode.coordinate;
+            Coordinate from = fromNode;
+            Coordinate to = toNode;
             double distance;
             
             /**
@@ -226,8 +225,8 @@ public class WeakFormProblems2D {
 
             LineBoundary fromBoundary = new LineBoundary();
             LineBoundary toBoundary = new LineBoundary();
-            Coordinate from = new Coordinate();
-            Coordinate to = new Coordinate();
+            Node from = new Node();
+            Node to = new Node();
             double distance;
 
             public BoundarySearcher(double distance) {
@@ -260,6 +259,7 @@ public class WeakFormProblems2D {
             return new BoundarySearcher(maxNodeSupportDomainRadium + 0.5 * longestBoundaryLength);
         }
 
+        @Override
         public VolumeCondition getVolumeCondition() {
             return volumeCondition;
         }
@@ -294,7 +294,7 @@ public class WeakFormProblems2D {
         LinkedList<LineBoundary> boundaries = new LinkedList<>();
         LinkedList<BoundaryCondition> neumannBcs = new LinkedList<>();
         for (int i = 0; i < neumannNodes.length - 1; i++) {
-            LineBoundary bound = new LineBoundary(neumannNodes[i].coordinate, neumannNodes[i + 1].coordinate);
+            LineBoundary bound = new LineBoundary(neumannNodes[i], neumannNodes[i + 1]);
             boundaries.add(bound);
             neumannBcs.add(exact.new NeumannBoundaryCondition(bound));
         }
@@ -306,7 +306,7 @@ public class WeakFormProblems2D {
         }
         dirichletNodes[dirichletNodes.length - 1] = new Node(width, height / 2);
         for (int i = 0; i < dirichletNodes.length - 1; i++) {
-            LineBoundary bound = new LineBoundary(dirichletNodes[i].coordinate, dirichletNodes[i + 1].coordinate);
+            LineBoundary bound = new LineBoundary(dirichletNodes[i], dirichletNodes[i + 1]);
             boundaries.add(bound);
             dirichletBCs.add(exact.new DirichletBoundaryCondition(bound));
         }
@@ -318,13 +318,13 @@ public class WeakFormProblems2D {
             lowBoundaryNodes[i] = new Node((i + 1) * colsGap, -height / 2);
         }
         for (int i = 0; i < upBoundaryNodes.length - 1; i++) {
-            boundaries.add(new LineBoundary(upBoundaryNodes[i].coordinate, upBoundaryNodes[i + 1].coordinate));
-            boundaries.add(new LineBoundary(lowBoundaryNodes[i].coordinate, lowBoundaryNodes[i + 1].coordinate));
+            boundaries.add(new LineBoundary(upBoundaryNodes[i], upBoundaryNodes[i + 1]));
+            boundaries.add(new LineBoundary(lowBoundaryNodes[i], lowBoundaryNodes[i + 1]));
         }
-        boundaries.add(new LineBoundary(neumannNodes[neumannNodes.length - 1].coordinate, lowBoundaryNodes[0].coordinate));
-        boundaries.add(new LineBoundary(lowBoundaryNodes[lowBoundaryNodes.length - 1].coordinate, dirichletNodes[0].coordinate));
-        boundaries.add(new LineBoundary(dirichletNodes[dirichletNodes.length - 1].coordinate, upBoundaryNodes[0].coordinate));
-        boundaries.add(new LineBoundary(upBoundaryNodes[upBoundaryNodes.length - 1].coordinate, neumannNodes[0].coordinate));
+        boundaries.add(new LineBoundary(neumannNodes[neumannNodes.length - 1], lowBoundaryNodes[0]));
+        boundaries.add(new LineBoundary(lowBoundaryNodes[lowBoundaryNodes.length - 1], dirichletNodes[0]));
+        boundaries.add(new LineBoundary(dirichletNodes[dirichletNodes.length - 1], upBoundaryNodes[0]));
+        boundaries.add(new LineBoundary(upBoundaryNodes[upBoundaryNodes.length - 1], neumannNodes[0]));
 
         LinkedList<Node> nodes = new LinkedList<>();
         nodes.addAll(Arrays.asList(neumannNodes));
@@ -390,7 +390,7 @@ public class WeakFormProblems2D {
         LinkedList<LineBoundary> boundaries = new LinkedList<>();
         LinkedList<BoundaryCondition> neumannBcs = new LinkedList<>();
         for (int i = 0; i < neumannNodes.length - 1; i++) {
-            final LineBoundary bound = new LineBoundary(neumannNodes[i].coordinate, neumannNodes[i + 1].coordinate);
+            final LineBoundary bound = new LineBoundary(neumannNodes[i], neumannNodes[i + 1]);
             boundaries.add(bound);
             neumannBcs.add(new BoundaryCondition() {
 
@@ -426,7 +426,7 @@ public class WeakFormProblems2D {
         }
         dirichletNodes[dirichletNodes.length - 1] = new Node(width, height / 2);
         for (int i = 0; i < dirichletNodes.length - 1; i++) {
-            final LineBoundary bound = new LineBoundary(dirichletNodes[i].coordinate, dirichletNodes[i + 1].coordinate);
+            final LineBoundary bound = new LineBoundary(dirichletNodes[i], dirichletNodes[i + 1]);
             boundaries.add(bound);
             dirichletBCs.add(new BoundaryCondition() {
 
@@ -457,13 +457,13 @@ public class WeakFormProblems2D {
             lowBoundaryNodes[i] = new Node((i + 1) * colsGap, -height / 2);
         }
         for (int i = 0; i < upBoundaryNodes.length - 1; i++) {
-            boundaries.add(new LineBoundary(upBoundaryNodes[i].coordinate, upBoundaryNodes[i + 1].coordinate));
-            boundaries.add(new LineBoundary(lowBoundaryNodes[i].coordinate, lowBoundaryNodes[i + 1].coordinate));
+            boundaries.add(new LineBoundary(upBoundaryNodes[i], upBoundaryNodes[i + 1]));
+            boundaries.add(new LineBoundary(lowBoundaryNodes[i], lowBoundaryNodes[i + 1]));
         }
-        boundaries.add(new LineBoundary(neumannNodes[neumannNodes.length - 1].coordinate, lowBoundaryNodes[0].coordinate));
-        boundaries.add(new LineBoundary(lowBoundaryNodes[lowBoundaryNodes.length - 1].coordinate, dirichletNodes[0].coordinate));
-        boundaries.add(new LineBoundary(dirichletNodes[dirichletNodes.length - 1].coordinate, upBoundaryNodes[0].coordinate));
-        boundaries.add(new LineBoundary(upBoundaryNodes[upBoundaryNodes.length - 1].coordinate, neumannNodes[0].coordinate));
+        boundaries.add(new LineBoundary(neumannNodes[neumannNodes.length - 1], lowBoundaryNodes[0]));
+        boundaries.add(new LineBoundary(lowBoundaryNodes[lowBoundaryNodes.length - 1], dirichletNodes[0]));
+        boundaries.add(new LineBoundary(dirichletNodes[dirichletNodes.length - 1], upBoundaryNodes[0]));
+        boundaries.add(new LineBoundary(upBoundaryNodes[upBoundaryNodes.length - 1], neumannNodes[0]));
 
         LinkedList<Node> nodes = new LinkedList<>();
         nodes.addAll(Arrays.asList(neumannNodes));
@@ -528,7 +528,7 @@ public class WeakFormProblems2D {
         LinkedList<LineBoundary> boundaries = new LinkedList<>();
         LinkedList<BoundaryCondition> neumannBcs = new LinkedList<>();
         for (int i = 0; i < neumannNodes.length - 1; i++) {
-            final LineBoundary bound = new LineBoundary(neumannNodes[i].coordinate, neumannNodes[i + 1].coordinate);
+            final LineBoundary bound = new LineBoundary(neumannNodes[i], neumannNodes[i + 1]);
             boundaries.add(bound);
             neumannBcs.add(new BoundaryCondition() {
 
@@ -560,7 +560,7 @@ public class WeakFormProblems2D {
             dirichletNodes[i] = new Node(width / 2 - colsGap * i, height);
         }
         for (int i = 0; i < dirichletNodes.length - 1; i++) {
-            final LineBoundary bound = new LineBoundary(dirichletNodes[i].coordinate, dirichletNodes[i + 1].coordinate);
+            final LineBoundary bound = new LineBoundary(dirichletNodes[i], dirichletNodes[i + 1]);
             boundaries.add(bound);
             dirichletBCs.add(new BoundaryCondition() {
 
@@ -591,13 +591,13 @@ public class WeakFormProblems2D {
             rightBoundaryNodes[i] = new Node(width / 2, (i + 1) * rowsGap);
         }
         for (int i = 0; i < leftBoundaryNodes.length - 1; i++) {
-            boundaries.add(new LineBoundary(leftBoundaryNodes[i].coordinate, leftBoundaryNodes[i + 1].coordinate));
-            boundaries.add(new LineBoundary(rightBoundaryNodes[i].coordinate, rightBoundaryNodes[i + 1].coordinate));
+            boundaries.add(new LineBoundary(leftBoundaryNodes[i], leftBoundaryNodes[i + 1]));
+            boundaries.add(new LineBoundary(rightBoundaryNodes[i], rightBoundaryNodes[i + 1]));
         }
-        boundaries.add(new LineBoundary(neumannNodes[neumannNodes.length - 1].coordinate, rightBoundaryNodes[0].coordinate));
-        boundaries.add(new LineBoundary(rightBoundaryNodes[rightBoundaryNodes.length - 1].coordinate, dirichletNodes[0].coordinate));
-        boundaries.add(new LineBoundary(dirichletNodes[dirichletNodes.length - 1].coordinate, leftBoundaryNodes[0].coordinate));
-        boundaries.add(new LineBoundary(leftBoundaryNodes[leftBoundaryNodes.length - 1].coordinate, neumannNodes[0].coordinate));
+        boundaries.add(new LineBoundary(neumannNodes[neumannNodes.length - 1], rightBoundaryNodes[0]));
+        boundaries.add(new LineBoundary(rightBoundaryNodes[rightBoundaryNodes.length - 1], dirichletNodes[0]));
+        boundaries.add(new LineBoundary(dirichletNodes[dirichletNodes.length - 1], leftBoundaryNodes[0]));
+        boundaries.add(new LineBoundary(leftBoundaryNodes[leftBoundaryNodes.length - 1], neumannNodes[0]));
 
         LinkedList<Node> nodes = new LinkedList<>();
         nodes.addAll(Arrays.asList(neumannNodes));
@@ -665,7 +665,7 @@ public class WeakFormProblems2D {
         LinkedList<LineBoundary> boundaries = new LinkedList<>();
         LinkedList<BoundaryCondition> neumannBcs = new LinkedList<>();
         for (int i = 0; i < neumannNodes.length - 1; i++) {
-            final LineBoundary bound = new LineBoundary(neumannNodes[i].coordinate, neumannNodes[i + 1].coordinate);
+            final LineBoundary bound = new LineBoundary(neumannNodes[i], neumannNodes[i + 1]);
             boundaries.add(bound);
             neumannBcs.add(new BoundaryCondition() {
 
@@ -699,7 +699,7 @@ public class WeakFormProblems2D {
         }
         neumannRightNodes[neumannRightNodes.length - 1] = new Node(width, height / 2);
         for (int i = 0; i < neumannRightNodes.length - 1; i++) {
-            final LineBoundary bound = new LineBoundary(neumannRightNodes[i].coordinate, neumannRightNodes[i + 1].coordinate);
+            final LineBoundary bound = new LineBoundary(neumannRightNodes[i], neumannRightNodes[i + 1]);
             boundaries.add(bound);
             neumannRightBCs.add(new BoundaryCondition() {
 
@@ -736,13 +736,13 @@ public class WeakFormProblems2D {
             lowBoundaryNodes[i] = new Node((i + 1) * colsGap, -height / 2);
         }
         for (int i = 0; i < upBoundaryNodes.length - 1; i++) {
-            boundaries.add(new LineBoundary(upBoundaryNodes[i].coordinate, upBoundaryNodes[i + 1].coordinate));
-            boundaries.add(new LineBoundary(lowBoundaryNodes[i].coordinate, lowBoundaryNodes[i + 1].coordinate));
+            boundaries.add(new LineBoundary(upBoundaryNodes[i], upBoundaryNodes[i + 1]));
+            boundaries.add(new LineBoundary(lowBoundaryNodes[i], lowBoundaryNodes[i + 1]));
         }
-        boundaries.add(new LineBoundary(neumannNodes[neumannNodes.length - 1].coordinate, lowBoundaryNodes[0].coordinate));
-        boundaries.add(new LineBoundary(lowBoundaryNodes[lowBoundaryNodes.length - 1].coordinate, neumannRightNodes[0].coordinate));
-        boundaries.add(new LineBoundary(neumannRightNodes[neumannRightNodes.length - 1].coordinate, upBoundaryNodes[0].coordinate));
-        boundaries.add(new LineBoundary(upBoundaryNodes[upBoundaryNodes.length - 1].coordinate, neumannNodes[0].coordinate));
+        boundaries.add(new LineBoundary(neumannNodes[neumannNodes.length - 1], lowBoundaryNodes[0]));
+        boundaries.add(new LineBoundary(lowBoundaryNodes[lowBoundaryNodes.length - 1], neumannRightNodes[0]));
+        boundaries.add(new LineBoundary(neumannRightNodes[neumannRightNodes.length - 1], upBoundaryNodes[0]));
+        boundaries.add(new LineBoundary(upBoundaryNodes[upBoundaryNodes.length - 1], neumannNodes[0]));
 
         LinkedList<Node> nodes = new LinkedList<>();
         nodes.addAll(Arrays.asList(neumannNodes));
