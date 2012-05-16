@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.epsilony.simpmeshfree.vectorMultTDoubleArrayLists;
+package net.epsilony.simpmeshfree.model2d;
 
 import gnu.trove.list.array.TDoubleArrayList;
 import static java.lang.Math.min;
@@ -14,7 +14,6 @@ import net.epsilony.simpmeshfree.model.Node;
 import net.epsilony.simpmeshfree.model.WeightFunction;
 import static net.epsilony.simpmeshfree.utils.CommonUtils.len2DBase;
 import net.epsilony.simpmeshfree.utils.PartDiffUnivariateFunction;
-import net.epsilony.utils.geom.Coordinate;
 
 /**
  *

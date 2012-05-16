@@ -21,27 +21,25 @@ public class TimoshenkoExactBeam {
         public NeumannBoundaryCondition(Boundary boundary) {
             this.boundary = boundary;
         }
+        final boolean[] b1 = new boolean[]{true, false};
+        final boolean[] b2 = new boolean[]{true, true};
+
+
+
+        @Override
+        public boolean[] values(Coordinate coordinate, double[] results) {
+            getDisplacement(coordinate.x, coordinate.y, results);
+            return b2;
+        }
+
+        @Override
+        public boolean isByCoordinate() {
+            return true;
+        }
 
         @Override
         public Boundary getBoundary() {
             return boundary;
-        }
-        final boolean[] b1 = new boolean[]{true, false};
-        final boolean[] b2 = new boolean[]{true, true};
-
-        @Override
-        public boolean[] valueByParameter(Coordinate parameter, double[] results) {
-            throw new UnsupportedOperationException("Not supported yet.");
-            //            Coordinate coordinate = new Coordinate();
-//            boundary.valueByParameter(parameter, coordinate);
-//            getDisplacement(coordinate.x, coordinate.y, results);
-//            return b2;
-        }
-
-        @Override
-        public boolean[] valueByCoordinate(Coordinate coordinate, double[] results) {
-            getDisplacement(coordinate.x, coordinate.y, results);
-            return b2;
         }
     }
 
@@ -53,25 +51,28 @@ public class TimoshenkoExactBeam {
             this.boundary = boundary;
         }
 
-        @Override
-        public Boundary getBoundary() {
-            return boundary;
-        }
+        
         final boolean[] b = new boolean[]{false, true};
 
         @Override
-        public boolean[] valueByParameter(Coordinate parameter, double[] results) {
+        public boolean[] values(Coordinate parameter, double[] results) {
             throw new UnsupportedOperationException("Not supported yet.");
-            //            Coordinate coordinate = new Coordinate();
+//            Coordinate coordinate = new Coordinate();
 //            boundary.valueByParameter(parameter, coordinate);
 //            getStress(coordinate.x, coordinate.y, results);
 //            return b;
         }
 
         @Override
-        public boolean[] valueByCoordinate(Coordinate coord, double[] results) {
-            throw new UnsupportedOperationException("Not supported yet.");
+        public boolean isByCoordinate() {
+            return false;
         }
+
+        @Override
+        public Boundary getBoundary() {
+            return boundary;
+        }
+
     }
     double width, height;
     double E, v;

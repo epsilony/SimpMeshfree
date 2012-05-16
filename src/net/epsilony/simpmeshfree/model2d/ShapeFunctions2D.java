@@ -47,12 +47,8 @@ public class ShapeFunctions2D {
         public DenseVector[] values(Coordinate center, Boundary centerBnd, DenseVector[] results,ArrayList<Node> resNodes) {
 
             double supR = criterion.setCenter(center, centerBnd, resNodes);
-
-
             int diffDim = len2DBase(order);
-
             int baseDim = baseFunction.getDim();
-
             weightFunction.values(resNodes, supR, nodesWeights);
 
             for (int i = 0; i < diffDim; i++) {
@@ -133,6 +129,7 @@ public class ShapeFunctions2D {
                 throw new UnsupportedOperationException();
             }
             this.order = order;
+            //TODO: here maybe improved
             nodesWeights.ensureCapacity(order);
             weightFunction.setOrder(order);
         }

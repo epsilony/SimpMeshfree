@@ -8,7 +8,6 @@ import gnu.trove.list.array.TDoubleArrayList;
 import java.util.ArrayList;
 import java.util.List;
 import net.epsilony.simpmeshfree.utils.PartDiffOrdered;
-import net.epsilony.utils.geom.Coordinate;
 
 /**
  * 权函数接口，由{@link PartDiffOrdered#setOrders(net.epsilony.simpmeshfree.utils.PartDiffOrd[]) }指定{@link #values(net.epsilony.simpmeshfree.model.Node, net.epsilony.geom.Coordinate, double[]) }的返回值
@@ -26,4 +25,5 @@ public interface WeightFunction extends PartDiffOrdered{
      * @return 如果results为null返回一个new double[]否则返回results
      */
     ArrayList<TDoubleArrayList> values(List<Node> nodes,double supportRad, ArrayList<TDoubleArrayList> results);
+
 }

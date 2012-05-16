@@ -22,13 +22,10 @@ import net.epsilony.utils.math.TriangleSymmetricQuadrature;
 import no.uib.cipr.matrix.DenseMatrix;
 
 /**
- * Same standard mechanical sample problems, including</br>
- * <ul>
- * <li>{@link #timoshenkoCantilevel(double, double, double, double, double, double, double)  Timoshenko's exact cantilevel} </li>
- * <li>{@link #tensionBarHorizontal(double, double, double, double, double, double, double) horizontal tension bar}</li>
- * <li>{@link #tensionBarVertical(double, double, double, double, double, double, double) vertical tension bar}</li>
- * <li>{@link #displacementTensionBar(double, double, double, double, double, double, double) tension bar by displacement (Neumann boundary conditions only)}</li>
+ * Same standard mechanical sample problems, including</br> <ul> <li>{@link #timoshenkoCantilevel(double, double, double, double, double, double, double)  Timoshenko's exact cantilevel}
+ * </li> <li>{@link #tensionBarHorizontal(double, double, double, double, double, double, double) horizontal tension bar}</li> <li>{@link #tensionBarVertical(double, double, double, double, double, double, double) vertical tension bar}</li> <li>{@link #displacementTensionBar(double, double, double, double, double, double, double) tension bar by displacement (Neumann boundary conditions only)}</li>
  * </ul>
+ *
  * @author epsilonyuan@gmail.com
  */
 public class WeakFormProblems2D {
@@ -37,15 +34,14 @@ public class WeakFormProblems2D {
     }
 
     /**
-     * 根据输入的数组创建一个{@link WeakFormWorkProblem}
-     * Only support for these situations:</br>
-     * <ul>
-     * <li>constant constitutive law</li>
-     * <li>constant nodes list</li>
-     * <li>distributed continous boundary conditions (not concentrated singluar bcs) </li>
-     * <li>triangle and quadrangle quadrature subdomain, for {@link QuadraturePointIterables iterable wrapping} only</li>
-     * <li>constant node support domain sizer or a given general support domain sizer</li>
-     * </ul>
+     * 根据输入的数组创建一个{@link WeakFormWorkProblem} Only support for these
+     * situations:</br> <ul> <li>constant constitutive law</li> <li>constant
+     * nodes list</li> <li>distributed continous boundary conditions (not
+     * concentrated singluar bcs) </li> <li>triangle and quadrangle quadrature
+     * subdomain, for {@link QuadraturePointIterables iterable wrapping}
+     * only</li> <li>constant node support domain sizer or a given general
+     * support domain sizer</li> </ul>
+     *
      * @see NodeSupportDomainSizer
      * @see NodeSupportDomainSizers
      */
@@ -68,10 +64,12 @@ public class WeakFormProblems2D {
 
         /**
          * @param nodes 所有的结点，作用{@link Node#id}不得重复，其值在区间[0,nodes.num())里
-         * @param nodeSupportDomainRadiums 用于{@link #nodeSupportDomainSizer()}，若为null则所有的结点支持域半径为constantDomainRadium; 若非null,一个Node nd所对应的支持域半径应为nodesSupportDomainRadiums[nd.id]
+         * @param nodeSupportDomainRadiums 用于{@link #nodeSupportDomainSizer()}，若为null则所有的结点支持域半径为constantDomainRadium;
+         * 若非null,一个Node nd所对应的支持域半径应为nodesSupportDomainRadiums[nd.id]
          * @param constantDomainRadium 用于{@link #nodeSupportDomainSizer()}，当nodeSupportDomainRadiums==null时起作用。
          * @param boundaries 所有的边界
-         * @param triangleQuadratureDomains 用于{@link #volumeIterable(int) }所有的三角形积分子域 可以为null
+         * @param triangleQuadratureDomains 用于{@link #volumeIterable(int)
+         * }所有的三角形积分子域 可以为null
          * @param quadrangleQuadratureDomains 所有的四边形积分子域 可以为null
          * @param volumeCondition 体积力条件
          * @param neumannBCs 所有的Neumann边界条件
@@ -145,35 +143,36 @@ public class WeakFormProblems2D {
 
         @Override
         public int dirichletQuadraturePointsNum(int power) {
-            int numPoint=(int) Math.ceil((power+1)/2.0);
-            return dirichletBCs.length*numPoint;
+            int numPoint = (int) Math.ceil((power + 1) / 2.0);
+            return dirichletBCs.length * numPoint;
         }
 
         @Override
         public int neumannQudaraturePointsNum(int power) {
-            int numPoint=(int) Math.ceil((power+1)/2.0);
-            return neumannBCs.length*numPoint;
+            int numPoint = (int) Math.ceil((power + 1) / 2.0);
+            return neumannBCs.length * numPoint;
         }
 
         @Override
         public int balanceQuadraturePointsNum(int power) {
-            int sum=0;
-            int pointNum=(int) Math.ceil((power+1)/2.0);
-            pointNum*=pointNum;
-            if(null!=triangleQuadratureDomains){
-                sum+=triangleQuadratureDomains.length*TriangleSymmetricQuadrature.getNumPoints(power);
+            int sum = 0;
+            int pointNum = (int) Math.ceil((power + 1) / 2.0);
+            pointNum *= pointNum;
+            if (null != triangleQuadratureDomains) {
+                sum += triangleQuadratureDomains.length * TriangleSymmetricQuadrature.getNumPoints(power);
             }
-            if(null!=quadrangleQuadratureDomains){
-                sum+=quadrangleQuadratureDomains.length*pointNum;
+            if (null != quadrangleQuadratureDomains) {
+                sum += quadrangleQuadratureDomains.length * pointNum;
             }
             return sum;
         }
 
         /**
-         * a conformal node searcher that can search all the possible nodes
-         * of which support domain includes the search center. The search results
-         * may contain some nodes that should be filtered later.</br>
-         * The backgroup algorithm is a layered range tree.
+         * a conformal node searcher that can search all the possible nodes of
+         * which support domain includes the search center. The search results
+         * may contain some nodes that should be filtered later.</br> The
+         * backgroup algorithm is a layered range tree.
+         *
          * @see LayeredRangeTree
          */
         public class NodeSearcher implements CenterSearcher<Coordinate, Node> {
@@ -183,9 +182,10 @@ public class WeakFormProblems2D {
             Coordinate from = fromNode;
             Coordinate to = toNode;
             double distance;
-            
+
             /**
-             * @param projection should be the max support domain radiu of all the nodes
+             * @param projection should be the max support domain radiu of all
+             * the nodes
              */
             protected NodeSearcher(double distance) {
                 this.distance = distance;
@@ -193,7 +193,8 @@ public class WeakFormProblems2D {
 
             /**
              * @param center the center of the search window
-             * @param results in rectangle window with border length 2*(max node support domain radiu) (border inclusive)
+             * @param results in rectangle window with border length 2*(max node
+             * support domain radiu) (border inclusive)
              * @return results, all the possible support nodes
              */
             @Override
@@ -201,7 +202,7 @@ public class WeakFormProblems2D {
                 if (null == results) {
                     results = new LinkedList<>();
                 }
-                
+
                 double cx = center.x;
                 double cy = center.y;
                 double dist = distance;
@@ -215,11 +216,11 @@ public class WeakFormProblems2D {
         }
 
         /**
-         * a conforming boundary searcher by layered range tree.</br>
-         * In fact, it seams that the 
-         * layered range tree may be not a good choice. Monotone line string based
-         * algorithm may be better in most situations.
-         * 
+         * a conforming boundary searcher by layered range tree.</br> In fact,
+         * it seams that the layered range tree may be not a good choice.
+         * Monotone line string based algorithm may be better in most
+         * situations.
+         *
          */
         public class BoundarySearcher implements CenterSearcher<Coordinate, Boundary> {
 
@@ -266,16 +267,19 @@ public class WeakFormProblems2D {
     }
 
     /**
-     * 构造一个标准Timoshenko闭合解的结点均匀分布的算例，该算例为一中轴在x轴上的矩型结构，
-     * 矩型左端与y轴共线，为Neumann边界。The right side of the rectangle is at line x=width,
-     * and the dirichlet boundary condition is applied on the right border
-     * @param nodesGap the maximum x or y projection betwean a node and its nearest neigbor
+     * 构造一个标准Timoshenko闭合解的结点均匀分布的算例，该算例为一中轴在x轴上的矩型结构， 矩型左端与y轴共线，为Neumann边界。The
+     * right side of the rectangle is at line x=width, and the dirichlet
+     * boundary condition is applied on the right border
+     *
+     * @param nodesGap the maximum x or y projection betwean a node and its
+     * nearest neigbor
      * @param supportDomainRadiu the support domain radiu of all the nodes
      * @param width the width of the cantilever
      * @param height the height of the cantilever
      * @param E Young's module
      * @param v Possion's ratio
-     * @param P the total force applied on the right border &lt;0: upward &gt;0: downward
+     * @param P the total force applied on the right border &lt;0: upward &gt;0:
+     * downward
      * @return a new instance of {@link ByArrays}
      */
     public static WeakFormProblem timoshenkoCantilevel(double nodesGap, double supportDomainRadiu, double width, double height, final double E, final double v, final double P) {
@@ -290,7 +294,7 @@ public class WeakFormProblems2D {
         for (int i = 0; i < neumannNodes.length; i++) {
             neumannNodes[i] = new Node(0, height / 2 - rowsGap * i);
         }
-        
+
         LinkedList<LineBoundary> boundaries = new LinkedList<>();
         LinkedList<BoundaryCondition> neumannBcs = new LinkedList<>();
         for (int i = 0; i < neumannNodes.length - 1; i++) {
@@ -362,17 +366,22 @@ public class WeakFormProblems2D {
     }
 
     /**
-     * A bar be tensed. The bar's axis is aligned to x axis. The bars left side is aligned to y axis.
-     * The Neumann B.C. is simply fixing x and y freedom as 0, at the y axis.
-     * The Dirichlet B.C. is simply a horizontal distributing force applyed on the 
-     * right side of the bar (x=widith)
-     * @param nodesGap the max projection betwean a node and its nearest neighbor must be no bigger than nodesGap
-     * @param supportDomainRadiu the constant support domain num of all the nodes
+     * A bar be tensed. The bar's axis is aligned to x axis. The bars left side
+     * is aligned to y axis. The Neumann B.C. is simply fixing x and y freedom
+     * as 0, at the y axis. The Dirichlet B.C. is simply a horizontal
+     * distributing force applyed on the right side of the bar (x=widith)
+     *
+     * @param nodesGap the max projection betwean a node and its nearest
+     * neighbor must be no bigger than nodesGap
+     * @param supportDomainRadiu the constant support domain num of all the
+     * nodes
      * @param width bar's width, commonly means 'length'
-     * @param height the max and min y dimension inside the bar is height/2 and -height/2
+     * @param height the max and min y dimension inside the bar is height/2 and
+     * -height/2
      * @param E Young's modulus
      * @param v Possion's ratio
-     * @param P the distributing force that are applied on the right side of the bar, the total force is P*height
+     * @param P the distributing force that are applied on the right side of the
+     * bar, the total force is P*height
      * @return A new instance.
      */
     public static WeakFormProblem tensionBarHorizontal(double nodesGap, double supportDomainRadiu, double width, double height, final double E, final double v, final double P) {
@@ -394,16 +403,6 @@ public class WeakFormProblems2D {
             boundaries.add(bound);
             neumannBcs.add(new BoundaryCondition() {
 
-                @Override
-                public Boundary getBoundary() {
-                    return bound;
-                }
-
-                @Override
-                public boolean[] valueByParameter(Coordinate parameter, double[] results) {
-                    throw new UnsupportedOperationException("Not supported yet.");
-
-                }
                 final boolean[] b1 = new boolean[]{true, false};
                 final boolean[] b2 = new boolean[]{true, true};
 
@@ -411,10 +410,20 @@ public class WeakFormProblems2D {
                  * 目前还不支持点状的边界条件
                  */
                 @Override
-                public boolean[] valueByCoordinate(Coordinate coord, double[] results) {
+                public boolean[] values(Coordinate coord, double[] results) {
                     results[0] = 0;
                     results[1] = 0;
                     return b1;
+                }
+
+                @Override
+                public boolean isByCoordinate() {
+                    return true;
+                }
+
+                @Override
+                public Boundary getBoundary() {
+                    return bound;
                 }
             });
         }
@@ -430,22 +439,23 @@ public class WeakFormProblems2D {
             boundaries.add(bound);
             dirichletBCs.add(new BoundaryCondition() {
 
-                @Override
-                public Boundary getBoundary() {
-                    return bound;
-                }
                 final boolean[] b1 = new boolean[]{true, false};
 
                 @Override
-                public boolean[] valueByParameter(Coordinate parameter, double[] results) {
+                public boolean[] values(Coordinate parameter, double[] results) {
                     results[0] = P;
                     results[1] = 0;
                     return b1;
                 }
 
                 @Override
-                public boolean[] valueByCoordinate(Coordinate coord, double[] results) {
-                    throw new UnsupportedOperationException("Not supported yet.");
+                public boolean isByCoordinate() {
+                    return false;
+                }
+
+                @Override
+                public Boundary getBoundary() {
+                    return bound;
                 }
             });
         }
@@ -500,18 +510,23 @@ public class WeakFormProblems2D {
         return new ByArrays(nodes.toArray(new Node[0]), null, supportDomainRadiu, boundaries.toArray(new LineBoundary[0]), null, quadrangles.toArray(new Quadrangle[0]), null, neumannBcs.toArray(new BoundaryCondition[0]), dirichletBCs.toArray(new BoundaryCondition[0]), 2, constitutiveLaw);
     }
 
-     /**
-     * A bar be tensed. The bar's axis is aligned to y axis. The bars down side is aligned to x axis.
-     * The Neumann B.C. is simply fixing x and y freedom as 0, at the x axis.
-     * The Dirichlet B.C. is simply a vertical distributing force applyed on the 
-     * top side of the bar (y=height)
-     * @param nodesGap the max projection betwean a node and its nearest neighbor must be no bigger than nodesGap
-     * @param supportDomainRadiu the constant support domain num of all the nodes
-     * @param width the max and min x dimension inside the bar is -width/2 and width/2
+    /**
+     * A bar be tensed. The bar's axis is aligned to y axis. The bars down side
+     * is aligned to x axis. The Neumann B.C. is simply fixing x and y freedom
+     * as 0, at the x axis. The Dirichlet B.C. is simply a vertical distributing
+     * force applyed on the top side of the bar (y=height)
+     *
+     * @param nodesGap the max projection betwean a node and its nearest
+     * neighbor must be no bigger than nodesGap
+     * @param supportDomainRadiu the constant support domain num of all the
+     * nodes
+     * @param width the max and min x dimension inside the bar is -width/2 and
+     * width/2
      * @param height commonly means 'length' of the bar
      * @param E Young's modulus
      * @param v Possion's ratio
-     * @param P the distributing force that are applied on the top side of the bar, the total force is P*width
+     * @param P the distributing force that are applied on the top side of the
+     * bar, the total force is P*width
      * @return A new instance.
      */
     public static WeakFormProblem tensionBarVertical(double nodesGap, double supportDomainRadiu, double width, double height, final double E, final double v, final double P) {
@@ -532,24 +547,23 @@ public class WeakFormProblems2D {
             boundaries.add(bound);
             neumannBcs.add(new BoundaryCondition() {
 
-                @Override
-                public Boundary getBoundary() {
-                    return bound;
-                }
-
-                @Override
-                public boolean[] valueByParameter(Coordinate parameter, double[] results) {
-                    throw new UnsupportedOperationException("Not supported yet.");
-
-                }
-                final boolean[] b1 = new boolean[]{true, false};
                 final boolean[] b2 = new boolean[]{true, true};
 
                 @Override
-                public boolean[] valueByCoordinate(Coordinate coord, double[] results) {
+                public boolean[] values(Coordinate coord, double[] results) {
                     results[0] = 0;
                     results[1] = 0;
                     return b2;
+                }
+
+                @Override
+                public boolean isByCoordinate() {
+                    return true;
+                }
+
+                @Override
+                public Boundary getBoundary() {
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
             });
         }
@@ -564,21 +578,22 @@ public class WeakFormProblems2D {
             boundaries.add(bound);
             dirichletBCs.add(new BoundaryCondition() {
 
-                @Override
-                public Boundary getBoundary() {
-                    return bound;
-                }
                 final boolean[] b1 = new boolean[]{false, true};
 
                 @Override
-                public boolean[] valueByParameter(Coordinate parameter, double[] results) {
+                public boolean[] values(Coordinate parameter, double[] results) {
                     results[0] = 0;
                     results[1] = P;
                     return b1;
                 }
 
                 @Override
-                public boolean[] valueByCoordinate(Coordinate coord, double[] results) {
+                public boolean isByCoordinate() {
+                    return true;
+                }
+
+                @Override
+                public Boundary getBoundary() {
                     throw new UnsupportedOperationException("Not supported yet.");
                 }
             });
@@ -635,14 +650,19 @@ public class WeakFormProblems2D {
     }
 
     /**
-     * A bar be tensed by only Neumann B.C. . The bar's axis is aligned to x axis. The bars left side is aligned to y axis.
-     * One Neumann B.C. is simply fixing x and y freedom as 0, at the y axis.
-     * The othe Neumann B.C. is simply a horizontal displacement of y freedom applyed on the 
-     * right side of the bar (x=widith)
-     * @param nodesGap the max projection betwean a node and its nearest neighbor must be no bigger than nodesGap
-     * @param supportDomainRadiu the constant support domain num of all the nodes
+     * A bar be tensed by only Neumann B.C. . The bar's axis is aligned to x
+     * axis. The bars left side is aligned to y axis. One Neumann B.C. is simply
+     * fixing x and y freedom as 0, at the y axis. The othe Neumann B.C. is
+     * simply a horizontal displacement of y freedom applyed on the right side
+     * of the bar (x=widith)
+     *
+     * @param nodesGap the max projection betwean a node and its nearest
+     * neighbor must be no bigger than nodesGap
+     * @param supportDomainRadiu the constant support domain num of all the
+     * nodes
      * @param width bar's width, commonly means 'length'
-     * @param height the max and min y dimension inside the bar is height/2 and -height/2
+     * @param height the max and min y dimension inside the bar is height/2 and
+     * -height/2
      * @param E Young's modulus
      * @param v Possion's ratio
      * @param P the displacement that are applied on the right side of the bar.
@@ -669,26 +689,29 @@ public class WeakFormProblems2D {
             boundaries.add(bound);
             neumannBcs.add(new BoundaryCondition() {
 
-                @Override
-                public Boundary getBoundary() {
-                    return bound;
-                }
-
-                @Override
-                public boolean[] valueByParameter(Coordinate parameter, double[] results) {
-                    throw new UnsupportedOperationException("Not supported yet.");
-                }
+              
                 final boolean[] b1 = new boolean[]{true, false};
                 final boolean[] b2 = new boolean[]{true, true};
 
                 @Override
-                public boolean[] valueByCoordinate(Coordinate coord, double[] results) {
+                public boolean[] values(Coordinate coord, double[] results) {
                     results[0] = 0;
                     results[1] = 0;
 
                     return b2;
 
                 }
+
+                @Override
+                public boolean isByCoordinate() {
+                    return true;
+                }
+
+                @Override
+                public Boundary getBoundary() {
+                    throw new UnsupportedOperationException("Not supported yet.");
+                }
+
             });
         }
 
@@ -703,21 +726,11 @@ public class WeakFormProblems2D {
             boundaries.add(bound);
             neumannRightBCs.add(new BoundaryCondition() {
 
-                @Override
-                public Boundary getBoundary() {
-                    return bound;
-                }
-
-                @Override
-                public boolean[] valueByParameter(Coordinate parameter, double[] results) {
-                    throw new UnsupportedOperationException("Not supported yet.");
-
-                }
                 final boolean[] b1 = new boolean[]{true, false};
                 final boolean[] b2 = new boolean[]{true, true};
 
                 @Override
-                public boolean[] valueByCoordinate(Coordinate coord, double[] results) {
+                public boolean[] values(Coordinate coord, double[] results) {
                     results[0] = displace;
                     results[1] = 0;
                     if (coord.y == 0) {
@@ -725,6 +738,16 @@ public class WeakFormProblems2D {
                     } else {
                         return b1;
                     }
+                }
+
+                @Override
+                public boolean isByCoordinate() {
+                    return true;
+                }
+
+                @Override
+                public Boundary getBoundary() {
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
             });
         }

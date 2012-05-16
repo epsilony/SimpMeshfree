@@ -29,7 +29,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
     ArrayList<Coordinate> bndNormals;
     int[] bndStatusCache;
     int[] nodeStatusCache;
-    int allBndNodeNum;
+    int bndNodeNum;
     public static final int MAX_BOUNDARY_NEIGHBORS = 3;
     public int defaultMaxNodeNumInSupportDomain = 50;
     String indexingSetting = "default";
@@ -44,7 +44,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
     CenterDistanceSearcher<Coordinate, Node> boundaryNodeSearcher;
     TIntArrayList intCache1 = new TIntArrayList(defaultMaxNodeNumInSupportDomain);
     TIntArrayList intCache2 = new TIntArrayList(defaultMaxNodeNumInSupportDomain);
-    private NearestKVisibleDomainSizer domainSizer;
+    SupportDomainSizer domainSizer;
     int leastNodesNumInDomain = 10;
     double initSearchRadius;
 
@@ -71,7 +71,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
      * Searches the boundaries which has common points with a shpere.
      *
      * @param center sphere center
-     * @param radius 
+     * @param radius
      * @param results
      * @return results
      */
@@ -88,7 +88,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
     }
 
     /**
-     * Gets the nodesTree at the border of
+     * Gets the nodes at the border of
      * <code>bnds</code>.</br>
      * <code>bnds</code> can tiles out several pieces of shells with closed
      * borders. Even only one {@link LineBoundary line} has a border with two
@@ -142,9 +142,10 @@ public class GeomUtils implements Avatarable<GeomUtils> {
     private GeomUtils() {
     }
 
-    public GeomUtils(ArrayList<Boundary> bounds, ArrayList<Node> spacesNodes) {
+    public GeomUtils(ArrayList<Boundary> bounds, ArrayList<Node> spacesNodes, int dim) {
         this.boundaries = bounds;
         this.spaceNodes = spacesNodes;
+        this.dim = dim;
         indexingNodes();
         indexingBoundaries();
     }
@@ -153,7 +154,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
     public GeomUtils avatorInstance() {
         GeomUtils avator = new GeomUtils();
 
-        avator.allBndNodeNum = allBndNodeNum;
+        avator.bndNodeNum = bndNodeNum;
         avator.allNodes = allNodes;
         avator.bndCenters = bndCenters;
         avator.bndNormals = bndNormals;
@@ -165,10 +166,10 @@ public class GeomUtils implements Avatarable<GeomUtils> {
         avator.boundarySearcher = boundarySearcher;
         avator.defaultMaxNodeNumInSupportDomain = defaultMaxNodeNumInSupportDomain;
         avator.dim = dim;
-        avator.domainSizer=domainSizer;
+        avator.domainSizer = domainSizer;
         avator.indexingSetting = indexingSetting;
         //intCache1,intCache2 will initiated by themselves
-        avator.leastNodesNumInDomain=leastNodesNumInDomain;
+        avator.leastNodesNumInDomain = leastNodesNumInDomain;
         avator.maxBndRad = maxBndRad;
         avator.nodeSearcher = nodeSearcher;
         avator.nodeStatusCache = new int[nodeStatusCache.length];
@@ -178,6 +179,10 @@ public class GeomUtils implements Avatarable<GeomUtils> {
         avator.spaceNodes = spaceNodes;
 
         return avator;
+    }
+
+    public double domain(Coordinate center, List<Node> outputs) {
+        return domainSizer.domain(center, outputs);
     }
 
     /**
@@ -202,13 +207,17 @@ public class GeomUtils implements Avatarable<GeomUtils> {
             Node from = new Node();
             Node to = new Node();
             for (int i = 0; i < dim; i++) {
-                double centerDim = center.getDim(dim);
-                from.setDim(dim, centerDim - radius);
-                to.setDim(dim, centerDim + radius);
+                double centerDim = center.getDim(i);
+                from.setDim(i, centerDim - radius);
+                to.setDim(i, centerDim + radius);
             }
             LinkedList<Node> tlist = new LinkedList<>();
             nodesTree.search(tlist, from, to);
-            results.clear();
+            if (null == results) {
+                results = new LinkedList<>();
+            } else {
+                results.clear();
+            }
             double radiusSq = radius * radius;
             for (Node nd : tlist) {
                 double distSq = distanceSquare(center, nd);
@@ -231,9 +240,9 @@ public class GeomUtils implements Avatarable<GeomUtils> {
             Node from = new Node();
             Node to = new Node();
             for (int i = 0; i < dim; i++) {
-                double centerDim = center.getDim(dim);
-                from.setDim(dim, centerDim - radius - maxBndRad);
-                to.setDim(dim, centerDim + radius + maxBndRad);
+                double centerDim = center.getDim(i);
+                from.setDim(i, centerDim - radius - maxBndRad);
+                to.setDim(i, centerDim + radius + maxBndRad);
             }
             LinkedList<Node> centerResults = new LinkedList<>();
             boundaryTree.search(centerResults, from, to);
@@ -275,7 +284,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
                 }
             }
         }
-        allBndNodeNum = tNodes.size();
+        bndNodeNum = tNodes.size();
 
         for (int i = 0; i < spaceNodes.size(); i++) {
             Node node = spaceNodes.get(i);
@@ -298,6 +307,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
         Arrays.fill(nodeStatusCache, -1);
         bndCenters = new ArrayList<>(boundaries.size());
         bndRadius = new double[boundaries.size()];
+        bndNormals = new ArrayList<>(boundaries.size());
         double maxR = 0;
         for (Boundary bnd : boundaries) {
             int i = bndCenters.size();
@@ -516,8 +526,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
      * the node belongs to.
      *
      * @param center
-     * @param nds should all be space nodesTree or should all be boundary
-     * nodesTree
+     * @param nds should all be space nodes or should all be boundary nodes
      * @param bnds
      * @param nodeBlockNums There is
      * <code>nodeBlockNums.get(i)</code> boundaries blocked betwean
@@ -525,7 +534,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
      * <code>center</code>. For acceleration, if the
      * <code>nds.get(i)</code> is blocked by twice, it won't be considered
      * later. So that the max item in this will not > 2.
-     * @param nodeBlockBndIdx The the boundary which
+     * @param nodeBlockBndIdx The boundary which
      * <code>getId</code> is
      * <code>nodeBlockBndIdx</code> blocks betwean
      * <code>center</code> and
@@ -534,9 +543,9 @@ public class GeomUtils implements Avatarable<GeomUtils> {
      * <code>center</code> and
      * <code>nds.get(i)</code> , that is
      * <code>nodeBlockNums</code> >=2 , only one of the blocking boundary's id
-     * will be recorded here.
+     * will be randomly recorded here.
      * @param isBoundaryNode is the
-     * <code>nds</code> are all boundary nodesTree or are all not
+     * <code>nds</code> are all boundary nodes or are all not
      */
     public void visibleStatus(Coordinate center, List<Node> nds, List<Boundary> bnds, TIntArrayList nodeBlockNums, TIntArrayList nodeBlockBndIdx, boolean isBoundaryNode) {
         Coordinate t = new Coordinate();
@@ -557,27 +566,31 @@ public class GeomUtils implements Avatarable<GeomUtils> {
         }
         int bIdx = 0;
         for (Boundary bnd : bnds) {
-            if (!isBoundaryNode && !isPtInSideBnd(bnd, center, t)) {
+            boolean isCenterInside=isPtInSideBnd(bnd, center, t);
+            if (!isBoundaryNode && !isCenterInside) {
                 bIdx++;
                 continue;
             }
             int nIdx = 0;
+            
             for (Node nd : nds) {
 
                 if (nodeBlockNums.get(nIdx) > 1) {
                     nIdx++;
                     continue;
                 }
-                boolean needContinue = false;
-                for (int i = 0; isBoundaryNode && i < bnd.num(); i++) {
-                    if (nd == bnd.getNode(i)) {
-                        needContinue = true;
-                        break;
+                if (isBoundaryNode) {
+                    boolean needContinue = false;
+                    for (int i = 0; i < bnd.num(); i++) {
+                        if (nd == bnd.getNode(i)) {
+                            needContinue = true;
+                            break;
+                        }
                     }
-                }
-                if (needContinue) {
-                    nIdx++;
-                    continue;
+                    if (needContinue) {
+                        nIdx++;
+                        continue;
+                    }
                 }
                 boolean isNdInSide = isPtInSideBnd(bnd, nd, t);
                 if (isNdInSide) {
@@ -588,7 +601,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
                 switch (dim) {
                     case 2:
                         LineBoundary line = (LineBoundary) bnd;
-                        isInConvecCone = BoundaryUtils.isInConvexCone(line, center, nd);
+                        isInConvecCone = BoundaryUtils.isInConvexCone(line, center, isCenterInside,nd);
                         break;
                     case 3:
                         TriangleBoundary tri = (TriangleBoundary) bnd;
@@ -609,7 +622,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
     }
 
     /**
-     * Gets the nodesTree of
+     * Gets the nodes of
      * <code>bnds</code>
      *
      * @param bnds
@@ -716,6 +729,9 @@ public class GeomUtils implements Avatarable<GeomUtils> {
         public double domain(Coordinate center, List<Node> outputs) {
             double rSearch = rInit;
             int iter = 1;
+            if (null == outputs) {
+                outputs = new LinkedList<>();
+            }
             do {
                 searchSpaceNodes(center, rSearch, nds);
                 searchBoundary(center, rSearch, bnds);

@@ -12,6 +12,8 @@ import net.epsilony.utils.geom.Coordinate;
  * @author epsilonyuan@gmail.com
  */
 public interface BoundaryCondition {
+    boolean isByCoordinate();
+    
     Boundary getBoundary();
     
     /**
@@ -21,7 +23,6 @@ public interface BoundaryCondition {
      * @param results 
      * @return results
      */
-    boolean[] valueByParameter(Coordinate parameter,double[] results);
-    boolean[] valueByCoordinate(Coordinate coord,double[] results);
+    boolean[] values(Coordinate input,double[] results);
     
 }

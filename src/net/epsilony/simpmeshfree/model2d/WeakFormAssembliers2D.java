@@ -25,7 +25,6 @@ import org.apache.commons.math.linear.SparseRealMatrix;
  * @author epsilonyuan@gmail.com
  */
 public class WeakFormAssembliers2D {
-    
 
     public static class SimpAssemblier implements WeakFormAssemblier {
 
@@ -43,18 +42,12 @@ public class WeakFormAssembliers2D {
         }
 
         @Override
-        public void asmBalance(QuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunctions, VolumeCondition volBc) {
+        public void asmBalance(QuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunVals, VolumeCondition volBc) {
             double[] v, vx, vy;
+            v = shapeFunVals[0].getData();
+            vx = shapeFunVals[1].getData();
+            vy = shapeFunVals[2].getData();
 
-            if (null == volBc) {
-                v = null;
-                vx = shapeFunctions[0].getData();
-                vy = shapeFunctions[1].getData();
-            } else {
-                v = shapeFunctions[0].getData();
-                vx = shapeFunctions[1].getData();
-                vy = shapeFunctions[2].getData();
-            }
             double weight = qp.weight;
             int nodesSize = nodes.size();
             if (nodesIds == null || nodesIds.length < nodesSize) {
@@ -66,13 +59,13 @@ public class WeakFormAssembliers2D {
                 nIds[i] = nd.id;
                 i++;
             }
-            DenseMatrix tmat = constitutiveLaw;
-            double d00 = tmat.get(0, 0) * weight,
-                    d01 = tmat.get(0, 1) * weight,
-                    d02 = tmat.get(0, 2) * weight,
-                    d11 = tmat.get(1, 1) * weight,
-                    d12 = tmat.get(1, 2) * weight,
-                    d22 = tmat.get(2, 2) * weight;
+            DenseMatrix cLaw = constitutiveLaw;
+            double d00 = cLaw.get(0, 0) * weight,
+                    d01 = cLaw.get(0, 1) * weight,
+                    d02 = cLaw.get(0, 2) * weight,
+                    d11 = cLaw.get(1, 1) * weight,
+                    d12 = cLaw.get(1, 2) * weight,
+                    d22 = cLaw.get(2, 2) * weight;
             FlexCompRowMatrix mat = mainMatrix;
             double[] bcValue = null;
             double bcAndWeightX = 0, bcAndWeightY = 0;
@@ -85,91 +78,53 @@ public class WeakFormAssembliers2D {
                 }
             }
 
-            if (null == bcValue) {
-                for (i = 0; i < nodesSize; i++) {
-                    int matIndexI = nIds[i] * 2;
-                    double ix = vx[i], iy = vy[i];
-                    {
-                        double xx = ix * ix,
-                                xy = ix * iy,
-                                yx = iy * ix,
-                                yy = iy * iy;
-                        double xyyx = xy + yx;
+            DenseVector vec = mainVector;
 
+            for (i = 0; i < nodesSize; i++) {
+                int matIndexI = nIds[i] * 2;
 
-                        mat.add(matIndexI, matIndexI, d00 * xx + d02 * xyyx + d22 * yy);
-                        mat.add(matIndexI, matIndexI + 1, d01 * xy + d12 * yy + d02 * xx + d22 * yx);
-                        mat.add(matIndexI + 1, matIndexI + 1, d11 * yy + d12 * xyyx + d22 * xx);
-                    }
-                    for (int j = i + 1; j < nodesSize; j++) {
-                        int matIndexJ = nIds[j] * 2;
-                        double jx = vx[j], jy = vy[j];
-                        double xx = ix * jx,
-                                xy = ix * jy,
-                                yx = iy * jx,
-                                yy = iy * jy;
-                        double xyyx = xy + yx;
-                        if (matIndexI < matIndexJ) {
-                            mat.add(matIndexI, matIndexJ, d00 * xx + d02 * xyyx + d22 * yy);
-                            mat.add(matIndexI + 1, matIndexJ, d01 * yx + d02 * xx + d12 * yy + d22 * xy);
-                            mat.add(matIndexI, matIndexJ + 1, d01 * xy + d12 * yy + d02 * xx + d22 * yx);
-                            mat.add(matIndexI + 1, matIndexJ + 1, d11 * yy + d12 * xyyx + d22 * xx);
-                        } else {
-                            mat.add(matIndexJ, matIndexI, d00 * xx + d02 * xyyx + d22 * yy);
-                            mat.add(matIndexJ, matIndexI + 1, d01 * yx + d02 * xx + d12 * yy + d22 * xy);
-                            mat.add(matIndexJ + 1, matIndexI, d01 * xy + d12 * yy + d02 * xx + d22 * yx);
-                            mat.add(matIndexJ + 1, matIndexI + 1, d11 * yy + d12 * xyyx + d22 * xx);
-                        }
-                    }
-                }
-            } else {
-                DenseVector vec = mainVector;
-
-                for (i = 0; i < nodesSize; i++) {
-                    int matIndexI = nIds[i] * 2;
-                    double ix = vx[i], iy = vy[i];
+                
+                if (null != bcValue) {
                     double dv = v[i];
                     vec.add(matIndexI, bcAndWeightX * dv);
                     vec.add(matIndexI + 1, bcAndWeightY * dv);
+                }
+                
+                double ix = vx[i], iy = vy[i];
+                double xx = ix * ix,
+                        xy = ix * iy,
+                        yx = iy * ix,
+                        yy = iy * iy;
+                double xyyx = xy + yx;
 
-                    {
-                        double xx = ix * ix,
-                                xy = ix * iy,
-                                yx = iy * ix,
-                                yy = iy * iy;
-                        double xyyx = xy + yx;
+
+                mat.add(matIndexI, matIndexI, d00 * xx + d02 * xyyx + d22 * yy);
+                mat.add(matIndexI, matIndexI + 1, d01 * xy + d12 * yy + d02 * xx + d22 * yx);
+                mat.add(matIndexI + 1, matIndexI + 1, d11 * yy + d12 * xyyx + d22 * xx);
 
 
-                        mat.add(matIndexI, matIndexI, d00 * xx + d02 * xyyx + d22 * yy);
-                        mat.add(matIndexI, matIndexI + 1, d01 * xy + d12 * yy + d02 * xx + d22 * yx);
-                        mat.add(matIndexI + 1, matIndexI + 1, d11 * yy + d12 * xyyx + d22 * xx);
-                    }
+                for (int j = i + 1; j < nodesSize; j++) {
+                    int matIndexJ = nIds[j] * 2;
+                    double jx = vx[j], jy = vy[j];
+                    xx = ix * jx;
+                    xy = ix * jy;
+                    yx = iy * jx;
+                    yy = iy * jy;
+                    xyyx = xy + yx;
 
-                    for (int j = i + 1; j < nodesSize; j++) {
-                        int matIndexJ = nIds[j] * 2;
-                        double jx = vx[j], jy = vy[j];
-                        double xx = ix * jx,
-                                xy = ix * jy,
-                                yx = iy * jx,
-                                yy = iy * jy;
-                        double xyyx = xy + yx;
-
-                        if (matIndexI < matIndexJ) {
-                            mat.add(matIndexI, matIndexJ, d00 * xx + d02 * xyyx + d22 * yy);
-                            mat.add(matIndexI + 1, matIndexJ, d01 * yx + d02 * xx + d12 * yy + d22 * xy);
-                            mat.add(matIndexI, matIndexJ + 1, d01 * xy + d12 * yy + d02 * xx + d22 * yx);
-                            mat.add(matIndexI + 1, matIndexJ + 1, d11 * yy + d12 * xyyx + d22 * xx);
-                        } else {
-                            mat.add(matIndexJ, matIndexI, d00 * xx + d02 * xyyx + d22 * yy);
-                            mat.add(matIndexJ, matIndexI + 1, d01 * yx + d02 * xx + d12 * yy + d22 * xy);
-                            mat.add(matIndexJ + 1, matIndexI, d01 * xy + d12 * yy + d02 * xx + d22 * yx);
-                            mat.add(matIndexJ + 1, matIndexI + 1, d11 * yy + d12 * xyyx + d22 * xx);
-                        }
-
+                    if (matIndexI < matIndexJ) {
+                        mat.add(matIndexI, matIndexJ, d00 * xx + d02 * xyyx + d22 * yy);
+                        mat.add(matIndexI + 1, matIndexJ, d01 * yx + d02 * xx + d12 * yy + d22 * xy);
+                        mat.add(matIndexI, matIndexJ + 1, d01 * xy + d12 * yy + d02 * xx + d22 * yx);
+                        mat.add(matIndexI + 1, matIndexJ + 1, d11 * yy + d12 * xyyx + d22 * xx);
+                    } else {
+                        mat.add(matIndexJ, matIndexI, d00 * xx + d02 * xyyx + d22 * yy);
+                        mat.add(matIndexJ, matIndexI + 1, d01 * yx + d02 * xx + d12 * yy + d22 * xy);
+                        mat.add(matIndexJ + 1, matIndexI, d01 * xy + d12 * yy + d02 * xx + d22 * yx);
+                        mat.add(matIndexJ + 1, matIndexI + 1, d11 * yy + d12 * xyyx + d22 * xx);
                     }
                 }
             }
-
         }
 
         @Override
@@ -180,7 +135,7 @@ public class WeakFormAssembliers2D {
             double weight = qp.weight;
             BoundaryCondition boundBC = qp.boundaryCondition;
             double[] bcValue = new double[2];
-            boolean[] avis = boundBC.valueByParameter(qp.parameter, bcValue);
+            boolean[] avis = boundBC.values(qp.parameter, bcValue);
             int opt = 0;
             if (avis[0]) {
                 opt += 1;
@@ -242,7 +197,7 @@ public class WeakFormAssembliers2D {
             double[] vs = shapeFunctions[0].getData();
             BoundaryCondition bc = qp.boundaryCondition;
             double[] values = new double[2];
-            boolean[] avis = bc.valueByCoordinate(qp.coordinate, values);
+            boolean[] avis = bc.values(qp.coordinate, values);
             int opt = 0;
             if (avis[0]) {
                 opt += 1;
@@ -355,29 +310,29 @@ public class WeakFormAssembliers2D {
         public DenseVector getEquationVector() {
             return mainVector;
         }
+        LinkedList<SimpAssemblier> avators = new LinkedList<>();
 
-        LinkedList<SimpAssemblier> avators=new LinkedList<>();
         @Override
         synchronized public WeakFormAssemblier avatorInstance() {
-            SimpAssemblier avator=new SimpAssemblier(constitutiveLaw, neumannPenalty, mainVector.size()/2);
+            SimpAssemblier avator = new SimpAssemblier(constitutiveLaw, neumannPenalty, mainVector.size() / 2);
             avators.add(avator);
             return avator;
         }
 
         @Override
         public void uniteAvators() {
-            for(SimpAssemblier avator:avators){
-                for(MatrixEntry me:avator.mainMatrix){
+            for (SimpAssemblier avator : avators) {
+                for (MatrixEntry me : avator.mainMatrix) {
                     mainMatrix.add(me.row(), me.column(), me.get());
                 }
-                for(VectorEntry ve:avator.mainVector){
-                    mainVector.add(ve.index(),ve.get());
+                for (VectorEntry ve : avator.mainVector) {
+                    mainVector.add(ve.index(), ve.get());
                 }
             }
-            avators.clear();  
+            avators.clear();
         }
     }
-    
+
     public static class ApacheSpareSimpAssemblier implements WeakFormAssemblier {
 
         DenseMatrix constitutiveLaw;
@@ -531,7 +486,7 @@ public class WeakFormAssembliers2D {
             double weight = qp.weight;
             BoundaryCondition boundBC = qp.boundaryCondition;
             double[] bcValue = new double[2];
-            boolean[] avis = boundBC.valueByParameter(qp.parameter, bcValue);
+            boolean[] avis = boundBC.values(qp.parameter, bcValue);
             int opt = 0;
             if (avis[0]) {
                 opt += 1;
@@ -593,7 +548,7 @@ public class WeakFormAssembliers2D {
             double[] vs = shapeFunctions[0].getData();
             BoundaryCondition bc = qp.boundaryCondition;
             double[] values = new double[2];
-            boolean[] avis = bc.valueByCoordinate(qp.coordinate, values);
+            boolean[] avis = bc.values(qp.coordinate, values);
             int opt = 0;
             if (avis[0]) {
                 opt += 1;
@@ -706,31 +661,31 @@ public class WeakFormAssembliers2D {
         public DenseVector getEquationVector() {
             return mainVector;
         }
+        LinkedList<ApacheSpareSimpAssemblier> avators = new LinkedList<>();
 
-        LinkedList<ApacheSpareSimpAssemblier> avators=new LinkedList<>();
         @Override
         synchronized public WeakFormAssemblier avatorInstance() {
-            ApacheSpareSimpAssemblier avator=new ApacheSpareSimpAssemblier(constitutiveLaw, neumannPenalty, mainVector.size()/2);
+            ApacheSpareSimpAssemblier avator = new ApacheSpareSimpAssemblier(constitutiveLaw, neumannPenalty, mainVector.size() / 2);
             avators.add(avator);
             return avator;
         }
 
         @Override
         public void uniteAvators() {
-            for(ApacheSpareSimpAssemblier avator:avators){
-                for(int i=0;i<avator.mainMatrix.getColumnDimension();i++){
-                    Iterator<RealVector.Entry> iter=avator.mainMatrix.getRowVector(i).sparseIterator();
-                    while(iter.hasNext()) {
-                        RealVector.Entry ve=iter.next();
+            for (ApacheSpareSimpAssemblier avator : avators) {
+                for (int i = 0; i < avator.mainMatrix.getColumnDimension(); i++) {
+                    Iterator<RealVector.Entry> iter = avator.mainMatrix.getRowVector(i).sparseIterator();
+                    while (iter.hasNext()) {
+                        RealVector.Entry ve = iter.next();
                         mainMatrix.addToEntry(i, ve.getIndex(), ve.getValue());
                     }
-                    
+
                 }
-                for(VectorEntry ve:avator.mainVector){
-                    mainVector.add(ve.index(),ve.get());
+                for (VectorEntry ve : avator.mainVector) {
+                    mainVector.add(ve.index(), ve.get());
                 }
             }
-            avators.clear();  
+            avators.clear();
         }
     }
 }

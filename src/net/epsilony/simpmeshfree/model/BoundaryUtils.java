@@ -197,13 +197,21 @@ public class BoundaryUtils {
      * @param pt
      * @return
      */
-    public static boolean isInConvexCone(LineBoundary line, Coordinate center, Coordinate pt) {
+    public static boolean isInConvexCone(LineBoundary line, Coordinate center, boolean isCenterInside, Coordinate pt) {
         double cross1 = cross2D(pt.x - center.x, pt.y - center.y, line.start.x - center.x, line.start.y - center.y);
         double cross2 = cross2D(line.end.x - center.x, line.end.y - center.y, pt.x - center.x, pt.y - center.y);
-        if (cross1 >= 0 && cross2 >= 0) {
-            return true;
-        } else {
-            return false;
+        if (isCenterInside) {
+            if (cross1 <= 0 && cross2 <= 0) {
+                return true;
+            } else {
+                return false;
+            }
+        }else{
+            if(cross1>=0 && cross2 >=0){
+                return true;
+            }else{
+                return false;
+            }
         }
     }
 
@@ -229,9 +237,9 @@ public class BoundaryUtils {
         }
 
         for (int i = 0; i < 3; i++) {
-            tMat.set(i, 0, tri.nodes[i].x);
-            tMat.set(i, 1, tri.nodes[i].y);
-            tMat.set(i, 2, tri.nodes[i].z);
+            tMat.set(0, i, tri.nodes[i].x-center.x);
+            tMat.set(1, i, tri.nodes[i].y-center.y);
+            tMat.set(2, i, tri.nodes[i].z-center.z);
         }
         tVec1.set(0, nd.x - center.x);
         tVec1.set(1, nd.y - center.y);
