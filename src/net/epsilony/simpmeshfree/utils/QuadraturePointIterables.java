@@ -17,7 +17,7 @@ import net.epsilony.utils.math.QuadrangleMapper;
 import net.epsilony.utils.math.TriangleSymmetricQuadrature;
 
 /**
- *
+ * @deprecated Use the more tidy QuadraturePointIterators instead.
  * @author epsilonyuan@gmail.com
  */
 public class QuadraturePointIterables {
@@ -93,7 +93,7 @@ public class QuadraturePointIterables {
                 pointPositions = new double[size * 2];
                 weights = TriangleSymmetricQuadrature.getWeights(power);
                 Triangle tri = triangles[0];
-                double x1 = tri.x1, y1 = tri.y1, x2 = tri.x2, y2 = tri.y2, x3 = tri.x3, y3 = tri.y3;
+                double x1 = tri.c1.x, y1 = tri.c1.y, x2 = tri.c2.x, y2 = tri.c2.y, x3 = tri.c3.x, y3 = tri.c3.y;
                 TriangleSymmetricQuadrature.getPositions(x1, y1, x2, y2, x3, y3, power, pointPositions);
                 area = GeometryMath.triangleArea(x1, y1, x2, y2, x3, y3);
             }
@@ -128,12 +128,12 @@ public class QuadraturePointIterables {
                 inTriangleIndex = 0;
                 triangleIndex++;
                 Triangle triangle = triangles[triangleIndex];
-                double x1 = triangle.x1,
-                        y1 = triangle.y1,
-                        x2 = triangle.x2,
-                        y2 = triangle.y2,
-                        x3 = triangle.x3,
-                        y3 = triangle.y3;
+                double x1 = triangle.c1.x,
+                        y1 = triangle.c1.y,
+                        x2 = triangle.c2.x,
+                        y2 = triangle.c2.y,
+                        x3 = triangle.c3.x,
+                        y3 = triangle.c3.y;
                 area = GeometryMath.triangleArea(x1, y1, x2, y2, x3, y3);
                 TriangleSymmetricQuadrature.getPositions(x1, y1, x2, y2, x3, y3, power, pointPositions);
                 weights = TriangleSymmetricQuadrature.getWeights(power, false);

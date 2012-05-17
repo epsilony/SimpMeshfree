@@ -12,65 +12,37 @@ import net.epsilony.utils.geom.Coordinate;
  *
  * @author epsilonyuan@gmail.com
  */
-public class TimoshenkoExactBeam {
+public class TimoshenkoExactBeam2D {
 
+    
     public class NeumannBoundaryCondition implements BoundaryCondition {
 
-        Boundary boundary;
-
-        public NeumannBoundaryCondition(Boundary boundary) {
-            this.boundary = boundary;
-        }
-        final boolean[] b1 = new boolean[]{true, false};
-        final boolean[] b2 = new boolean[]{true, true};
-
-
-
         @Override
-        public boolean[] values(Coordinate coordinate, double[] results) {
-            getDisplacement(coordinate.x, coordinate.y, results);
-            return b2;
+        public void values(Coordinate coordinate, double[] results,boolean[] validities) {
+            getStress(coordinate.x, coordinate.y, results);
+            validities[0]=true;
+            validities[1]=true;
+
         }
 
         @Override
-        public boolean isByCoordinate() {
+        public boolean setBoundary(Boundary bnd) {
             return true;
-        }
-
-        @Override
-        public Boundary getBoundary() {
-            return boundary;
         }
     }
 
     public class DirichletBoundaryCondition implements BoundaryCondition {
 
-        Boundary boundary;
-
-        public DirichletBoundaryCondition(Boundary boundary) {
-            this.boundary = boundary;
-        }
-
-        
-        final boolean[] b = new boolean[]{false, true};
-
         @Override
-        public boolean[] values(Coordinate parameter, double[] results) {
-            throw new UnsupportedOperationException("Not supported yet.");
-//            Coordinate coordinate = new Coordinate();
-//            boundary.valueByParameter(parameter, coordinate);
-//            getStress(coordinate.x, coordinate.y, results);
-//            return b;
+        public boolean setBoundary(Boundary bnd) {
+            return true;
         }
 
         @Override
-        public boolean isByCoordinate() {
-            return false;
-        }
-
-        @Override
-        public Boundary getBoundary() {
-            return boundary;
+        public void values(Coordinate input, double[] results, boolean[] validities) {
+            getDisplacement(input.x, input.y, results);
+            validities[0]=true;
+            validities[1]=true;
         }
 
     }
@@ -79,7 +51,7 @@ public class TimoshenkoExactBeam {
     double P;
     double I;
 
-    public TimoshenkoExactBeam(double width, double height, double E, double v, double P) {
+    public TimoshenkoExactBeam2D(double width, double height, double E, double v, double P) {
         this.width = width;
         this.height = height;
         this.E = E;
@@ -110,5 +82,13 @@ public class TimoshenkoExactBeam {
         results[0] = sxx;
         results[1] = sxy;
         return results;
+    }
+    
+    public BoundaryCondition getNeumannBC(){
+        return new NeumannBoundaryCondition();
+    }
+    
+    public BoundaryCondition getDirichletBC(){
+        return new DirichletBoundaryCondition();
     }
 }

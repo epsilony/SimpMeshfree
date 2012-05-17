@@ -12,17 +12,22 @@ import net.epsilony.utils.geom.Coordinate;
  * @author epsilonyuan@gmail.com
  */
 public interface BoundaryCondition {
-    boolean isByCoordinate();
-    
-    Boundary getBoundary();
-    
+  
     /**
-     * boundary condition value respect to the parameter of boundary
+     * 
+     * @param bnd
+     * @return whether the first argument of {@link #values(net.epsilony.utils.geom.Coordinate, double[]) values} is a Cartesian coordinate or {@code bnd}'s parametic coordinate. true:
+     * Cartesian, false:parametic
+     */
+    boolean setBoundary(Boundary bnd);
+    /**
+     * boundary condition value respect to the Cartesian Coordinate or parameter of {@link Boundary}
+     * the {@link setBoundary} should be called first when evaluating on a fresh {@link Boundary}
      * @param parameter in 2D, boundary is circle and the parameter.x is only used, 
      * in 3D the parameter.x .y are used.
      * @param results 
      * @return results
      */
-    boolean[] values(Coordinate input,double[] results);
+    void values(Coordinate input,double[] results,boolean[] validities);
     
 }

@@ -11,5 +11,5 @@ import net.epsilony.utils.geom.Coordinate;
  * @author epsilonyuan@gmail.com
  */
 public interface VolumeCondition {
-    double[] value(Coordinate pos);
+    void value(Coordinate pos,double[] results);
 }

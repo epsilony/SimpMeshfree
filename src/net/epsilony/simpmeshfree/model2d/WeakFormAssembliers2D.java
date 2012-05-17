@@ -7,11 +7,9 @@ package net.epsilony.simpmeshfree.model2d;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import net.epsilony.simpmeshfree.model.BoundaryCondition;
 import net.epsilony.simpmeshfree.model.Node;
 import net.epsilony.simpmeshfree.model.VolumeCondition;
 import net.epsilony.simpmeshfree.model.WeakFormAssemblier;
-import net.epsilony.simpmeshfree.utils.BCQuadraturePoint;
 import net.epsilony.simpmeshfree.utils.QuadraturePoint;
 import net.epsilony.utils.geom.Coordinate;
 import no.uib.cipr.matrix.*;
@@ -67,10 +65,10 @@ public class WeakFormAssembliers2D {
                     d12 = cLaw.get(1, 2) * weight,
                     d22 = cLaw.get(2, 2) * weight;
             FlexCompRowMatrix mat = mainMatrix;
-            double[] bcValue = null;
+            double[] bcValue = new double[3];
             double bcAndWeightX = 0, bcAndWeightY = 0;
             if (null != volBc) {
-                bcValue = volBc.value(qp.coordinate);
+                volBc.value(qp.coordinate,bcValue);
                 bcAndWeightX = bcValue[0] * weight;
                 bcAndWeightY = bcValue[1] * weight;
                 if (bcAndWeightX == 0 && bcAndWeightY == 0) {
@@ -128,19 +126,18 @@ public class WeakFormAssembliers2D {
         }
 
         @Override
-        public void asmNeumann(BCQuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunctions) {
+        public void asmNeumann(QuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunctions) {
 
 
             DenseVector vec = mainVector;
             double weight = qp.weight;
-            BoundaryCondition boundBC = qp.boundaryCondition;
-            double[] bcValue = new double[2];
-            boolean[] avis = boundBC.values(qp.parameter, bcValue);
+            double[] bcValue = qp.values;
+            boolean[] bcValidities = qp.validities;
             int opt = 0;
-            if (avis[0]) {
+            if (bcValidities[0]) {
                 opt += 1;
             }
-            if (avis[1]) {
+            if (bcValidities[1]) {
                 opt += 2;
             }
             if (0 == opt) {
@@ -190,14 +187,14 @@ public class WeakFormAssembliers2D {
         }
 
         @Override
-        public void asmDirichlet(BCQuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunctions) {
+        public void asmDirichlet(QuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunctions) {
             double factor = qp.weight * neumannPenalty;
             FlexCompRowMatrix mat = mainMatrix;
             DenseVector vec = mainVector;
             double[] vs = shapeFunctions[0].getData();
-            BoundaryCondition bc = qp.boundaryCondition;
-            double[] values = new double[2];
-            boolean[] avis = bc.values(qp.coordinate, values);
+
+            double[] values = qp.values;
+            boolean[] avis = qp.validities;
             int opt = 0;
             if (avis[0]) {
                 opt += 1;
@@ -380,10 +377,10 @@ public class WeakFormAssembliers2D {
                     d12 = tmat.get(1, 2) * weight,
                     d22 = tmat.get(2, 2) * weight;
             SparseRealMatrix mat = mainMatrix;
-            double[] bcValue = null;
+            double[] bcValue = new double[3];
             double bcAndWeightX = 0, bcAndWeightY = 0;
             if (null != volBc) {
-                bcValue = volBc.value(qp.coordinate);
+                volBc.value(qp.coordinate,bcValue);
                 bcAndWeightX = bcValue[0] * weight;
                 bcAndWeightY = bcValue[1] * weight;
                 if (bcAndWeightX == 0 && bcAndWeightY == 0) {
@@ -479,14 +476,14 @@ public class WeakFormAssembliers2D {
         }
 
         @Override
-        public void asmNeumann(BCQuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunctions) {
+        public void asmNeumann(QuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunctions) {
 
 
             DenseVector vec = mainVector;
             double weight = qp.weight;
-            BoundaryCondition boundBC = qp.boundaryCondition;
-            double[] bcValue = new double[2];
-            boolean[] avis = boundBC.values(qp.parameter, bcValue);
+
+            double[] bcValue = qp.values;
+            boolean[] avis = qp.validities;
             int opt = 0;
             if (avis[0]) {
                 opt += 1;
@@ -541,14 +538,14 @@ public class WeakFormAssembliers2D {
         }
 
         @Override
-        public void asmDirichlet(BCQuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunctions) {
+        public void asmDirichlet(QuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunctions) {
             double factor = qp.weight * neumannPenalty;
             SparseRealMatrix mat = mainMatrix;
             DenseVector vec = mainVector;
             double[] vs = shapeFunctions[0].getData();
-            BoundaryCondition bc = qp.boundaryCondition;
-            double[] values = new double[2];
-            boolean[] avis = bc.values(qp.coordinate, values);
+
+            double[] values = qp.values;
+            boolean[] avis = qp.validities;
             int opt = 0;
             if (avis[0]) {
                 opt += 1;
