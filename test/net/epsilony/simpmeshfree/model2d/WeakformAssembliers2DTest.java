@@ -23,9 +23,9 @@ import org.junit.Test;
  *
  * @author epsilonyuan@gmail.com
  */
-public class WeakFormAssembliers2DTest {
+public class WeakformAssembliers2DTest {
 //
-//    public WeakFormAssembliers2DTest() {
+//    public WeakformAssembliers2DTest() {
 //    }
 //
 //    @BeforeClass

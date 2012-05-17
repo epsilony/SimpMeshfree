@@ -24,16 +24,16 @@ import org.apache.log4j.Logger;
  *
  * @author epsilonyuan@gmail.com
  */
-public class WeakFormProcessor2D {
+public class WeakformProcessor2D {
 
     ShapeFunctionFactory shapeFunFactory;
     public int arrayListSize = 100;
-    WeakFormAssemblier assemblier;
-    WeakFormProblem workProblem;
-    int quadraturePower;
+    WeakformAssemblier assemblier;
+    WeakformProblem workProblem;
     private final EquationSolver equationSolver;
     DenseVector equationResultVector;
     Logger logger = Logger.getLogger(this.getClass());
+    public int processThreadsNum=Integer.MAX_VALUE;
 
     /**
      *
@@ -43,17 +43,15 @@ public class WeakFormProcessor2D {
      * @param power
      * @param equationSolver
      */
-    public WeakFormProcessor2D(ShapeFunctionFactory shapeFunFactory, WeakFormAssemblier assemblier, WeakFormProblem workProblem, int power, EquationSolver equationSolver) {
+    public WeakformProcessor2D(ShapeFunctionFactory shapeFunFactory, WeakformAssemblier assemblier, WeakformProblem workProblem, EquationSolver equationSolver) {
         this.shapeFunFactory = shapeFunFactory;
         this.assemblier = assemblier;
         this.workProblem = workProblem;
-        this.quadraturePower = power;
         this.equationSolver = equationSolver;
     }
 
     public void process() {
-//        process(1);
-        process(Integer.MAX_VALUE);
+        process(processThreadsNum);
     }
 
     /**
@@ -89,7 +87,7 @@ public class WeakFormProcessor2D {
                 @Override
                 public void run() {
                     ShapeFunction shapeFun = shapeFunFactory.factory();
-                    WeakFormAssemblier assemblierAvator = assemblier.avatorInstance();
+                    WeakformAssemblier assemblierAvator = assemblier.avatorInstance();
 
                     assemblyBalanceEquation(shapeFun, assemblierAvator);
 
@@ -131,7 +129,7 @@ public class WeakFormProcessor2D {
     QuadraturePointIterator balanceIterator;
     AtomicInteger balanceCount = new AtomicInteger();
 
-    void assemblyBalanceEquation(ShapeFunction shapeFun, WeakFormAssemblier assemblierAvator) {
+    void assemblyBalanceEquation(ShapeFunction shapeFun, WeakformAssemblier assemblierAvator) {
 
         ArrayList<Node> shapeFunNodes = new ArrayList<>(arrayListSize);
         VolumeCondition volumnBoundaryCondition = workProblem.volumeCondition();
@@ -177,7 +175,7 @@ public class WeakFormProcessor2D {
     }
     AtomicInteger dirichletCount = new AtomicInteger();
 
-    void assemblyNeumann(ShapeFunction shapeFun, WeakFormAssemblier assemblierAvator) {
+    void assemblyNeumann(ShapeFunction shapeFun, WeakformAssemblier assemblierAvator) {
         shapeFun.setOrder(0);
         DenseVector[] shapeFunVals = new DenseVector[3];
         QuadraturePoint qp = new QuadraturePoint();
@@ -194,7 +192,7 @@ public class WeakFormProcessor2D {
     }
     AtomicInteger neumannCount = new AtomicInteger();
 
-    void assemblyDirichlet(ShapeFunction shapeFun, WeakFormAssemblier assemblierAvator) {
+    void assemblyDirichlet(ShapeFunction shapeFun, WeakformAssemblier assemblierAvator) {
 
         ArrayList<Node> shapeFunNds = new ArrayList<>(arrayListSize);
         shapeFun.setOrder(0);

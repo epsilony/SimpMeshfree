@@ -9,7 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import net.epsilony.simpmeshfree.model.Node;
 import net.epsilony.simpmeshfree.model.VolumeCondition;
-import net.epsilony.simpmeshfree.model.WeakFormAssemblier;
+import net.epsilony.simpmeshfree.model.WeakformAssemblier;
 import net.epsilony.simpmeshfree.utils.QuadraturePoint;
 import net.epsilony.utils.geom.Coordinate;
 import no.uib.cipr.matrix.*;
@@ -22,9 +22,9 @@ import org.apache.commons.math.linear.SparseRealMatrix;
  *
  * @author epsilonyuan@gmail.com
  */
-public class WeakFormAssembliers2D {
+public class WeakformAssembliers2D {
 
-    public static class SimpAssemblier implements WeakFormAssemblier {
+    public static class SimpAssemblier implements WeakformAssemblier {
 
         DenseMatrix constitutiveLaw;
         FlexCompRowMatrix mainMatrix;
@@ -310,7 +310,7 @@ public class WeakFormAssembliers2D {
         LinkedList<SimpAssemblier> avators = new LinkedList<>();
 
         @Override
-        synchronized public WeakFormAssemblier avatorInstance() {
+        synchronized public WeakformAssemblier avatorInstance() {
             SimpAssemblier avator = new SimpAssemblier(constitutiveLaw, neumannPenalty, mainVector.size() / 2);
             avators.add(avator);
             return avator;
@@ -330,7 +330,7 @@ public class WeakFormAssembliers2D {
         }
     }
 
-    public static class ApacheSpareSimpAssemblier implements WeakFormAssemblier {
+    public static class ApacheSpareSimpAssemblier implements WeakformAssemblier {
 
         DenseMatrix constitutiveLaw;
         SparseRealMatrix mainMatrix;
@@ -661,7 +661,7 @@ public class WeakFormAssembliers2D {
         LinkedList<ApacheSpareSimpAssemblier> avators = new LinkedList<>();
 
         @Override
-        synchronized public WeakFormAssemblier avatorInstance() {
+        synchronized public WeakformAssemblier avatorInstance() {
             ApacheSpareSimpAssemblier avator = new ApacheSpareSimpAssemblier(constitutiveLaw, neumannPenalty, mainVector.size() / 2);
             avators.add(avator);
             return avator;

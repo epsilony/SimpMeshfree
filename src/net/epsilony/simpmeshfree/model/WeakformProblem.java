@@ -10,7 +10,7 @@ import net.epsilony.simpmeshfree.utils.QuadraturePointIterator;
  *
  * @author epsilonyuan@gmail.com
  */
-public interface WeakFormProblem {
+public interface WeakformProblem {
 
     QuadraturePointIterator volumeIterator(int[] numOut);
 

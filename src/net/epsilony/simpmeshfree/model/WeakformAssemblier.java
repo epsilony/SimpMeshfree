@@ -16,7 +16,7 @@ import no.uib.cipr.matrix.Matrix;
  *
  * @author epsilonyuan@gmail.com
  */
-public interface WeakFormAssemblier extends Avatarable<WeakFormAssemblier>{
+public interface WeakformAssemblier extends Avatarable<WeakformAssemblier>{
 
     void asmBalance(QuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunVals, VolumeCondition volBc);
 

@@ -24,9 +24,9 @@ import net.epsilony.utils.math.TriangleSymmetricQuadrature;
  *
  * @author epsilonyuan@gmail.com
  */
-public class WeakFormProblems2D {
+public class WeakformProblems2D {
 
-    public static abstract class LineBoundaryBased implements WeakFormProblem {
+    public static abstract class LineBoundaryBased implements WeakformProblem {
 
         protected abstract BoundaryCondition getDirichletBC();
 

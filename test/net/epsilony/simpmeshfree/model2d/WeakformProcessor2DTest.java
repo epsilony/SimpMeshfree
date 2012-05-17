@@ -31,9 +31,9 @@ import org.junit.Test;
  * 目前，该算例还没有使用标准的assert机制
  * @author epsilonyuan@gmail.com
  */
-public class WeakFormProcessor2DTest {
+public class WeakformProcessor2DTest {
 //1
-//    public WeakFormProcessor2DTest() {
+//    public WeakformProcessor2DTest() {
 //    }
 //
 //    @BeforeClass

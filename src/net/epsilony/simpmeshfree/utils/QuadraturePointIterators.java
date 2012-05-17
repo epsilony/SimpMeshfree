@@ -158,7 +158,7 @@ public class QuadraturePointIterators {
             init(power,Arrays.asList(triangles));
         }
 
-        public TriangleIterator(int power, Iterable triangles) {
+        public TriangleIterator(int power, Iterable<Triangle> triangles) {
             init(power,triangles);
         }
 
