@@ -4,6 +4,7 @@
  */
 package net.epsilony.simpmeshfree.model2d;
 
+import gnu.trove.list.array.TDoubleArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -40,11 +41,11 @@ public class WeakformAssembliers2D {
         }
 
         @Override
-        public void asmBalance(QuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunVals, VolumeCondition volBc) {
-            double[] v, vx, vy;
-            v = shapeFunVals[0].getData();
-            vx = shapeFunVals[1].getData();
-            vy = shapeFunVals[2].getData();
+        public void asmBalance(QuadraturePoint qp, List<Node> nodes, TDoubleArrayList[] shapeFunVals, VolumeCondition volBc) {
+            TDoubleArrayList v, vx, vy;
+            v = shapeFunVals[0];
+            vx = shapeFunVals[1];
+            vy = shapeFunVals[2];
 
             double weight = qp.weight;
             int nodesSize = nodes.size();
@@ -83,12 +84,12 @@ public class WeakformAssembliers2D {
 
                 
                 if (null != bcValue) {
-                    double dv = v[i];
+                    double dv = v.getQuick(i);
                     vec.add(matIndexI, bcAndWeightX * dv);
                     vec.add(matIndexI + 1, bcAndWeightY * dv);
                 }
                 
-                double ix = vx[i], iy = vy[i];
+                double ix = vx.getQuick(i), iy = vy.getQuick(i);
                 double xx = ix * ix,
                         xy = ix * iy,
                         yx = iy * ix,
@@ -103,7 +104,7 @@ public class WeakformAssembliers2D {
 
                 for (int j = i + 1; j < nodesSize; j++) {
                     int matIndexJ = nIds[j] * 2;
-                    double jx = vx[j], jy = vy[j];
+                    double jx = vx.getQuick(j), jy = vy.getQuick(j);
                     xx = ix * jx;
                     xy = ix * jy;
                     yx = iy * jx;
@@ -126,7 +127,7 @@ public class WeakformAssembliers2D {
         }
 
         @Override
-        public void asmNeumann(QuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunctions) {
+        public void asmNeumann(QuadraturePoint qp, List<Node> nodes, TDoubleArrayList[] shapeFunctions) {
 
 
             DenseVector vec = mainVector;
@@ -146,7 +147,7 @@ public class WeakformAssembliers2D {
 
             double valueX = bcValue[0] * weight;
             double valueY = bcValue[1] * weight;
-            double[] vs = shapeFunctions[0].getData();
+            TDoubleArrayList vs = shapeFunctions[0];
 
 
             switch (opt) {
@@ -154,7 +155,7 @@ public class WeakformAssembliers2D {
                     int i = 0;
                     for (Node nd : nodes) {
                         int vecIndex = nd.id * 2;
-                        double v = vs[i];
+                        double v = vs.getQuick(i);
                         vec.add(vecIndex, valueX * v);
                         i++;
                     }
@@ -163,7 +164,7 @@ public class WeakformAssembliers2D {
                     int i = 0;
                     for (Node nd : nodes) {
                         int vecIndex = nd.id * 2;
-                        double v = vs[i];
+                        double v = vs.getQuick(i);
                         vec.add(vecIndex + 1, valueY * v);
                         i++;
                     }
@@ -173,7 +174,7 @@ public class WeakformAssembliers2D {
                     int i = 0;
                     for (Node nd : nodes) {
                         int vecIndex = nd.id * 2;
-                        double v = vs[i];
+                        double v = vs.getQuick(i);
                         vec.add(vecIndex, valueX * v);
                         vec.add(vecIndex + 1, valueY * v);
                         i++;
@@ -187,11 +188,11 @@ public class WeakformAssembliers2D {
         }
 
         @Override
-        public void asmDirichlet(QuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunctions) {
+        public void asmDirichlet(QuadraturePoint qp, List<Node> nodes, TDoubleArrayList[] shapeFunctions) {
             double factor = qp.weight * neumannPenalty;
             FlexCompRowMatrix mat = mainMatrix;
             DenseVector vec = mainVector;
-            double[] vs = shapeFunctions[0].getData();
+            TDoubleArrayList vs = shapeFunctions[0];
 
             double[] values = qp.values;
             boolean[] avis = qp.validities;
@@ -216,12 +217,12 @@ public class WeakformAssembliers2D {
                     i = 0;
                     for (Node nd : nodes) {
                         int matIndexI = nd.id * 2;
-                        double vi = vs[i];
+                        double vi = vs.getQuick(i);
                         vec.add(matIndexI, vi * values[0] * factor);
 
                         for (int j = i; j < nodes.size(); j++) {
                             int matIndexJ = ids[j] * 2;
-                            double vij = factor * vi * vs[j];
+                            double vij = factor * vi * vs.getQuick(j);
 
                             int indexI, indexJ;
                             if (matIndexI <= matIndexJ) {
@@ -240,12 +241,12 @@ public class WeakformAssembliers2D {
                     i = 0;
                     for (Node nd : nodes) {
                         int matIndexI = nd.id * 2;
-                        double vi = vs[i];
+                        double vi = vs.getQuick(i);
                         vec.add(matIndexI + 1, vi * values[1] * factor);
 
                         for (int j = i; j < nodes.size(); j++) {
                             int matIndexJ = ids[j] * 2;
-                            double vij = factor * vi * vs[j];
+                            double vij = factor * vi * vs.getQuick(j);
 
                             int indexI, indexJ;
                             if (matIndexI <= matIndexJ) {
@@ -264,13 +265,13 @@ public class WeakformAssembliers2D {
                     i = 0;
                     for (Node nd : nodes) {
                         int matIndexI = nd.id * 2;
-                        double vi = vs[i];
+                        double vi = vs.getQuick(i);
                         vec.add(matIndexI, vi * values[0] * factor);
                         vec.add(matIndexI + 1, vi * values[1] * factor);
 
                         for (int j = i; j < nodes.size(); j++) {
                             int matIndexJ = ids[j] * 2;
-                            double vij = factor * vi * vs[j];
+                            double vij = factor * vi * vs.getQuick(j);
 
                             int indexI, indexJ;
                             if (matIndexI <= matIndexJ) {
@@ -346,17 +347,17 @@ public class WeakformAssembliers2D {
         }
 
         @Override
-        public void asmBalance(QuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunctions, VolumeCondition volBc) {
-            double[] v, vx, vy;
+        public void asmBalance(QuadraturePoint qp, List<Node> nodes, TDoubleArrayList[] shapeFunctions, VolumeCondition volBc) {
+            TDoubleArrayList v, vx, vy;
 
             if (null == volBc) {
                 v = null;
-                vx = shapeFunctions[0].getData();
-                vy = shapeFunctions[1].getData();
+                vx = shapeFunctions[0];
+                vy = shapeFunctions[1];
             } else {
-                v = shapeFunctions[0].getData();
-                vx = shapeFunctions[1].getData();
-                vy = shapeFunctions[2].getData();
+                v = shapeFunctions[0];
+                vx = shapeFunctions[1];
+                vy = shapeFunctions[2];
             }
             double weight = qp.weight;
             int nodesSize = nodes.size();
@@ -391,7 +392,7 @@ public class WeakformAssembliers2D {
             if (null == bcValue) {
                 for (i = 0; i < nodesSize; i++) {
                     int matIndexI = nIds[i] * 2;
-                    double ix = vx[i], iy = vy[i];
+                    double ix = vx.getQuick(i), iy = vy.getQuick(i);
                     {
                         double xx = ix * ix,
                                 xy = ix * iy,
@@ -406,7 +407,7 @@ public class WeakformAssembliers2D {
                     }
                     for (int j = i + 1; j < nodesSize; j++) {
                         int matIndexJ = nIds[j] * 2;
-                        double jx = vx[j], jy = vy[j];
+                        double jx = vx.getQuick(j), jy = vy.getQuick(j);
                         double xx = ix * jx,
                                 xy = ix * jy,
                                 yx = iy * jx,
@@ -430,8 +431,8 @@ public class WeakformAssembliers2D {
 
                 for (i = 0; i < nodesSize; i++) {
                     int matIndexI = nIds[i] * 2;
-                    double ix = vx[i], iy = vy[i];
-                    double dv = v[i];
+                    double ix = vx.getQuick(i), iy = vy.getQuick(i);
+                    double dv = v.getQuick(i);
                     vec.add(matIndexI, bcAndWeightX * dv);
                     vec.add(matIndexI + 1, bcAndWeightY * dv);
 
@@ -450,7 +451,7 @@ public class WeakformAssembliers2D {
 
                     for (int j = i + 1; j < nodesSize; j++) {
                         int matIndexJ = nIds[j] * 2;
-                        double jx = vx[j], jy = vy[j];
+                        double jx = vx.getQuick(j), jy = vy.getQuick(j);
                         double xx = ix * jx,
                                 xy = ix * jy,
                                 yx = iy * jx,
@@ -476,7 +477,7 @@ public class WeakformAssembliers2D {
         }
 
         @Override
-        public void asmNeumann(QuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunctions) {
+        public void asmNeumann(QuadraturePoint qp, List<Node> nodes, TDoubleArrayList[] shapeFunctions) {
 
 
             DenseVector vec = mainVector;
@@ -497,7 +498,7 @@ public class WeakformAssembliers2D {
 
             double valueX = bcValue[0] * weight;
             double valueY = bcValue[1] * weight;
-            double[] vs = shapeFunctions[0].getData();
+            TDoubleArrayList vs = shapeFunctions[0];
 
 
             switch (opt) {
@@ -505,7 +506,7 @@ public class WeakformAssembliers2D {
                     int i = 0;
                     for (Node nd : nodes) {
                         int vecIndex = nd.id * 2;
-                        double v = vs[i];
+                        double v = vs.getQuick(i);
                         vec.add(vecIndex, valueX * v);
                         i++;
                     }
@@ -514,7 +515,7 @@ public class WeakformAssembliers2D {
                     int i = 0;
                     for (Node nd : nodes) {
                         int vecIndex = nd.id * 2;
-                        double v = vs[i];
+                        double v = vs.getQuick(i);
                         vec.add(vecIndex + 1, valueY * v);
                         i++;
                     }
@@ -524,7 +525,7 @@ public class WeakformAssembliers2D {
                     int i = 0;
                     for (Node nd : nodes) {
                         int vecIndex = nd.id * 2;
-                        double v = vs[i];
+                        double v = vs.getQuick(i);
                         vec.add(vecIndex, valueX * v);
                         vec.add(vecIndex + 1, valueY * v);
                         i++;
@@ -538,11 +539,11 @@ public class WeakformAssembliers2D {
         }
 
         @Override
-        public void asmDirichlet(QuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunctions) {
+        public void asmDirichlet(QuadraturePoint qp, List<Node> nodes, TDoubleArrayList[] shapeFunctions) {
             double factor = qp.weight * neumannPenalty;
             SparseRealMatrix mat = mainMatrix;
             DenseVector vec = mainVector;
-            double[] vs = shapeFunctions[0].getData();
+            TDoubleArrayList vs = shapeFunctions[0];
 
             double[] values = qp.values;
             boolean[] avis = qp.validities;
@@ -567,12 +568,12 @@ public class WeakformAssembliers2D {
                     i = 0;
                     for (Node nd : nodes) {
                         int matIndexI = nd.id * 2;
-                        double vi = vs[i];
+                        double vi = vs.getQuick(i);
                         vec.add(matIndexI, vi * values[0] * factor);
 
                         for (int j = i; j < nodes.size(); j++) {
                             int matIndexJ = ids[j] * 2;
-                            double vij = factor * vi * vs[j];
+                            double vij = factor * vi * vs.getQuick(j);
 
                             int indexI, indexJ;
                             if (matIndexI <= matIndexJ) {
@@ -591,12 +592,12 @@ public class WeakformAssembliers2D {
                     i = 0;
                     for (Node nd : nodes) {
                         int matIndexI = nd.id * 2;
-                        double vi = vs[i];
+                        double vi = vs.getQuick(i);
                         vec.add(matIndexI + 1, vi * values[1] * factor);
 
                         for (int j = i; j < nodes.size(); j++) {
                             int matIndexJ = ids[j] * 2;
-                            double vij = factor * vi * vs[j];
+                            double vij = factor * vi * vs.getQuick(j);
 
                             int indexI, indexJ;
                             if (matIndexI <= matIndexJ) {
@@ -615,13 +616,13 @@ public class WeakformAssembliers2D {
                     i = 0;
                     for (Node nd : nodes) {
                         int matIndexI = nd.id * 2;
-                        double vi = vs[i];
+                        double vi = vs.getQuick(i);
                         vec.add(matIndexI, vi * values[0] * factor);
                         vec.add(matIndexI + 1, vi * values[1] * factor);
 
                         for (int j = i; j < nodes.size(); j++) {
                             int matIndexJ = ids[j] * 2;
-                            double vij = factor * vi * vs[j];
+                            double vij = factor * vi * vs.getQuick(j);
 
                             int indexI, indexJ;
                             if (matIndexI <= matIndexJ) {

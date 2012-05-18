@@ -12,7 +12,7 @@ import net.epsilony.utils.geom.Coordinate;
  *
  * @author epsilon
  */
-public interface PartDiffCoordinateArrayFunction extends PartDiffOrdered{
+public interface CoordinatePartDiffArrayFunction extends PartDiffOrdered{
     double[][] values(Coordinate coord,double[][] results);
     
     int getDim();

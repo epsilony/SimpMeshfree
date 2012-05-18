@@ -2,27 +2,29 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.epsilony.simpmeshfree.model2d;
+package net.epsilony.simpmeshfree.model;
 
 import gnu.trove.list.array.TDoubleArrayList;
 import static java.lang.Math.min;
 import static java.lang.Math.pow;
 import java.util.ArrayList;
 import java.util.List;
-import net.epsilony.simpmeshfree.model.DistanceFunction;
-import net.epsilony.simpmeshfree.model.Node;
-import net.epsilony.simpmeshfree.model.WeightFunction;
-import static net.epsilony.simpmeshfree.utils.CommonUtils.len2DBase;
-import net.epsilony.simpmeshfree.utils.PartDiffUnivariateFunction;
+import static net.epsilony.simpmeshfree.utils.CommonUtils.lenBase;
+import net.epsilony.simpmeshfree.utils.UnivariatePartDiffFunction;
 
 /**
  *
  * @author epsilonyuan@gmail.com
  */
-public class WeightFunctions2D {
+public class WeightFunctions {
 
-    public static WeightFunction factory(PartDiffUnivariateFunction coreFun, DistanceFunction distFun) {
+    public static WeightFunction factory(UnivariatePartDiffFunction coreFun, DistanceFunction distFun) {
         WeightFunctionImp imp=new WeightFunctionImp(coreFun,distFun);
+        return imp;
+    }
+    
+    public static WeightFunction factory(UnivariatePartDiffFunction coreFun, DistanceFunction distFun,int dim) {
+        WeightFunctionImp imp=new WeightFunctionImp(coreFun,distFun,dim);
         return imp;
     }
 
@@ -30,22 +32,34 @@ public class WeightFunctions2D {
 
         private int order;
         private int baseLen;
-        PartDiffUnivariateFunction coreFun;
+        UnivariatePartDiffFunction coreFun;
         DistanceFunction distFun;
+        private final int dim;
 
-        private WeightFunctionImp(PartDiffUnivariateFunction coreFun, DistanceFunction distFun) {
+        private WeightFunctionImp(UnivariatePartDiffFunction coreFun, DistanceFunction distFun, int  dim) {
             this.coreFun=coreFun;
             this.distFun=distFun;
+            this.dim = dim;
+        }
+        
+        private WeightFunctionImp(UnivariatePartDiffFunction coreFun, DistanceFunction distFun) {
+            this.coreFun=coreFun;
+            this.distFun=distFun;
+            this.dim = 2;
         }
 
         @Override
         public ArrayList<TDoubleArrayList> values(List<Node> nodes, double supportRad, ArrayList<TDoubleArrayList> results) {
+            if(null==results){
+                results=new ArrayList<>(baseLen);
+            }
             initResults(results, nodes);
             int index=0;
             TDoubleArrayList coreVals=new TDoubleArrayList(order);
             TDoubleArrayList dists=new TDoubleArrayList(order);
+            
             for (Node node :nodes){
-                TDoubleArrayList res=results.get(index++);
+                TDoubleArrayList res=results.get(index);
                 distFun.values(node,dists);
                 coreFun.values(dists.get(0)/supportRad, coreVals);
                 res.add(coreVals.get(0));
@@ -54,6 +68,7 @@ public class WeightFunctions2D {
                     res.add(coreVals.get(1)*dists.get(1)/supportRad);
                     res.add(coreVals.get(1)*dists.get(2)/supportRad);
                 }
+                index++;
             }
             return results;
         }
@@ -64,28 +79,30 @@ public class WeightFunctions2D {
                 res.resetQuick();
                 res.ensureCapacity(baseLen);
             }
-
-            for (int i = 0; i < nodes.size() - results.size(); i++) {
+            int resultsSize=results.size();
+            for (int i = 0; i<nodes.size()-resultsSize; i++) {
                 results.add(new TDoubleArrayList(baseLen));
             }
         }
 
         @Override
-        public void setOrder(int order) {
+        public void setDiffOrder(int order) {
             if (order < 0 || order >= 2) {
                 throw new UnsupportedOperationException();
             }
             this.order = order;
-            baseLen = len2DBase(order);
+            baseLen = lenBase(dim,order);
+            distFun.setDiffOrder(order);
+            coreFun.setDiffOrder(order);
         }
 
         @Override
-        public int getOrder() {
+        public int getDiffOrder() {
             return order;
         }
     }
 
-    public static class TriSpline implements PartDiffUnivariateFunction {
+    public static class TriSpline implements UnivariatePartDiffFunction {
 
         private int order;
 
@@ -122,7 +139,7 @@ public class WeightFunctions2D {
         }
 
         @Override
-        public void setOrder(int order) {
+        public void setDiffOrder(int order) {
             if (order < 0 || order >= 2) {
                 throw new UnsupportedOperationException();
             }
@@ -130,12 +147,12 @@ public class WeightFunctions2D {
         }
 
         @Override
-        public int getOrder() {
+        public int getDiffOrder() {
             return order;
         }
     }
 
-    public static class SimpPower implements PartDiffUnivariateFunction {
+    public static class SimpPower implements UnivariatePartDiffFunction {
 
         private int power;
         private int order;
@@ -165,7 +182,7 @@ public class WeightFunctions2D {
         }
 
         @Override
-        public void setOrder(int order) {
+        public void setDiffOrder(int order) {
             if (order < 0 || order >= 2) {
                 throw new UnsupportedOperationException();
             }
@@ -173,7 +190,7 @@ public class WeightFunctions2D {
         }
 
         @Override
-        public int getOrder() {
+        public int getDiffOrder() {
             return order;
         }
     }

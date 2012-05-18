@@ -10,6 +10,6 @@ import gnu.trove.list.array.TDoubleArrayList;
  *
  * @author epsilon
  */
-public interface PartDiffUnivariateFunction extends PartDiffOrdered{
+public interface UnivariatePartDiffFunction extends PartDiffOrdered{
     TDoubleArrayList values(double x, TDoubleArrayList results);
 }

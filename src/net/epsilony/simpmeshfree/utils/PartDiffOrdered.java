@@ -19,7 +19,7 @@ public interface PartDiffOrdered {
      * </ul></p>
      * @param order 
      */
-    void setOrder(int order);
+    void setDiffOrder(int order);
     
-    int getOrder();
+    int getDiffOrder();
 }

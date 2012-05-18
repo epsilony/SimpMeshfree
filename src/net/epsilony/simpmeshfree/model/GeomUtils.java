@@ -673,7 +673,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
         return result;
     }
 
-    public class VisibleCritieron implements BoundaryBasedCritieron {
+    public class VisibleCritieron implements SupportDomainCritierion {
 
         public int nodeNumMin, nodeNumMax;
         public double radiusEnlargeFactor = 1.2,

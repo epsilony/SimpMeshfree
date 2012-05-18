@@ -26,6 +26,17 @@ public class CommonUtils {
          return result;
     }
     
+    public static int lenBase(int dim,int order){
+        switch(dim){
+            case 2:
+                return len2DBase(order);
+            case 3:
+                return len3DBase(order);
+            default:
+                throw new UnsupportedOperationException();
+        }
+    }
+    
     public static void vectorMultTDoubleArrayLists(DenseVector gamma,ArrayList<TDoubleArrayList> B,DenseVector result){
         for(int i=0;i<B.get(0).size();i++){
             double t=0;

@@ -4,12 +4,12 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import gnu.trove.list.array.TDoubleArrayList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import net.epsilony.simpmeshfree.utils.PartDiffOrdered;
 import net.epsilony.utils.geom.Coordinate;
-import no.uib.cipr.matrix.DenseVector;
 
 /**
  * 形函数 Shape Function。</br>
@@ -23,5 +23,5 @@ import no.uib.cipr.matrix.DenseVector;
  * @author epsilonyuan@gmail.com
  */
 public interface ShapeFunction extends PartDiffOrdered{   
-    DenseVector[] values(Coordinate center,Boundary centerBnd, DenseVector[] results,ArrayList<Node> resNodes);
+    TDoubleArrayList[] values(Coordinate center,Boundary centerBnd,ArrayList<Node> resNodes);
 }

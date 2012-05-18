@@ -18,7 +18,7 @@ import net.epsilony.utils.geom.Coordinate;
  * @see ShapeFunctions2D
  * @author epsilonyuan@gmail.com
  */
-public interface BoundaryBasedCritieron{
+public interface SupportDomainCritierion{
     /**
      * @param center
      * @param centerBound 

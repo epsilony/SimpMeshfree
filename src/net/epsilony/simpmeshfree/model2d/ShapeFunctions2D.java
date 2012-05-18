@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import net.epsilony.simpmeshfree.model.*;
 import static net.epsilony.simpmeshfree.utils.CommonUtils.len2DBase;
 import static net.epsilony.simpmeshfree.utils.CommonUtils.vectorMultTDoubleArrayLists;
-import net.epsilony.simpmeshfree.utils.PartDiffCoordinateArrayFunction;
+import net.epsilony.simpmeshfree.utils.CoordinatePartDiffArrayFunction;
 import net.epsilony.utils.geom.Coordinate;
 import no.uib.cipr.matrix.DenseCholesky;
 import no.uib.cipr.matrix.DenseVector;
@@ -26,10 +26,16 @@ public class ShapeFunctions2D {
      */
     public static class MLS implements ShapeFunction {
 
+        public MLS(WeightFunction weightFunction, CoordinatePartDiffArrayFunction baseFunction, SupportDomainCritierion criterion) {
+            this.weightFunction = weightFunction;
+            setBaseFunction(baseFunction);
+            this.criterion = criterion;
+        }
+
         private int order;
         WeightFunction weightFunction;
-        PartDiffCoordinateArrayFunction baseFunction;
-        BoundaryBasedCritieron criterion;
+        CoordinatePartDiffArrayFunction baseFunction;
+        SupportDomainCritierion criterion;
         int MAX_NODES_SIZE_ESTIMATION = 50;
         ArrayList<TDoubleArrayList> nodesWeights = new ArrayList<>();
         UpperSPDDenseMatrix A, A_x, A_y;
@@ -124,22 +130,22 @@ public class ShapeFunctions2D {
         }
 
         @Override
-        public void setOrder(int order) {
+        public void setDiffOrder(int order) {
             if (order < 0 || order >= 2) {
                 throw new UnsupportedOperationException();
             }
             this.order = order;
             //TODO: here maybe improved
             nodesWeights.ensureCapacity(order);
-            weightFunction.setOrder(order);
+            weightFunction.setDiffOrder(order);
         }
 
         @Override
-        public int getOrder() {
+        public int getDiffOrder() {
             return order;
         }
 
-        public void setBaseFunction(PartDiffCoordinateArrayFunction baseFunction) {
+        private void setBaseFunction(CoordinatePartDiffArrayFunction baseFunction) {
             
             this.baseFunction = baseFunction;
             final int baseLen = baseFunction.getDim();

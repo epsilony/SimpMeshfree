@@ -4,6 +4,7 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import gnu.trove.list.array.TDoubleArrayList;
 import java.util.List;
 import net.epsilony.simpmeshfree.utils.Avatarable;
 import net.epsilony.simpmeshfree.utils.QuadraturePoint;
@@ -18,11 +19,11 @@ import no.uib.cipr.matrix.Matrix;
  */
 public interface WeakformAssemblier extends Avatarable<WeakformAssemblier>{
 
-    void asmBalance(QuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunVals, VolumeCondition volBc);
+    void asmBalance(QuadraturePoint qp, List<Node> nodes, TDoubleArrayList[] shapeFunVals, VolumeCondition volBc);
 
-    void asmNeumann(QuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunVals);
+    void asmNeumann(QuadraturePoint qp, List<Node> nodes, TDoubleArrayList[] shapeFunVals);
 
-    void asmDirichlet(QuadraturePoint qp, List<Node> nodes, DenseVector[] shapeFunVals);
+    void asmDirichlet(QuadraturePoint qp, List<Node> nodes, TDoubleArrayList[] shapeFunVals);
 
     DenseMatrix getConstitutiveLaw(Coordinate pos);
 
