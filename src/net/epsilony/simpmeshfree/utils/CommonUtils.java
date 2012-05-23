@@ -37,13 +37,4 @@ public class CommonUtils {
         }
     }
     
-    public static void vectorMultTDoubleArrayLists(DenseVector gamma,ArrayList<TDoubleArrayList> B,DenseVector result){
-        for(int i=0;i<B.get(0).size();i++){
-            double t=0;
-            for(int j=0;j<gamma.size();j++){
-                t+=gamma.get(j)*B.get(j).getQuick(i);
-            }
-            result.set(i,t);
-        }
-    }
 }

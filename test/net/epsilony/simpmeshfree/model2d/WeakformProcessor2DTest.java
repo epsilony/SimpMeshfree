@@ -14,7 +14,7 @@ import javax.swing.plaf.LayerUI;
 import net.epsilony.simpmeshfree.model.*;
 //import net.epsilony.simpmeshfree.model2d.ui.SimpPanel;
 import net.epsilony.simpmeshfree.utils.BivariateArrayFunction;
-import net.epsilony.simpmeshfree.utils.BivariateCompletePolynomial;
+import net.epsilony.simpmeshfree.utils.Complete2DPolynomialBase;
 //import net.epsilony.simpmeshfree.utils.PartDiffOrd;
 import net.epsilony.utils.geom.Coordinate;
 import net.epsilony.utils.math.EquationSolver;

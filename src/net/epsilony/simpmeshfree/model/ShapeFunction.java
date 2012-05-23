@@ -23,5 +23,5 @@ import net.epsilony.utils.geom.Coordinate;
  * @author epsilonyuan@gmail.com
  */
 public interface ShapeFunction extends PartDiffOrdered{   
-    TDoubleArrayList[] values(Coordinate center,Boundary centerBnd,ArrayList<Node> resNodes);
+    TDoubleArrayList[] values(Coordinate center,Boundary centerBnd,TDoubleArrayList[] result, ArrayList<Node> resNodes);
 }

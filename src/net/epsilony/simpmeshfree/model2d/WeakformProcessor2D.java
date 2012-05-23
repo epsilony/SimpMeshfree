@@ -34,7 +34,7 @@ public class WeakformProcessor2D {
     private final EquationSolver equationSolver;
     DenseVector equationResultVector;
     Logger logger = Logger.getLogger(this.getClass());
-    public int processThreadsNum=Integer.MAX_VALUE;
+    public int processThreadsNum = Integer.MAX_VALUE;
 
     /**
      *
@@ -137,8 +137,9 @@ public class WeakformProcessor2D {
         shapeFun.setDiffOrder(1);
         QuadraturePoint qp = new QuadraturePoint();
         Coordinate qPoint = qp.coordinate;
+        TDoubleArrayList[] shapeFunVals = ShapeFunctions2D.initOutputResult(1);
         while (nextBalanceQuadraturePoint(qp)) {
-            TDoubleArrayList[] shapeFunVals=shapeFun.values(qPoint, null, shapeFunNodes);
+            shapeFun.values(qPoint, null, shapeFunVals, shapeFunNodes);
             assemblierAvator.asmBalance(qp, shapeFunNodes, shapeFunVals, volumnBoundaryCondition);
             balanceCount.incrementAndGet();
         }
@@ -154,11 +155,12 @@ public class WeakformProcessor2D {
         LinkedList<double[]> results = new LinkedList<>();
         ArrayList<Node> shapeFunNodes = new ArrayList<>(arrayListSize);
         Iterator<Boundary> bndIter = (bnds != null ? bnds.iterator() : null);
+        TDoubleArrayList[] shapeFunVals = ShapeFunctions2D.initOutputResult(1);
         for (Coordinate coord : coords) {
             Boundary bnd = (bndIter != null ? bndIter.next() : null);
 
 
-            TDoubleArrayList[] shapeFunVals = shapeFunction.values(coord, bnd, shapeFunNodes);
+            shapeFunction.values(coord, bnd, shapeFunVals, shapeFunNodes);
 
             double[] result = new double[2];
             int nodeCount = 0;
@@ -178,10 +180,11 @@ public class WeakformProcessor2D {
         shapeFun.setDiffOrder(0);
         QuadraturePoint qp = new QuadraturePoint();
         ArrayList<Node> shapeFunNds = new ArrayList<>(arrayListSize);
+        TDoubleArrayList[] shapeFunVals = ShapeFunctions2D.initOutputResult(1);
         while (nextNeumannQuadraturePoint(qp)) {
             Coordinate qPoint = qp.coordinate;
             Boundary bound = qp.boundary;
-            TDoubleArrayList[] shapeFunVals = shapeFun.values(qPoint, bound,  shapeFunNds);
+            shapeFun.values(qPoint, bound, shapeFunVals, shapeFunNds);
             assemblierAvator.asmNeumann(qp, shapeFunNds, shapeFunVals);
             dirichletCount.incrementAndGet();
         }
@@ -195,10 +198,11 @@ public class WeakformProcessor2D {
         ArrayList<Node> shapeFunNds = new ArrayList<>(arrayListSize);
         shapeFun.setDiffOrder(0);
         QuadraturePoint qp = new QuadraturePoint();
+        TDoubleArrayList[] shapeFunVals = ShapeFunctions2D.initOutputResult(0);
         while (nextDirichletQuadraturePoint(qp)) {
             Coordinate qPoint = qp.coordinate;
             Boundary bound = qp.boundary;
-            TDoubleArrayList[] shapeFunVals = shapeFun.values(qPoint, bound,  shapeFunNds);
+            shapeFun.values(qPoint, bound, shapeFunVals, shapeFunNds);
             assemblierAvator.asmDirichlet(qp, shapeFunNds, shapeFunVals);
             neumannCount.incrementAndGet();
         }

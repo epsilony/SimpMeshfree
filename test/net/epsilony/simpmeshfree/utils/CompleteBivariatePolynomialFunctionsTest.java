@@ -9,7 +9,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import static net.epsilony.simpmeshfree.utils.BivariateCompletePolynomial.*;
+import static net.epsilony.simpmeshfree.utils.Complete2DPolynomialBase.*;
 
 /**
  *

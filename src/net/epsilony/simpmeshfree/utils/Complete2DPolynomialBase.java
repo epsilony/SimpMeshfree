@@ -14,65 +14,68 @@ import net.epsilony.utils.geom.Coordinate;
  *
  * @author epsilonyuan@gmail.com
  */
-public class BivariateCompletePolynomial {
+public class Complete2DPolynomialBase implements CoordinatePartDiffArrayFunction {
 
-    private BivariateCompletePolynomial() {
+    public static CoordinatePartDiffArrayFunction complete2DPolynomialBase(int baseOrder) {
+        return new Complete2DPolynomialBase(baseOrder);
+    }
+    private int partDiffOrder;
+    private BivariateArrayFunction bFun, bFunX, bFunY;
+
+    public Complete2DPolynomialBase(int baseOrder) {
+        setBaseOrder(baseOrder);
     }
 
-    public static CoordinatePartDiffArrayFunction complete2DBaseFunction(final int baseOrder) {
-        return new CoordinatePartDiffArrayFunction() {
-
-            private int partDiffOrder;
-            private BivariateArrayFunction bFun;
-            private BivariateArrayFunction bFunX;
-            private BivariateArrayFunction bFunY;
-
-            @Override
-            public double[][] values(Coordinate coord, double[][] results) {
-                if (null == results) {
-                    switch (partDiffOrder) {
-                        case 0:
-                            results=new double[1][getDim()];
-                            break;
-                        case 1:
-                            results = new double[3][getDim()];
-                            break;
-                        default:
-                            throw new UnsupportedOperationException();
-                    }
-                }
-                double x=coord.x,y=coord.y;
-                bFun.value(x, y, results[0]);
-                if(partDiffOrder>=1){
-                    bFunX.value(x, y, results[1]);
-                    bFunY.value(x,y,results[2]);
-                }
-                return results;
-            }
-
-            @Override
-            public int getDim() {
-                return bFun.valueDimension();
-            }
-
-            @Override
-            public void setDiffOrder(int order) {
-                if (order < 0 || order >= 2) {
+    @Override
+    public double[][] values(Coordinate coord, double[][] results) {
+        if (null == results) {
+            switch (partDiffOrder) {
+                case 0:
+                    results = new double[1][getDim()];
+                    break;
+                case 1:
+                    results = new double[3][getDim()];
+                    break;
+                default:
                     throw new UnsupportedOperationException();
-                }
-                this.partDiffOrder = order;
-                bFun = factory(order);
-                if (order >= 1) {
-                    bFunX = partialXFactory(order);
-                    bFunY = partialYFactory(order);
-                }
             }
+        }
+        double x = coord.x, y = coord.y;
+        bFun.value(x, y, results[0]);
+        if (partDiffOrder >= 1) {
+            bFunX.value(x, y, results[1]);
+            bFunY.value(x, y, results[2]);
+        }
+        return results;
+    }
 
-            @Override
-            public int getDiffOrder() {
-                return partDiffOrder;
-            }
-        };
+    @Override
+    public int getDim() {
+        return bFun.valueDimension();
+    }
+
+    @Override
+    public void setDiffOrder(int order) {
+         if (order < 0 || order >= 2) {
+            throw new UnsupportedOperationException();
+        }
+        this.partDiffOrder = order;
+    }
+
+    private void setBaseOrder(int order) {
+        if(order<1){
+            throw new IllegalArgumentException("Base order should be >=1");
+        }
+        bFun = factory(order);
+        if (order >= 1) {
+            bFunX = partialXFactory(order);
+            bFunY = partialYFactory(order);
+        }
+    }
+
+    @Override
+    public int getDiffOrder() {
+        return partDiffOrder;
     }
 
     /**
