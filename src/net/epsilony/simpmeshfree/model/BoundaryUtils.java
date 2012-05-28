@@ -6,6 +6,7 @@ package net.epsilony.simpmeshfree.model;
 
 import net.epsilony.utils.ArrayUtils;
 import net.epsilony.utils.geom.Coordinate;
+import net.epsilony.utils.geom.GeometryMath;
 import static net.epsilony.utils.geom.GeometryMath.*;
 import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
@@ -18,77 +19,84 @@ public class BoundaryUtils {
 
     /**
      * Determines whether
-     * <code>bnd</code> and a sphere has common points.
+     * <code>bnd</code> and a sphere, which has {@code center} and {@code radius},
+     * has common points.
      *
      * @param bnd
      * @param center
      * @param radius
      * @return
      */
-    public static boolean isBoundaryIntersect(Boundary bnd, Coordinate center, double radius) {
-        Class bndClass = bnd.getClass();
-        if (bndClass == LineBoundary.class) {
-            return isBoundaryIntersect((LineBoundary) bnd, center, radius);
-        } else if (bndClass == TriangleBoundary.class) {
-            return isBoundaryIntersect((TriangleBoundary) bnd, center, radius);
+    public static boolean isBoundarySphereIntersect(Boundary bnd, Coordinate center, double radius) {
+        if (bnd instanceof LineBoundary) {
+            return isLineBoundarySphereIntersect((LineBoundary) bnd, center, radius);
+        } else if (bnd instanceof TriangleBoundary) {
+            return isTriBoundarySphereIntersect((TriangleBoundary) bnd, center, radius);
         }
         throw new IllegalArgumentException();
     }
 
     /**
      * Determines whether
-     * <code>line</code> and a sphere has common points.
+     * <code>bnd</code> and a sphere, which has a {@code center} and {@code radius},
+     * has common points.
      *
      * @param line
      * @param center
      * @param radius
      * @return
      */
-    public static boolean isBoundaryIntersect(LineBoundary line, Coordinate center, double radius) {
-        double distanceSq = radius * radius;
-        double startDisSq = distanceSquare(center, line.start);
-        if (startDisSq <= distanceSq) {
-            return true;
+    public static boolean isLineBoundarySphereIntersect(LineBoundary line, Coordinate center, double radius) {
+        double radSq = radius * radius;
+
+        Coordinate start = line.start, end = line.end;
+        double x_s = start.x,
+                y_s = start.y,
+                z_s = start.z,
+                x_e = end.x,
+                y_e = end.y,
+                z_e = end.z,
+                x_c = center.x,
+                y_c = center.y,
+                z_c = center.z;
+        double t = ((x_e - x_s) * (x_c - x_s) + (y_e - y_s) * (y_c - y_s) + (z_e - z_s) * (z_c - z_s)) / distanceSquare(line.start, line.end);
+        if (t > 1) {
+
+            double endDisSq = distanceSquare(center, line.end);
+            if (endDisSq <= radSq) {
+                return true;
+            } else {
+                return false;
+            }
+        } else if (t < 0) {
+            double startDisSq = distanceSquare(center, line.start);
+            if (startDisSq <= radSq) {
+                return true;
+            } else {
+                return false;
+            }
         }
-        double endDisSq = distanceSquare(center, line.end);
-        if (endDisSq <= distanceSq) {
-            return true;
-        }
-        double lineLenSq = distanceSquare(line.start, line.end);
-        if (startDisSq - distanceSq > lineLenSq || endDisSq - distanceSq > lineLenSq) {
+        double x_t = (x_e - x_s) * t + x_s,
+                y_t = (y_e - y_s) * t + y_s,
+                z_t = (z_e - z_s) * t + z_s;
+        if ((x_t - x_c) * (x_t - x_c) + (y_t - y_c) * (y_t - y_c) + (z_t - z_c) * (z_t - z_c) > radSq) {
             return false;
         }
 
-
-        Coordinate nearPt, farPt;
-        if (startDisSq < distanceSq) {
-            nearPt = line.start;
-            farPt = line.end;
-        } else {
-            nearPt = line.end;
-            farPt = line.end;
-        }
-        Coordinate vec1 = minus(center, nearPt);
-        Coordinate vec2 = minus(farPt, nearPt);
-        Coordinate normal = cross(cross(vec1, vec2), vec2, vec2);
-        double norm = Math.abs(dot(normal, vec1));
-        if (norm > radius) {
-            return false;
-        } else {
-            return true;
-        }
+        return true;
     }
 
     /**
      * Determines whether
-     * <code>tri</code> and a sphere has common points.
+     * <code>tri</code> and a sphere, which has {@code center} and {@code radius},
+     * has common points.
      *
      * @param tri
      * @param center
      * @param radius
      * @return
      */
-    public static boolean isBoundaryIntersect(TriangleBoundary tri, Coordinate center, double radius) {
+    public static boolean isTriBoundarySphereIntersect(TriangleBoundary tri, Coordinate center, double radius) {
         Coordinate normal = outNormal(tri, null);
         double[] dists = new double[3];
         Node[] nodes = tri.nodes;
@@ -191,7 +199,7 @@ public class BoundaryUtils {
      * Determines whether
      * <code>pt-center</code> is in the convex cone of
      * <code>{line.getNode(i)- center:i = 0 or 1}</code>
-     *
+     * @deprecated not tested
      * @param line
      * @param center
      * @param pt
@@ -206,10 +214,10 @@ public class BoundaryUtils {
             } else {
                 return false;
             }
-        }else{
-            if(cross1>=0 && cross2 >=0){
+        } else {
+            if (cross1 >= 0 && cross2 >= 0) {
                 return true;
-            }else{
+            } else {
                 return false;
             }
         }
@@ -219,7 +227,7 @@ public class BoundaryUtils {
      * Determines whether
      * <code>pt-center</code> is in the convex cone of
      * <code>{tri.getNode(i)- center:i = 0, 1 or 2}</code>
-     *
+     * @deprecated not tested
      * @param tri
      * @param center
      * @param pt
@@ -237,9 +245,9 @@ public class BoundaryUtils {
         }
 
         for (int i = 0; i < 3; i++) {
-            tMat.set(0, i, tri.nodes[i].x-center.x);
-            tMat.set(1, i, tri.nodes[i].y-center.y);
-            tMat.set(2, i, tri.nodes[i].z-center.z);
+            tMat.set(0, i, tri.nodes[i].x - center.x);
+            tMat.set(1, i, tri.nodes[i].y - center.y);
+            tMat.set(2, i, tri.nodes[i].z - center.z);
         }
         tVec1.set(0, nd.x - center.x);
         tVec1.set(1, nd.y - center.y);
@@ -251,5 +259,41 @@ public class BoundaryUtils {
             }
         }
         return true;
+    }
+
+    public static double longestLength(LineBoundary[] boundaries, LineBoundary[] output) {
+        double longest = 0;
+        LineBoundary longLine = null;
+        if (boundaries.length > 0) {
+            longLine = boundaries[0];
+        }
+        for (int i = 0; i < boundaries.length; i++) {
+            LineBoundary bound = boundaries[i];
+            double dx = bound.end.x - bound.start.x;
+            double dy = bound.end.y - bound.start.y;
+            double dz = bound.end.z - bound.start.z;
+            double sq = dx * dx + dy * dy + dz * dz;
+            if (longest < sq) {
+                longLine = bound;
+                longest = sq;
+            }
+        }
+        if (null != output) {
+            output[0] = longLine;
+        }
+        return Math.sqrt(longest);
+    }
+    
+    public static boolean isLine2DLineBoundaryIntersect(Coordinate start,Coordinate end,LineBoundary line){
+        return GeometryMath.isLineSegment2DIntersect(start, end, line.start, line.end);
+    }
+    
+    public static boolean isLineTriangleSegmentIntersect(Coordinate start,Coordinate end,TriangleBoundary triBnd,Coordinate normal){
+        int inter=GeometryMath.lineSegmentTriangleIntersection(start, end, triBnd.nodes[0], triBnd.nodes[1], triBnd.nodes[2], normal);
+        if (inter==GeometryMath.DISDROINT){
+            return false;
+        }else{
+            return true;
+        }
     }
 }

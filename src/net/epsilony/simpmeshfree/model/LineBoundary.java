@@ -17,6 +17,11 @@ public class LineBoundary implements Boundary {
     public LineBoundary succ;
     public int id;
 
+    @Override
+    public String toString() {
+        return "LB{" + "id=" + id + ", start=" + start + ", end=" + end + '}';
+    }
+
     public LineBoundary(Node start, Node end) {
         this.start = start;
         this.end = end;
@@ -115,21 +120,6 @@ public class LineBoundary implements Boundary {
             default:
                 throw new IllegalArgumentException();
         }
-    }
-
-    public static double longestLength(LineBoundary[] boundaries) {
-        double longest = 0;
-        for (int i = 0; i < boundaries.length; i++) {
-            LineBoundary bound = boundaries[i];
-            double dx = bound.end.x - bound.start.x;
-            double dy = bound.end.y - bound.start.y;
-            double dz = bound.end.z - bound.start.z;
-            double sq = dx * dx + dy * dy + dz * dz;
-            if (longest < sq) {
-                longest = sq;
-            }
-        }
-        return Math.sqrt(longest);
     }
 
     @Override
@@ -270,7 +260,7 @@ public class LineBoundary implements Boundary {
 
     @Override
     public boolean isIntersect(Coordinate center, double radius) {
-        return BoundaryUtils.isBoundaryIntersect(this, center, radius);
+        return BoundaryUtils.isLineBoundarySphereIntersect(this, center, radius);
     }
 
 //    @Override

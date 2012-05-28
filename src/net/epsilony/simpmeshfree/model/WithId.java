@@ -8,7 +8,7 @@ package net.epsilony.simpmeshfree.model;
  *
  * @author epsilon
  */
-public interface Indexable {
+public interface WithId {
 
     int getId();
 

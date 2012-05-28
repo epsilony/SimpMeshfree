@@ -14,8 +14,6 @@ import net.epsilony.utils.geom.Coordinate;
 import net.epsilony.utils.geom.Coordinates;
 import net.epsilony.utils.geom.GeometryMath;
 import static net.epsilony.utils.geom.GeometryMath.*;
-import no.uib.cipr.matrix.DenseMatrix;
-import no.uib.cipr.matrix.DenseVector;
 
 /**
  *
@@ -255,7 +253,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
                 int centerId = bndCenter.id;
                 Boundary bnd = boundaries.get(centerId);
                 double realDist = distance(bndCenter, center);
-                if (realDist - bndRadius[centerId] <= radius && BoundaryUtils.isBoundaryIntersect(bnd, center, radius)) {
+                if (realDist - bndRadius[centerId] <= radius && BoundaryUtils.isBoundarySphereIntersect(bnd, center, radius)) {
                     results.add(bnd);
                 }
             }
@@ -507,8 +505,8 @@ public class GeomUtils implements Avatarable<GeomUtils> {
         intCache2.reset();
         intCache2.ensureCapacity(bndNds.size());
 
-        visibleStatus(center, bndNds, bnds, nodeBlockNums, nodeBlockBndIdx, true);
-        visibleStatus(center, spaceNds, bnds, intCache1, intCache2, false);
+        visibleStatus(center, bndNds, true,bnds, nodeBlockNums, nodeBlockBndIdx);
+        visibleStatus(center, spaceNds, false, bnds, intCache1, intCache2);
 
         outNds.addAll(bndNds);
         outNds.addAll(spaceNds);
@@ -547,23 +545,15 @@ public class GeomUtils implements Avatarable<GeomUtils> {
      * @param isBoundaryNode is the
      * <code>nds</code> are all boundary nodes or are all not
      */
-    public void visibleStatus(Coordinate center, List<Node> nds, List<Boundary> bnds, TIntArrayList nodeBlockNums, TIntArrayList nodeBlockBndIdx, boolean isBoundaryNode) {
+    public void visibleStatus(Coordinate center, List<Node> nds,boolean isBoundaryNode, List<Boundary> bnds, TIntArrayList nodeBlockNums, TIntArrayList nodeBlockBndIdx) {
         Coordinate t = new Coordinate();
-        DenseMatrix tMat = null;
-        DenseVector tVec = null, tVec2 = null;
-        nodeBlockNums.reset();
+        nodeBlockNums.resetQuick();
         nodeBlockNums.ensureCapacity(nds.size());
-        nodeBlockBndIdx.reset();
+        nodeBlockBndIdx.resetQuick();
         nodeBlockNums.ensureCapacity(nds.size());
-        for (int i = 0; i < nds.size(); i++) {
-            nodeBlockNums.add(0);
-            nodeBlockBndIdx.add(-1);
-        }
-        if (3 == dim) {
-            tMat = new DenseMatrix(3, 3);
-            tVec = new DenseVector(3);
-            tVec2 = new DenseVector(3);
-        }
+        nodeBlockNums.fill(0, nds.size(), 0);
+        nodeBlockBndIdx.fill(0,nds.size(),-1);
+        
         int bIdx = 0;
         for (Boundary bnd : bnds) {
             boolean isCenterInside=isPtInSideBnd(bnd, center, t);
@@ -592,25 +582,21 @@ public class GeomUtils implements Avatarable<GeomUtils> {
                         continue;
                     }
                 }
-                boolean isNdInSide = isPtInSideBnd(bnd, nd, t);
-                if (isNdInSide) {
-                    nIdx++;
-                    continue;
-                }
-                boolean isInConvecCone;
+
+                boolean isIntersect;
                 switch (dim) {
                     case 2:
                         LineBoundary line = (LineBoundary) bnd;
-                        isInConvecCone = BoundaryUtils.isInConvexCone(line, center, isCenterInside,nd);
+                        isIntersect = BoundaryUtils.isLine2DLineBoundaryIntersect(center, nd, line);
                         break;
                     case 3:
                         TriangleBoundary tri = (TriangleBoundary) bnd;
-                        isInConvecCone = BoundaryUtils.isInConvexCone(tri, center, nd, tMat, tVec, tVec2);
+                        isIntersect = BoundaryUtils.isLineTriangleSegmentIntersect(center, nd, tri, bndNormals.get(tri.getId()));
                         break;
                     default:
                         throw new IllegalStateException();
                 }
-                if (isInConvecCone) {
+                if (isIntersect) {
                     int blockNum = nodeBlockNums.get(nIdx) + 1;
                     nodeBlockNums.setQuick(nIdx, blockNum);
                     nodeBlockBndIdx.setQuick(nIdx, bIdx);
@@ -684,7 +670,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
             this.nodeNumMin = nodeNumMin;
             this.nodeNumMax = nodeNumMax;
         }
-        DistanceFunction distFun = new DistanceFunctions.Common();
+        DistanceSquareFunction distFun = new DistanceSquareFunctions.Common();
 
         @Override
         public double setCenter(Coordinate center, Boundary centerBnd, List<Node> outputNodes) {
@@ -701,7 +687,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
         }
 
         @Override
-        public DistanceFunction distanceFunction() {
+        public DistanceSquareFunction getDistanceSquareFunction() {
             return distFun;
         }
     }
@@ -735,7 +721,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
             do {
                 searchSpaceNodes(center, rSearch, nds);
                 searchBoundary(center, rSearch, bnds);
-                visibleStatus(center, nds, bnds, blockedNum, blockedBndId, false);
+                visibleStatus(center, nds,false, bnds, blockedNum, blockedBndId);
                 outputs.clear();
                 int idx = 0;
                 for (Node nd : nds) {
@@ -745,7 +731,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
                     idx++;
                 }
                 getBndsNodes(bnds, bndNds);
-                visibleStatus(center, bndNds, bnds, blockedNum, blockedBndId, true);
+                visibleStatus(center, bndNds, true, bnds, blockedNum, blockedBndId);
                 idx = 0;
                 for (Node nd : bndNds) {
                     if (blockedNum.getQuick(idx) < 1) {

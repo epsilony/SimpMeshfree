@@ -42,19 +42,18 @@ import net.epsilony.utils.geom.Coordinate;
  * @see GeomUtils
  * @author epsilonyuan@gmail.com
  */
-public interface Boundary extends Indexable{
+public interface Boundary extends WithId{
 
     /**
-     * 
      * @param index in the range of [0,num())
-     * @return 
+     * @return the reference of indexth node
      */
     Node getNode(int index);
 
     /**
      * This Boundary and getNeighbor(i) (if exists) has common nodes that are getNode[i],getNode[(i+1)%num()]
      * @param index in the range of [0,num())
-     * @return 
+     * @return ref of bnd
      */
     Boundary getNeighbor(int index);
 
@@ -72,7 +71,7 @@ public interface Boundary extends Indexable{
     double circum(Coordinate outputCenter);
     
     /**
-     * Determines whether there are common points betwean this boundary and a shpere.
+     * Determines whether there are common points betwean this boundary and the shpere with {@code center} and {@code radius} given.
      * @param center
      * @param radius
      * @return 
@@ -81,8 +80,8 @@ public interface Boundary extends Indexable{
     
     /**
      * Calculates unit out normal 
-     * @param result
-     * @return 
+     * @param result can be null
+     * @return {@code result} or a new instance of {@code Coordinate} if {@code result} is null
      */
     Coordinate outNormal(Coordinate result);
 //    

@@ -11,7 +11,7 @@ import net.epsilony.utils.geom.Coordinate;
  *
  * @author epsilonyuan@gmail.com
  */
-public class Node extends Coordinate implements Indexable{
+public class Node extends Coordinate implements WithId{
 
     public int id;
     

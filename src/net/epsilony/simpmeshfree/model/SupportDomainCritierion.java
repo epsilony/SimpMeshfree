@@ -27,5 +27,5 @@ public interface SupportDomainCritierion{
      */
     double setCenter(Coordinate center,Boundary centerBound,List<Node> outputNodes);
     
-    DistanceFunction distanceFunction();
+    DistanceSquareFunction getDistanceSquareFunction();
 }

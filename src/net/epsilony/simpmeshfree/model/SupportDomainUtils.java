@@ -37,7 +37,7 @@ public class SupportDomainUtils {
     }
     
     public static class SimpCriterion implements SupportDomainCritierion{
-        DistanceFunction distanceFun;
+        DistanceSquareFunction distanceFun;
         
         int dim;
         private final SupportDomainSizer domainSizer;
@@ -50,18 +50,18 @@ public class SupportDomainUtils {
 
         public SimpCriterion(int dim,SupportDomainSizer domainSizer) {
             this.dim = dim;
-            distanceFun=new DistanceFunctions.Common(dim);
+            distanceFun=new DistanceSquareFunctions.Common(dim);
             this.domainSizer = domainSizer;
         }
         
         public SimpCriterion(SupportDomainSizer domainSizer) {
             this.dim = 2;
-            distanceFun=new DistanceFunctions.Common(dim);
+            distanceFun=new DistanceSquareFunctions.Common(dim);
             this.domainSizer = domainSizer;
         }
 
         @Override
-        public DistanceFunction distanceFunction() {
+        public DistanceSquareFunction getDistanceSquareFunction() {
             return distanceFun;
         }
         

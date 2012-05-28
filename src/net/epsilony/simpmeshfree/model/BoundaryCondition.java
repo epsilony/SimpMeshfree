@@ -7,8 +7,27 @@ package net.epsilony.simpmeshfree.model;
 import net.epsilony.utils.geom.Coordinate;
 
 /**
- * information class of boundary condition
+ * <p>information class of boundary condition</p>
+ * <p>The pattern of using {@code BoundaryCondition} is like below:</br>
+ * <pre>
+ * {@code 
+ *      
+ *      BoundaryCondition bc=neumannBoundaryCondition;
+ *      QuadraturePointIterator qpIter=someQuadraturePointIterator;
+ *      QuadraturePoint qp=new QuadraturePoint();
+ *      double[] val=new double[3];
+ *      double[] vlds=new double[3];
+ *      while(qpIter.next(qp)){
+ *          boolean isCartesian=Parambc.setBoundary(qp.boundary);
+ *          Coordinate byCart=someMethod(qp.coordinate,isCartesian);
+ *          bc.value(qp.coordinate,val,vlds)
+ *          ...
+ *     }
+ * 
+ * }
+ * </pre>
  * ps: be aware that the volume force is supplied in {@link VolumeCondition}</br>
+ * 
  * @author epsilonyuan@gmail.com
  */
 public interface BoundaryCondition {

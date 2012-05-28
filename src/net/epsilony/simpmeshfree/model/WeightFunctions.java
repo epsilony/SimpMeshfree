@@ -16,12 +16,12 @@ import static net.epsilony.simpmeshfree.utils.CommonUtils.lenBase;
  */
 public class WeightFunctions {
 
-    public static WeightFunction factory(WeightFunctionCore coreFun, DistanceFunction distFun) {
+    public static WeightFunction factory(WeightFunctionCore coreFun, DistanceSquareFunction distFun) {
         WeightFunctionImp imp = new WeightFunctionImp(coreFun, distFun);
         return imp;
     }
 
-    public static WeightFunction factory(WeightFunctionCore coreFun, DistanceFunction distFun, int dim) {
+    public static WeightFunction factory(WeightFunctionCore coreFun, DistanceSquareFunction distFun, int dim) {
         WeightFunctionImp imp = new WeightFunctionImp(coreFun, distFun, dim);
         return imp;
     }
@@ -31,17 +31,17 @@ public class WeightFunctions {
         private int diffOrder;
         private int diffDim;
         WeightFunctionCore coreFun;
-        DistanceFunction distFun;
+        DistanceSquareFunction distFun;
         private final int dim;
         private double[] coreVals;
 
-        private WeightFunctionImp(WeightFunctionCore coreFun, DistanceFunction distFun, int dim) {
+        private WeightFunctionImp(WeightFunctionCore coreFun, DistanceSquareFunction distFun, int dim) {
             this.coreFun = coreFun;
             this.distFun = distFun;
             this.dim = dim;
         }
 
-        private WeightFunctionImp(WeightFunctionCore coreFun, DistanceFunction distFun) {
+        private WeightFunctionImp(WeightFunctionCore coreFun, DistanceSquareFunction distFun) {
             this.coreFun = coreFun;
             this.distFun = distFun;
             this.dim = 2;
@@ -105,7 +105,7 @@ public class WeightFunctions {
         }
 
         @Override
-        public DistanceFunction getDistFun() {
+        public DistanceSquareFunction getDistFun() {
             return distFun;
         }
     }

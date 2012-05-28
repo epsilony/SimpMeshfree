@@ -173,7 +173,7 @@ public class QuadraturePointIterators {
                     TriangleSymmetricQuadrature.getPositions(power, tri, coords);
                 }
             }
-            qp.coordinate.setDim(coords[coordIdx]);
+            qp.coordinate.set(coords[coordIdx]);
             qp.weight = weights[coordIdx];
             coordIdx++;
             return true;

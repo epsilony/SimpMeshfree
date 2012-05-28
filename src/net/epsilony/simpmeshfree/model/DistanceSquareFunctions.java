@@ -11,12 +11,20 @@ import net.epsilony.utils.geom.Coordinate;
 import net.epsilony.utils.geom.GeometryMath;
 
 /**
- *
+ * 
  * @author epsilon
  */
-public class DistanceFunctions {
+public class DistanceSquareFunctions {
+    
+    public static DistanceSquareFunction common(int dim){
+        return new Common(dim);
+    }
+    
+    public static DistanceSquareFunction common(){
+        return new Common();
+    }
 
-    public static class Common implements DistanceFunction {
+    public static class Common implements DistanceSquareFunction {
 
         private Coordinate center;
         private int order;

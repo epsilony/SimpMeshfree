@@ -6,6 +6,7 @@ package net.epsilony.simpmeshfree.model;
 
 import net.epsilony.utils.geom.Coordinate;
 
+
 /**
  *
  * @author epsilon
@@ -170,7 +171,7 @@ public class TriangleBoundary implements Boundary {
 
     @Override
     public boolean isIntersect(Coordinate center, double radius) {
-        return BoundaryUtils.isBoundaryIntersect(this, center, radius);
+        return BoundaryUtils.isTriBoundarySphereIntersect(this, center, radius);
     }
 
 //    @Override
