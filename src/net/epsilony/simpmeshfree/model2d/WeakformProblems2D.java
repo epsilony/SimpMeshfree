@@ -64,10 +64,16 @@ public class WeakformProblems2D {
                 iters.add(quadIter);
             }
             if (null != numOut) {
+                numOut[0]=0;
                 int triNum = TriangleSymmetricQuadrature.getNumPoints(power);
                 int quadNum = GaussLegendreQuadratureUtils.getNumPoints(power);
                 quadNum *= quadNum;
-                numOut[0] = triNum * triQuads.size() + quadNum * quadQuads.size();
+                if(null!=triQuads){
+                    numOut[0]+=triNum*triQuads.size();
+                }
+                if(null!=quadQuads){
+                    numOut[0]+=quadNum*quadQuads.size();
+                }
             }
             return QuadraturePointIterators.compoundIterators(iters);
         }

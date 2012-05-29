@@ -24,7 +24,7 @@ public class ShapeFunctions2D {
     public static int MAX_NODES_SIZE_ESTIMATION = 50;
 
     public static TDoubleArrayList[] initOutputResult(int partDiffOrder) {
-        return initOutputResult(null, MAX_NODES_SIZE_ESTIMATION, partDiffOrder);
+        return initOutputResult(null,  partDiffOrder,MAX_NODES_SIZE_ESTIMATION);
     }
 
     public static TDoubleArrayList[] initOutputResult(TDoubleArrayList[] result, int partDiffOrder, int ndsNum) {

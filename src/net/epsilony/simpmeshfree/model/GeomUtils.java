@@ -22,7 +22,7 @@ import static net.epsilony.utils.geom.GeometryMath.*;
 public class GeomUtils implements Avatarable<GeomUtils> {
 
     ArrayList<Boundary> boundaries;
-    ArrayList<Node> allNodes;
+    public ArrayList<Node> allNodes;
     ArrayList<Node> spaceNodes;
     ArrayList<Coordinate> bndNormals;
     int[] bndStatusCache;
@@ -140,12 +140,14 @@ public class GeomUtils implements Avatarable<GeomUtils> {
     private GeomUtils() {
     }
 
-    public GeomUtils(ArrayList<Boundary> bounds, ArrayList<Node> spacesNodes, int dim) {
-        this.boundaries = bounds;
-        this.spaceNodes = spacesNodes;
+    public GeomUtils(List<? extends Boundary> bounds, List<Node> spacesNodes, int dim) {
+        this.boundaries = new ArrayList<>(bounds);
+        this.spaceNodes = new ArrayList<>(spacesNodes);
         this.dim = dim;
         indexingNodes();
         indexingBoundaries();
+        initSearchRadius = Math.sqrt(leastNodesNumInDomain / 3.0) * 1.5 * maxBndRad;
+        domainSizer = new NearestKVisibleDomainSizer(leastNodesNumInDomain, initSearchRadius);
     }
 
     @Override
@@ -295,8 +297,6 @@ public class GeomUtils implements Avatarable<GeomUtils> {
 
         spaceNodeSearcher = new LayeredRangeTreeNodeSearcher(dim, spaceNodes);
         nodeSearcher = new LayeredRangeTreeNodeSearcher(dim, allNodes);
-        initSearchRadius = Math.sqrt(leastNodesNumInDomain / 3.0) * 1.5 * maxBndRad;
-        domainSizer = new NearestKVisibleDomainSizer(leastNodesNumInDomain, initSearchRadius);
 
     }
 
@@ -656,6 +656,9 @@ public class GeomUtils implements Avatarable<GeomUtils> {
         Coordinate normal = bndNormals.get(bnd.getId());
         double transDist = -bndRadius[bnd.getId()] * ratio;
         GeometryMath.scale(normal, transDist, result);
+        result.x+=pt.x;
+        result.y+=pt.y;
+        result.z+=pt.z;
         return result;
     }
 
@@ -698,7 +701,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
         double rInit;
         double enlargeRatio = 1.42;
         int maxIter = 4;
-        CenterDistanceComparator<Coordinate> comp = Coordinates.normalCenterDistanceComparator();
+        CenterDistanceComparator<Coordinate> comp = Coordinates.inverseCenterDistanceComparator();
         PriorityQueue<Node> pq = new PriorityQueue<>(defaultMaxNodeNumInSupportDomain, comp);
         LinkedList<Boundary> bnds = new LinkedList<>();
         LinkedList<Node> nds = new LinkedList<>();

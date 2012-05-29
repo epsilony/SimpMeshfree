@@ -31,7 +31,7 @@ public class WeakformProcessor2D {
     public int arrayListSize = 100;
     WeakformAssemblier assemblier;
     WeakformProblem workProblem;
-    private final EquationSolver equationSolver;
+    public EquationSolver equationSolver;
     DenseVector equationResultVector;
     Logger logger = Logger.getLogger(this.getClass());
     public int processThreadsNum = Integer.MAX_VALUE;
@@ -66,11 +66,11 @@ public class WeakformProcessor2D {
         aviCoreNum = (coreNum > aviCoreNum ? aviCoreNum : coreNum);
         int[] numOut = new int[1];
         balanceIterator = workProblem.volumeIterator(numOut);
-        int sumDirichlet = numOut[0];
+        int sumBalance = numOut[0];
         neumannItrator = workProblem.neumannIterator(numOut);
         int sumNeumann = numOut[0];
         dirichletIterator = workProblem.dirichletIterator(numOut);
-        int sumBalance = numOut[0];
+        int sumDirichlet = numOut[0];
 
         balanceCount.set(0);
         dirichletCount.set(0);
@@ -209,7 +209,7 @@ public class WeakformProcessor2D {
 
     }
 
-    void solveEquation() {
+    public void solveEquation() {
         equationResultVector = equationSolver.solve(assemblier.getEquationMatrix(), assemblier.getEquationVector());
     }
     QuadraturePointIterator neumannItrator;

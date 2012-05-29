@@ -9,6 +9,7 @@ import java.util.Iterator;
 import net.epsilony.simpmeshfree.model.BoundaryCondition;
 import net.epsilony.simpmeshfree.model.LineBoundary;
 import net.epsilony.utils.geom.Coordinate;
+import net.epsilony.utils.geom.GeometryMath;
 import net.epsilony.utils.geom.Quadrangle;
 import net.epsilony.utils.geom.Triangle;
 import net.epsilony.utils.math.GaussLegendreQuadratureUtils;
@@ -51,9 +52,7 @@ public class QuadraturePointIterators {
 
         protected void setLine(LineBoundary line) {
             this.line = line;
-            double d1 = line.end.x - line.start.x;
-            double d2 = line.end.y - line.start.y;
-            lineLen = Math.sqrt(d1 * d1 + d2 * d2);
+            lineLen=GeometryMath.distance(line.start, line.end);
         }
 
         @Override
@@ -141,6 +140,7 @@ public class QuadraturePointIterators {
         private Coordinate[] coords;
         private double[] weights;
         private int coordIdx;
+        double triArea;
 
         private void init(int power,Iterable<Triangle> triangles) {
             this.triangles = triangles.iterator();
@@ -171,10 +171,11 @@ public class QuadraturePointIterators {
                     coordIdx = 0;
                     Triangle tri = triangles.next();
                     TriangleSymmetricQuadrature.getPositions(power, tri, coords);
+                    triArea=GeometryMath.triangleArea2D(tri);
                 }
             }
             qp.coordinate.set(coords[coordIdx]);
-            qp.weight = weights[coordIdx];
+            qp.weight = weights[coordIdx]*triArea;
             coordIdx++;
             return true;
         }
@@ -209,7 +210,7 @@ public class QuadraturePointIterators {
         double[] uvs;
         QuadrangleMapper quadMapper = new QuadrangleMapper();
         double[] xyJacb = new double[3];
-        QuadraturePoint quadraturePoint = new QuadraturePoint();
+
 
         @Override
         public boolean next(QuadraturePoint qp) {
@@ -230,9 +231,9 @@ public class QuadraturePointIterators {
             double u = uvs[uIdx];
             double v = uvs[vIdx];
             quadMapper.getResults(u, v, xyJacb);
-            quadraturePoint.coordinate.x = xyJacb[0];
-            quadraturePoint.coordinate.y = xyJacb[1];
-            quadraturePoint.weight = xyJacb[2] * weights[uIdx] * weights[vIdx];
+            qp.coordinate.x = xyJacb[0];
+            qp.coordinate.y = xyJacb[1];
+            qp.weight = xyJacb[2] * weights[uIdx] * weights[vIdx];
             uIdx++;
             return true;
         }
@@ -265,5 +266,21 @@ public class QuadraturePointIterators {
     
     public static QuadraturePointIterator compoundIterators(Iterable<QuadraturePointIterator> iters){
         return new CompoundIterator(iters);
+    }
+    
+    public static QuadraturePointIterator fromLineBoundaries(int power,Iterable<LineBoundary> lines){
+        return new LineBoundaryIterator(power, lines);
+    }
+    
+    public static QuadraturePointIterator fromLineBoundariesAndBC(int power,Iterable<LineBoundary> lines,BoundaryCondition bc){
+        return new LineBoundaryConditionIterator(power, lines, bc);
+    }
+    
+    public static QuadraturePointIterator fromQuadrangles(int power,Iterable<Quadrangle> quads){
+        return new QuadrangleIterator(power, quads);
+    }
+    
+    public static QuadraturePointIterator fromTriangles(int power,Iterable<Triangle> tris){
+        return new TriangleIterator(power, tris);
     }
 }
