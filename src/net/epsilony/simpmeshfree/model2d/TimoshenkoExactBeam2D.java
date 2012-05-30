@@ -66,19 +66,25 @@ public class TimoshenkoExactBeam2D {
     }
 
     public double[] getDisplacement(double x, double y, double[] results) {
+        if(null==results){
+            results=new double[2];
+        }
         double D = height, L = width;
-        double ux = P*y/(6*E*I)*((6*L-3*x)*x+(2+v)*(y*y-D*D/4));
-        double uy = -P/(6*E*I)*(3*v*y*y*(L-x)+(4+5*v)*D*D*x/4+(3*L-x)*x*x);
+        double ux = -P*y/(6*E*I)*((6*L-3*x)*x+(2+v)*(y*y-D*D/4));
+        double uy = P/(6*E*I)*(3*v*y*y*(L-x)+(4+5*v)*D*D*x/4+(3*L-x)*x*x);
         results[0] = ux;
         results[1] = uy;
         return results;
     }
 
     public double[] getStress(double x, double y, double results[]) {
+         if(null==results){
+            results=new double[2];
+        }
         double L = width;
         double D = height;
-        double sxx = P*(L-x)*y;
-        double sxy = -P/(2*I)*(D*D/4-y*y);
+        double sxx = -P*(L-x)*y;
+        double sxy = P/(2*I)*(D*D/4-y*y);
         results[0] = sxx;
         results[1] = sxy;
         return results;

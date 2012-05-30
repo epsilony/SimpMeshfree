@@ -42,8 +42,6 @@ public class GeomUtils implements Avatarable<GeomUtils> {
     CenterDistanceSearcher<Coordinate, Node> boundaryNodeSearcher;
     TIntArrayList intCache1 = new TIntArrayList(defaultMaxNodeNumInSupportDomain);
     TIntArrayList intCache2 = new TIntArrayList(defaultMaxNodeNumInSupportDomain);
-    SupportDomainSizer domainSizer;
-    int leastNodesNumInDomain = 10;
     double initSearchRadius;
 
     void fillNodeStatusCache(Collection<Node> nodes, int value) {
@@ -146,8 +144,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
         this.dim = dim;
         indexingNodes();
         indexingBoundaries();
-        initSearchRadius = Math.sqrt(leastNodesNumInDomain / 3.0) * 1.5 * maxBndRad;
-        domainSizer = new NearestKVisibleDomainSizer(leastNodesNumInDomain, initSearchRadius);
+
     }
 
     @Override
@@ -166,10 +163,10 @@ public class GeomUtils implements Avatarable<GeomUtils> {
         avator.boundarySearcher = boundarySearcher;
         avator.defaultMaxNodeNumInSupportDomain = defaultMaxNodeNumInSupportDomain;
         avator.dim = dim;
-        avator.domainSizer = domainSizer;
+        
         avator.indexingSetting = indexingSetting;
         //intCache1,intCache2 will initiated by themselves
-        avator.leastNodesNumInDomain = leastNodesNumInDomain;
+
         avator.maxBndRad = maxBndRad;
         avator.nodeSearcher = nodeSearcher;
         avator.nodeStatusCache = new int[nodeStatusCache.length];
@@ -179,10 +176,6 @@ public class GeomUtils implements Avatarable<GeomUtils> {
         avator.spaceNodes = spaceNodes;
 
         return avator;
-    }
-
-    public double domain(Coordinate center, List<Node> outputs) {
-        return domainSizer.domain(center, outputs);
     }
 
     /**
@@ -505,7 +498,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
         intCache2.reset();
         intCache2.ensureCapacity(bndNds.size());
 
-        visibleStatus(center, bndNds, true,bnds, nodeBlockNums, nodeBlockBndIdx);
+        visibleStatus(center, bndNds, true, bnds, nodeBlockNums, nodeBlockBndIdx);
         visibleStatus(center, spaceNds, false, bnds, intCache1, intCache2);
 
         outNds.addAll(bndNds);
@@ -545,24 +538,24 @@ public class GeomUtils implements Avatarable<GeomUtils> {
      * @param isBoundaryNode is the
      * <code>nds</code> are all boundary nodes or are all not
      */
-    public void visibleStatus(Coordinate center, List<Node> nds,boolean isBoundaryNode, List<Boundary> bnds, TIntArrayList nodeBlockNums, TIntArrayList nodeBlockBndIdx) {
+    public void visibleStatus(Coordinate center, List<Node> nds, boolean isBoundaryNode, List<Boundary> bnds, TIntArrayList nodeBlockNums, TIntArrayList nodeBlockBndIdx) {
         Coordinate t = new Coordinate();
         nodeBlockNums.resetQuick();
         nodeBlockNums.ensureCapacity(nds.size());
         nodeBlockBndIdx.resetQuick();
         nodeBlockNums.ensureCapacity(nds.size());
         nodeBlockNums.fill(0, nds.size(), 0);
-        nodeBlockBndIdx.fill(0,nds.size(),-1);
-        
+        nodeBlockBndIdx.fill(0, nds.size(), -1);
+
         int bIdx = 0;
         for (Boundary bnd : bnds) {
-            boolean isCenterInside=isPtInSideBnd(bnd, center, t);
+            boolean isCenterInside = isPtInSideBnd(bnd, center, t);
             if (!isBoundaryNode && !isCenterInside) {
                 bIdx++;
                 continue;
             }
             int nIdx = 0;
-            
+
             for (Node nd : nds) {
 
                 if (nodeBlockNums.get(nIdx) > 1) {
@@ -656,14 +649,15 @@ public class GeomUtils implements Avatarable<GeomUtils> {
         Coordinate normal = bndNormals.get(bnd.getId());
         double transDist = -bndRadius[bnd.getId()] * ratio;
         GeometryMath.scale(normal, transDist, result);
-        result.x+=pt.x;
-        result.y+=pt.y;
-        result.z+=pt.z;
+        result.x += pt.x;
+        result.y += pt.y;
+        result.z += pt.z;
         return result;
     }
 
     public class VisibleCritieron implements SupportDomainCritierion {
 
+        SupportDomainSizer domainSizer;
         public int nodeNumMin, nodeNumMax;
         public double radiusEnlargeFactor = 1.2,
                 radiusSafeFactor = 1.1,
@@ -672,6 +666,8 @@ public class GeomUtils implements Avatarable<GeomUtils> {
         public VisibleCritieron(int nodeNumMin, int nodeNumMax) {
             this.nodeNumMin = nodeNumMin;
             this.nodeNumMax = nodeNumMax;
+            initSearchRadius = Math.sqrt(nodeNumMin / 3.0) * 1.5 * maxBndRad;
+            domainSizer = new NearestKVisibleDomainSizer(nodeNumMin, initSearchRadius);
         }
         DistanceSquareFunction distFun = new DistanceSquareFunctions.Common();
 
@@ -724,7 +720,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
             do {
                 searchSpaceNodes(center, rSearch, nds);
                 searchBoundary(center, rSearch, bnds);
-                visibleStatus(center, nds,false, bnds, blockedNum, blockedBndId);
+                visibleStatus(center, nds, false, bnds, blockedNum, blockedBndId);
                 outputs.clear();
                 int idx = 0;
                 for (Node nd : nds) {

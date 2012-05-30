@@ -59,12 +59,12 @@ public class WeakformProcessor2DDemoUtils {
         MLSShapeFunctionFactory shapeFunFactory = genShapeFunctionFactory(geomUtils, coreFunc, baseOrder, minNdNum, maxNdNum);
         int ndsSize = geomUtils.allNodes.size();
         SimpAssemblier assemblier = new WeakformAssembliers2D.SimpAssemblier(constitutiveLaw, penalty, ndsSize);
-        FlexCompRowMatrixSolver eqSolver = new EquationSolvers.FlexCompRowMatrixSolver(MatrixUtils.SPD);
+        FlexCompRowMatrixSolver eqSolver = new EquationSolvers.FlexCompRowMatrixSolver(MatrixUtils.UNSYMMETRICAL_BUT_MIRROR_FROM_UP_HALF);
         return new WeakformProcessor2D(shapeFunFactory, assemblier, workProblem, eqSolver);
     }
 
     public static WeakformProcessor2D timoshenkoBeam(double width, double height, double P, double E, double v, double lineSize, double spaceNdsDis, double penalty, Pipe pipe) {
-        int power = 2;
+        int power = 4;
         int baseOrder = 2;
         int minNdNum = 15;
         int maxNdNum = 20;
@@ -81,7 +81,7 @@ public class WeakformProcessor2DDemoUtils {
     }
 
     public static WeakformProcessor2D timoshenkoBeam(Pipe pipe) {
-        return timoshenkoBeam(48, 12, -1000, 3e7, 0.3, 2, 2, 1e8, pipe);
+        return timoshenkoBeam(48, 12, -1000, 3e7, 0.3, 2, 2, 3e7*1e7, pipe);
     }
 
     public static class Pipe {

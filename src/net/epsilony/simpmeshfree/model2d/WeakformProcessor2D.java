@@ -117,7 +117,7 @@ public class WeakformProcessor2D {
         assemblier.uniteAvators();
     }
 
-    public DenseVector getNodesResult() {
+    public DenseVector getNodesValue() {
         return equationResultVector;
     }
     final Object balanceLock = new Object();
@@ -146,7 +146,7 @@ public class WeakformProcessor2D {
     }
     ShapeFunction shapeFunction;
 
-    public List<double[]> result(List<Coordinate> coords, List<Boundary> bnds) {
+    public List<double[]> result(List<? extends Coordinate> coords, List<? extends Boundary> bnds) {
 
         if (null == shapeFunction) {
             shapeFunction = shapeFunFactory.factory();
@@ -154,7 +154,7 @@ public class WeakformProcessor2D {
         shapeFunction.setDiffOrder(1);
         LinkedList<double[]> results = new LinkedList<>();
         ArrayList<Node> shapeFunNodes = new ArrayList<>(arrayListSize);
-        Iterator<Boundary> bndIter = (bnds != null ? bnds.iterator() : null);
+        Iterator<? extends Boundary> bndIter = (bnds != null ? bnds.iterator() : null);
         TDoubleArrayList[] shapeFunVals = ShapeFunctions2D.initOutputResult(1);
         for (Coordinate coord : coords) {
             Boundary bnd = (bndIter != null ? bndIter.next() : null);
@@ -174,8 +174,10 @@ public class WeakformProcessor2D {
         }
         return results;
     }
-    AtomicInteger dirichletCount = new AtomicInteger();
-
+    
+    public AtomicInteger dirichletCount = new AtomicInteger();
+    public AtomicInteger neumannCount = new AtomicInteger();
+    
     void assemblyNeumann(ShapeFunction shapeFun, WeakformAssemblier assemblierAvator) {
         shapeFun.setDiffOrder(0);
         QuadraturePoint qp = new QuadraturePoint();
@@ -186,12 +188,12 @@ public class WeakformProcessor2D {
             Boundary bound = qp.boundary;
             shapeFun.values(qPoint, bound, shapeFunVals, shapeFunNds);
             assemblierAvator.asmNeumann(qp, shapeFunNds, shapeFunVals);
-            dirichletCount.incrementAndGet();
+            neumannCount.incrementAndGet();
         }
 
 
     }
-    AtomicInteger neumannCount = new AtomicInteger();
+
 
     void assemblyDirichlet(ShapeFunction shapeFun, WeakformAssemblier assemblierAvator) {
 
@@ -204,7 +206,7 @@ public class WeakformProcessor2D {
             Boundary bound = qp.boundary;
             shapeFun.values(qPoint, bound, shapeFunVals, shapeFunNds);
             assemblierAvator.asmDirichlet(qp, shapeFunNds, shapeFunVals);
-            neumannCount.incrementAndGet();
+            dirichletCount.incrementAndGet();
         }
 
     }

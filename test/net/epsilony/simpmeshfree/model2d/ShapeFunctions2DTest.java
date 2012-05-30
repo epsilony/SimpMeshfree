@@ -78,9 +78,7 @@ public class ShapeFunctions2DTest {
         WeightFunctionCore[] coreFuns = new WeightFunctionCore[]{new WeightFunctionCores.TriSpline(), new WeightFunctionCores.SimpPower(1), new WeightFunctionCores.SimpPower(2)};
         ArrayList<Node> resNodes = new ArrayList<>(nodesNum);
         double maxErr = 0;
-        Coordinate maxErrCenter = null;
-        int maxErrBase = 0;
-        int maxErrJ = 0;
+
         for (int i = 0; i < baseOrders.length; i++) {
             int baseOrder = baseOrders[i];
             for (int j = 0; j < coreFuns.length; j++) {
@@ -97,22 +95,10 @@ public class ShapeFunctions2DTest {
                     try {
                         assertArrayEquals(expFunValsSum, funValsSum, 1e-10);
                     } catch (AssertionError e) {
-                        for (int ei = 0; ei < expFunValsSum.length; ei++) {
-                            double err = Math.abs(expFunValsSum[ei] - funValsSum[ei]);
-                            if (Math.abs(err) > Math.abs(maxErr)) {
-                                maxErr = err;
-                                maxErrCenter = center;
-                                maxErrBase = baseOrder;
-                                maxErrJ = j;
-                            }
-                        }
                         throw e;
                     }
-//                    System.out.println(Arrays.toString(expFunValsSum)+" "+ Arrays.toString(funValsSum));
                 }
             }
         }
-        System.out.println("results stastical of Partition of Unity test:");
-        System.out.println("maxErr" + maxErr + " maxErrCenter:" + maxErrCenter + " maxErrBaseOrder:" + maxErrBase + " maxErrCore:" + maxErrJ);
     }
 }
