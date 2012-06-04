@@ -64,6 +64,11 @@ public class SupportDomainUtils {
         public DistanceSquareFunction getDistanceSquareFunction() {
             return distanceFun;
         }
+
+        @Override
+        public SupportDomainCritierion avatorInstance() {
+            return new SimpCriterion(dim, domainSizer);
+        }
         
     }
     

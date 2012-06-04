@@ -66,6 +66,11 @@ public class WeightFunctionCores {
 
 
         }
+
+        @Override
+        public WeightFunctionCore avatorInstance() {
+            return new TriSpline();
+        }
     }
 
     public static class SimpPower implements WeightFunctionCore {
@@ -109,6 +114,11 @@ public class WeightFunctionCores {
         @Override
         public int getDiffOrder() {
             return diffOrder;
+        }
+
+        @Override
+        public WeightFunctionCore avatorInstance() {
+           return new SimpPower(power);
         }
     }
 }

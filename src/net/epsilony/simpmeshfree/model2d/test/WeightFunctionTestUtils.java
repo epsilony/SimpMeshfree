@@ -12,8 +12,8 @@ import java.util.LinkedList;
 import java.util.List;
 import net.epsilony.simpmeshfree.model.*;
 import net.epsilony.simpmeshfree.model2d.ShapeFunctions2D;
-import net.epsilony.simpmeshfree.utils.Complete2DPolynomialBase;
-import net.epsilony.simpmeshfree.utils.CoordinatePartDiffArrayFunction;
+import net.epsilony.simpmeshfree.utils.Complete2DPolynomialBases;
+import net.epsilony.simpmeshfree.utils.BasesFunction;
 import net.epsilony.utils.geom.Coordinate;
 
 /**
@@ -75,7 +75,7 @@ public class WeightFunctionTestUtils {
 
     public static ShapeFunction genShapeFunction(double rad, List<Node> nds, int baseOrder, WeightFunctionCore coreFun) {
         SupportDomainCritierion criterion = SupportDomainUtils.simpCriterion(rad, nds);
-        CoordinatePartDiffArrayFunction baseFun = Complete2DPolynomialBase.complete2DPolynomialBase(baseOrder);
+        BasesFunction baseFun = Complete2DPolynomialBases.complete2DPolynomialBase(baseOrder);
         WeightFunction weightFunction = WeightFunctions.factory(coreFun, criterion.getDistanceSquareFunction());
         return new ShapeFunctions2D.MLS(weightFunction, baseFun, criterion);
     }

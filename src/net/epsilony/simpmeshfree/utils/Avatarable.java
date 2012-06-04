@@ -19,9 +19,5 @@ public interface Avatarable <A> {
      * @return 
      */
     A avatorInstance();
-    
-    /**
-     * 合并所有曾经产生的分身到本实例
-     */
-    void uniteAvators();
+
 }

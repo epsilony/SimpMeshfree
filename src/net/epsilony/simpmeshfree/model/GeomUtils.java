@@ -178,12 +178,6 @@ public class GeomUtils implements Avatarable<GeomUtils> {
         return avator;
     }
 
-    /**
-     * Do nothing!
-     */
-    @Override
-    public void uniteAvators() {
-    }
 
     public static class LayeredRangeTreeNodeSearcher implements CenterDistanceSearcher<Coordinate, Node> {
 
@@ -657,7 +651,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
 
     public class VisibleCritieron implements SupportDomainCritierion {
 
-        SupportDomainSizer domainSizer;
+        NearestKVisibleDomainSizer domainSizer;
         public int nodeNumMin, nodeNumMax;
         public double radiusEnlargeFactor = 1.2,
                 radiusSafeFactor = 1.1,
@@ -688,6 +682,11 @@ public class GeomUtils implements Avatarable<GeomUtils> {
         @Override
         public DistanceSquareFunction getDistanceSquareFunction() {
             return distFun;
+        }
+
+        @Override
+        public SupportDomainCritierion avatorInstance() {
+            return new VisibleCritieron(nodeNumMin, nodeNumMax);
         }
     }
 

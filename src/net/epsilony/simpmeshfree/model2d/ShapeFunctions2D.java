@@ -9,8 +9,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import net.epsilony.simpmeshfree.model.*;
+import net.epsilony.simpmeshfree.utils.BasesFunction;
 import static net.epsilony.simpmeshfree.utils.CommonUtils.len2DBase;
-import net.epsilony.simpmeshfree.utils.CoordinatePartDiffArrayFunction;
 import net.epsilony.utils.geom.Coordinate;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.UpperSymmDenseMatrix;
@@ -71,12 +71,12 @@ public class ShapeFunctions2D {
      */
     public static class MLS implements ShapeFunction {
 
-        public MLS(WeightFunction weightFunction, CoordinatePartDiffArrayFunction baseFunction, SupportDomainCritierion criterion) {
-            init(weightFunction, baseFunction, criterion);
+        public MLS(WeightFunction weightFunction, BasesFunction basesFunction, SupportDomainCritierion criterion) {
+            init(weightFunction, basesFunction, criterion);
         }
         private int diffOrder;
         WeightFunction weightFunction;
-        CoordinatePartDiffArrayFunction baseFunction;
+        BasesFunction basesFunction;
         SupportDomainCritierion criterion;
         TDoubleArrayList[] nodesWeights = new TDoubleArrayList[3];
         UpperSymmDenseMatrix A, A_x, A_y;
@@ -94,7 +94,7 @@ public class ShapeFunctions2D {
             int ndsNum = resNodes.size();
             TDoubleArrayList[] results = initOutputResult(resultCache, diffOrder, ndsNum);
             int diffDim = len2DBase(diffOrder);
-            int baseDim = baseFunction.getDim();
+            int baseDim = basesFunction.getDim();
 
             weightFunction.values(resNodes, supR, nodesWeights);
 
@@ -109,7 +109,7 @@ public class ShapeFunctions2D {
                 }
             }
             
-            baseFunction.setDiffOrder(0);
+            basesFunction.setDiffOrder(0);
             for (int diffDimIdx = 0; diffDimIdx < diffDim; diffDimIdx++) {
                 TDoubleArrayList weights_d = nodesWeights[diffDimIdx];
                 UpperSymmDenseMatrix A_d = As[diffDimIdx];
@@ -117,7 +117,7 @@ public class ShapeFunctions2D {
                 double[] tp = ps_arr[0];
                 int ndIdx = 0;
                 for (Node nd : resNodes) {
-                    baseFunction.values(nd, ps_arr);
+                    basesFunction.values(nd, ps_arr);
                     double weight_d=weights_d.getQuick(ndIdx);
                     for (int i = 0; i < baseDim; i++) {
                         double p_i = tp[i];
@@ -131,8 +131,8 @@ public class ShapeFunctions2D {
                 }
 
             }
-            baseFunction.setDiffOrder(diffOrder);
-            baseFunction.values(center, ps_arr);
+            basesFunction.setDiffOrder(diffOrder);
+            basesFunction.values(center, ps_arr);
 
             A.solve(p, gamma);
             multAddTo(gamma, B, results[0]);
@@ -169,7 +169,7 @@ public class ShapeFunctions2D {
             }
             this.diffOrder = partDimOrder;
             weightFunction.setDiffOrder(partDimOrder);
-            baseFunction.setDiffOrder(partDimOrder);
+            basesFunction.setDiffOrder(partDimOrder);
             nodesWeights = new TDoubleArrayList[len2DBase(partDimOrder)];
             for (int i = 0; i < nodesWeights.length; i++) {
                 nodesWeights[i] = new TDoubleArrayList(MAX_NODES_SIZE_ESTIMATION);
@@ -181,10 +181,10 @@ public class ShapeFunctions2D {
             return diffOrder;
         }
 
-        private void init(WeightFunction weightFunction, CoordinatePartDiffArrayFunction baseFunction, SupportDomainCritierion criterion) {
+        private void init(WeightFunction weightFunction, BasesFunction baseFunction, SupportDomainCritierion criterion) {
             this.weightFunction = weightFunction;
             this.criterion = criterion;
-            this.baseFunction = baseFunction;
+            this.basesFunction = baseFunction;
             final int baseDim = baseFunction.getDim();
             A = new UpperSymmDenseMatrix(baseDim);
             A_x = new UpperSymmDenseMatrix(baseDim);

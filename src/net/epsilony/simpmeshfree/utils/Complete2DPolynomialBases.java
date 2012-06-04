@@ -14,15 +14,20 @@ import net.epsilony.utils.geom.Coordinate;
  *
  * @author epsilonyuan@gmail.com
  */
-public class Complete2DPolynomialBase implements CoordinatePartDiffArrayFunction {
+public class Complete2DPolynomialBases implements BasesFunction {
 
-    public static CoordinatePartDiffArrayFunction complete2DPolynomialBase(int baseOrder) {
-        return new Complete2DPolynomialBase(baseOrder);
+    public static BasesFunction complete2DPolynomialBase(int baseOrder) {
+        return new Complete2DPolynomialBases(baseOrder);
     }
     private int partDiffOrder;
     private BivariateArrayFunction bFun, bFunX, bFunY;
+    private int baseOrder;
 
-    public Complete2DPolynomialBase(int baseOrder) {
+    public int getBaseOrder() {
+        return baseOrder;
+    }
+
+    public Complete2DPolynomialBases(int baseOrder) {
         setBaseOrder(baseOrder);
     }
 
@@ -66,6 +71,7 @@ public class Complete2DPolynomialBase implements CoordinatePartDiffArrayFunction
         if(order<1){
             throw new IllegalArgumentException("Base order should be >=1");
         }
+        this.baseOrder=order;
         bFun = factory(order);
         if (order >= 1) {
             bFunX = partialXFactory(order);
@@ -450,5 +456,12 @@ public class Complete2DPolynomialBase implements CoordinatePartDiffArrayFunction
             throw new IllegalArgumentException();
         }
         return (order + 1) * (order + 2) / 2;
+    }
+
+    @Override
+    public BasesFunction avatorInstance() {
+        BasesFunction res=complete2DPolynomialBase(baseOrder);
+        res.setDiffOrder(partDiffOrder);
+        return res;
     }
 }

@@ -9,15 +9,15 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import static net.epsilony.simpmeshfree.utils.Complete2DPolynomialBase.*;
+import static net.epsilony.simpmeshfree.utils.Complete2DPolynomialBases.*;
 
 /**
  *
  * @author epsilonyuan@gmail.com
  */
-public class CompleteBivariatePolynomialFunctionsTest {
+public class CompleteBivariatePolynomialBasesTest {
     
-    public CompleteBivariatePolynomialFunctionsTest() {
+    public CompleteBivariatePolynomialBasesTest() {
     }
 
     @BeforeClass

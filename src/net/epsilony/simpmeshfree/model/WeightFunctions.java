@@ -5,10 +5,7 @@
 package net.epsilony.simpmeshfree.model;
 
 import gnu.trove.list.array.TDoubleArrayList;
-import static java.lang.Math.pow;
-import java.util.Arrays;
 import java.util.List;
-import static net.epsilony.simpmeshfree.utils.CommonUtils.lenBase;
 
 /**
  *
@@ -29,7 +26,6 @@ public class WeightFunctions {
     static class WeightFunctionImp implements WeightFunction {
 
         private int diffOrder;
-        private int diffDim;
         WeightFunctionCore coreFun;
         DistanceSquareFunction distFun;
         private final int dim;

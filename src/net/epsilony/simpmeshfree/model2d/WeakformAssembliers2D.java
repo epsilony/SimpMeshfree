@@ -221,7 +221,7 @@ public class WeakformAssembliers2D {
             avators.add(avator);
             return avator;
         }
-
+      
         @Override
         public void uniteAvators() {
             for (SimpAssemblier avator : avators) {

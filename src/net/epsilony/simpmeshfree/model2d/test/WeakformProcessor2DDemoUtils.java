@@ -6,10 +6,10 @@ package net.epsilony.simpmeshfree.model2d.test;
 
 import java.util.ArrayList;
 import net.epsilony.simpmeshfree.model.*;
-import net.epsilony.simpmeshfree.model2d.*;
 import net.epsilony.simpmeshfree.model2d.WeakformAssembliers2D.SimpAssemblier;
-import net.epsilony.simpmeshfree.utils.Complete2DPolynomialBase;
-import net.epsilony.simpmeshfree.utils.CoordinatePartDiffArrayFunction;
+import net.epsilony.simpmeshfree.model2d.*;
+import net.epsilony.simpmeshfree.utils.Complete2DPolynomialBases;
+import net.epsilony.simpmeshfree.utils.BasesFunction;
 import net.epsilony.utils.math.EquationSolvers;
 import net.epsilony.utils.math.EquationSolvers.FlexCompRowMatrixSolver;
 import net.epsilony.utils.math.MatrixUtils;
@@ -30,8 +30,8 @@ public class WeakformProcessor2DDemoUtils {
 
         private Object[] genArgs() {
             SupportDomainCritierion critierion = geomUtils.new VisibleCritieron(minNdNum, maxNdNum);
-            WeightFunction weightFunction = WeightFunctions.factory(coreFun, critierion.getDistanceSquareFunction());
-            CoordinatePartDiffArrayFunction baseFun = Complete2DPolynomialBase.complete2DPolynomialBase(baseOrder);
+            WeightFunction weightFunction = WeightFunctions.factory(coreFun.avatorInstance(), critierion.getDistanceSquareFunction());
+            BasesFunction baseFun = Complete2DPolynomialBases.complete2DPolynomialBase(baseOrder);
             Object[] results = new Object[]{weightFunction, baseFun, critierion};
             return results;
         }
@@ -47,7 +47,7 @@ public class WeakformProcessor2DDemoUtils {
         @Override
         public ShapeFunction factory() {
             Object[] args = genArgs();
-            return new ShapeFunctions2D.MLS((WeightFunction) args[0], (CoordinatePartDiffArrayFunction) args[1], (SupportDomainCritierion) args[2]);
+            return new ShapeFunctions2D.MLS((WeightFunction) args[0], (BasesFunction) args[1], (SupportDomainCritierion) args[2]);
         }
     }
 
@@ -81,7 +81,7 @@ public class WeakformProcessor2DDemoUtils {
     }
 
     public static WeakformProcessor2D timoshenkoBeam(Pipe pipe) {
-        return timoshenkoBeam(48, 12, -1000, 3e7, 0.3, 2, 2, 3e7*1e7, pipe);
+        return timoshenkoBeam(48, 12, -1000, 3e7, 0.3, 2, 2, 3e7 * 1e7, pipe);
     }
 
     public static class Pipe {
@@ -107,13 +107,15 @@ public class WeakformProcessor2DDemoUtils {
         public Pipe() {
         }
     }
-    public static Pipe newPipe(){
+
+    public static Pipe newPipe() {
         return new Pipe();
     }
+
     public static void main(String[] args) {
-        Pipe pipe =new Pipe();
+        Pipe pipe = new Pipe();
         WeakformProcessor2D processor = timoshenkoBeam(pipe);
-        processor.process(1);
+        processor.process();
         processor.solveEquation();
 
     }

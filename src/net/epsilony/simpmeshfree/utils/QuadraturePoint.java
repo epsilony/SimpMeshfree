@@ -4,6 +4,7 @@
  */
 package net.epsilony.simpmeshfree.utils;
 
+import java.util.Arrays;
 import net.epsilony.simpmeshfree.model.Boundary;
 import net.epsilony.utils.geom.Coordinate;
 import net.epsilony.utils.math.GaussLegendreQuadratureUtils;
@@ -32,5 +33,25 @@ public class QuadraturePoint{
     public double[] values=new double[3];
     
     public boolean[] validities=new boolean[3];
+    public QuadraturePoint(){
+        
+    }
     
+    public QuadraturePoint(QuadraturePoint qp){
+        set(qp,true);
+    }
+    
+    private void set(QuadraturePoint qp,boolean deep){
+        if(deep){
+           coordinate.set(qp.coordinate);
+           values=Arrays.copyOf(values, values.length);
+           validities=Arrays.copyOf(validities, validities.length);
+        }else{
+            coordinate=qp.coordinate;
+            values=qp.values;
+            validities=qp.validities;
+        }
+        boundary=qp.boundary;
+        
+    }
 }

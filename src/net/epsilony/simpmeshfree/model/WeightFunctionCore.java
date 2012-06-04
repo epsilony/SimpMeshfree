@@ -4,12 +4,13 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import net.epsilony.simpmeshfree.utils.Avatarable;
 import net.epsilony.simpmeshfree.utils.PartDiffOrdered;
 
 /**
  *
  * @author epsilon
  */
-public interface WeightFunctionCore extends PartDiffOrdered{
+public interface WeightFunctionCore extends PartDiffOrdered, Avatarable<WeightFunctionCore> {
     double[] valuesByNormalisedDistSq(double distSq,double[] results);
 }

@@ -4,15 +4,13 @@
  */
 package net.epsilony.simpmeshfree.utils;
 
-import gnu.trove.list.array.TDoubleArrayList;
-import java.util.ArrayList;
 import net.epsilony.utils.geom.Coordinate;
 
 /**
  *
  * @author epsilon
  */
-public interface CoordinatePartDiffArrayFunction extends PartDiffOrdered{
+public interface BasesFunction extends PartDiffOrdered, Avatarable<BasesFunction> {
     double[][] values(Coordinate coord,double[][] results);
     
     int getDim();
