@@ -13,7 +13,7 @@ import net.epsilony.simpmeshfree.utils.BasesFunction;
 import net.epsilony.utils.math.EquationSolvers;
 import net.epsilony.utils.math.EquationSolvers.FlexCompRowMatrixSolver;
 import net.epsilony.utils.math.MatrixUtils;
-import no.uib.cipr.matrix.DenseMatrix;
+import no.uib.cipr.matrix.*;
 
 /**
  *
@@ -113,10 +113,50 @@ public class WeakformProcessor2DDemoUtils {
     }
 
     public static void main(String[] args) {
-        Pipe pipe = new Pipe();
-        WeakformProcessor2D processor = timoshenkoBeam(pipe);
-        processor.process();
-        processor.solveEquation();
+        issue65v2();
 
     }
+    
+    public static void issue65v2(){
+        Pipe pipe = new Pipe();
+        WeakformProcessor2D processorMutliThread = timoshenkoBeam(pipe);
+        processorMutliThread.process(2);
+        
+        pipe = new Pipe();
+        WeakformProcessor2D processorSingleThread = timoshenkoBeam(pipe);
+        processorSingleThread.process(1);
+        WeakformAssemblier asmMT = processorMutliThread.getAssemblier();
+        WeakformAssemblier asmST = processorSingleThread.getAssemblier();
+        DenseVector vecMT = asmMT.getEquationVector();
+        Matrix matMT = asmMT.getEquationMatrix();
+        
+        DenseVector vecST = asmST.getEquationVector();
+        Matrix matST = asmST.getEquationMatrix();
+        Vector vecDf = vecMT.add(-1, vecST);
+        Matrix matDf = matMT.add(-1, matST);
+        double maxDiff=0;
+        int maxDiffRow = -1,maxDiffCol;
+        for (VectorEntry ve:vecDf){
+            double val=Math.abs(ve.get());
+            if(val>maxDiff){
+                maxDiff=val;
+                maxDiffRow=ve.index();
+            }
+        }
+        System.out.println("maxDiff = " + maxDiff+" index = " + maxDiffRow);
+        
+        maxDiff=0;
+        maxDiffRow=-1;
+        maxDiffCol=-1;
+        for (MatrixEntry me:matDf){
+            double val=Math.abs(me.get());
+            if(val>maxDiff){
+                maxDiff=val;
+                maxDiffRow=me.row();
+                maxDiffCol=me.column();
+            }
+        }
+        
+        System.out.println("maxDiff = " + maxDiff+ " row = "+maxDiffRow+ " col = "+ maxDiffCol);
+    }   
 }

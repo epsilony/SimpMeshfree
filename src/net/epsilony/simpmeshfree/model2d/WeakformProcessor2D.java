@@ -37,6 +37,14 @@ public class WeakformProcessor2D {
     public int processThreadsNum = Integer.MAX_VALUE;
 
     /**
+     * for issue65v2
+     * @return 
+     */
+    public WeakformAssemblier getAssemblier() {
+        return assemblier;
+    }
+
+    /**
      *
      * @param shapeFun
      * @param assemblier
@@ -121,15 +129,40 @@ public class WeakformProcessor2D {
         return equationResultVector;
     }
     final Object balanceLock = new Object();
-
+    //TODO issue65v2 if some bugs discovered and patched, delete below before merge.
+    LinkedList<QuadraturePoint> tempList = new LinkedList<>();
+    //end of del
     boolean nextBalanceQuadraturePoint(QuadraturePoint qp) {
         synchronized (balanceLock) {
-            return balanceIterator.next(qp);
+
+            boolean res = balanceIterator.next(qp);
+            //TODO issue65v2 if going to merge, delete below first
+            if (res) {
+                QuadraturePoint tempQp = new QuadraturePoint(qp);
+                tempList.add(tempQp);
+            }
+            //end of del
+            return res;
         }
     }
     QuadraturePointIterator balanceIterator;
     AtomicInteger balanceCount = new AtomicInteger();
 
+    //TODO issue65v2 if going to merge, delete below first
+    LinkedList<TDoubleArrayList[]> tempValLists=new LinkedList<>();
+    LinkedList<QuadraturePoint> tempQpList=new LinkedList<>();
+    LinkedList<ArrayList<Node>> tempResNdsList=new LinkedList<>();
+    synchronized private void tempAdd(TDoubleArrayList[] shapeFunVals,QuadraturePoint qp,List<Node> resNodes){
+        TDoubleArrayList[] arr=new TDoubleArrayList[shapeFunVals.length];
+        for(int i=0;i<arr.length;i++){
+            arr[i]=new TDoubleArrayList(shapeFunVals[i]);
+        }
+        tempValLists.add(arr);
+        tempQpList.add(new QuadraturePoint(qp));
+        tempResNdsList.add(new ArrayList<>(resNodes));
+    }
+    //end of del
+    
     void assemblyBalanceEquation(ShapeFunction shapeFun, WeakformAssemblier assemblierAvator) {
 
         ArrayList<Node> shapeFunNodes = new ArrayList<>(arrayListSize);
@@ -140,6 +173,10 @@ public class WeakformProcessor2D {
         TDoubleArrayList[] shapeFunVals = ShapeFunctions2D.initOutputResult(1);
         while (nextBalanceQuadraturePoint(qp)) {
             shapeFun.values(qPoint, null, shapeFunVals, shapeFunNodes);
+            
+            //TODO issue65v2 if going to merge, delete below first
+            tempAdd(shapeFunVals,qp,shapeFunNodes);
+            //end of del
             assemblierAvator.asmBalance(qp, shapeFunNodes, shapeFunVals, volumnBoundaryCondition);
             balanceCount.incrementAndGet();
         }
@@ -174,10 +211,9 @@ public class WeakformProcessor2D {
         }
         return results;
     }
-    
     public AtomicInteger dirichletCount = new AtomicInteger();
     public AtomicInteger neumannCount = new AtomicInteger();
-    
+
     void assemblyNeumann(ShapeFunction shapeFun, WeakformAssemblier assemblierAvator) {
         shapeFun.setDiffOrder(0);
         QuadraturePoint qp = new QuadraturePoint();
@@ -193,7 +229,6 @@ public class WeakformProcessor2D {
 
 
     }
-
 
     void assemblyDirichlet(ShapeFunction shapeFun, WeakformAssemblier assemblierAvator) {
 
