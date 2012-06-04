@@ -210,15 +210,19 @@ public class QuadraturePointIterators {
         double[] uvs;
         QuadrangleMapper quadMapper = new QuadrangleMapper();
         double[] xyJacb = new double[3];
-
+        boolean isOff=false;
 
         @Override
         public boolean next(QuadraturePoint qp) {
+            if(isOff){
+                return false;
+            }
             if (uIdx >= quadSize) {
                 uIdx = 0;
                 vIdx++;
                 if (vIdx >= quadSize) {
                     if (!quadrangles.hasNext()) {
+                        isOff=true;
                         return false;
                     } else {
                         Quadrangle quad = quadrangles.next();
@@ -246,13 +250,22 @@ public class QuadraturePointIterators {
         
         @Override
         public boolean next(QuadraturePoint qp) {
-            if(null==currentIter){
-                if(!iters.hasNext()){
+            do{
+                if(null==currentIter){
+                    if(iters.hasNext()){
+                        currentIter=iters.next();
+                        continue;
+                    }
                     return false;
+                }else{
+                    boolean res=currentIter.next(qp);
+                    if(res){
+                        return true;
+                    }else{
+                        currentIter=null;
+                    }
                 }
-                currentIter=iters.next();
-            }
-            return currentIter.next(qp);
+            }while(true);
         }
         
         private void init(Iterable<QuadraturePointIterator> iters){
