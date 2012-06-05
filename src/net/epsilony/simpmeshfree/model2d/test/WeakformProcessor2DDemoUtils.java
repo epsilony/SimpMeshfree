@@ -4,6 +4,7 @@
  */
 package net.epsilony.simpmeshfree.model2d.test;
 
+import net.epsilony.simpmeshfree.model.WeakformProcessor;
 import java.util.ArrayList;
 import net.epsilony.simpmeshfree.model.*;
 import net.epsilony.simpmeshfree.model2d.WeakformAssembliers2D.SimpAssemblier;
@@ -55,15 +56,15 @@ public class WeakformProcessor2DDemoUtils {
         return new MLSShapeFunctionFactory(geomUtils, coreFunc, baseOrder, minNdNum, maxNdNum);
     }
 
-    public static WeakformProcessor2D weakformProcessor(GeomUtils geomUtils, WeightFunctionCore coreFunc, int baseOrder, int minNdNum, int maxNdNum, DenseMatrix constitutiveLaw, double penalty, WeakformProblem workProblem) {
+    public static WeakformProcessor weakformProcessor(GeomUtils geomUtils, WeightFunctionCore coreFunc, int baseOrder, int minNdNum, int maxNdNum, DenseMatrix constitutiveLaw, double penalty, WeakformProblem workProblem) {
         MLSShapeFunctionFactory shapeFunFactory = genShapeFunctionFactory(geomUtils, coreFunc, baseOrder, minNdNum, maxNdNum);
         int ndsSize = geomUtils.allNodes.size();
         SimpAssemblier assemblier = new WeakformAssembliers2D.SimpAssemblier(constitutiveLaw, penalty, ndsSize);
         FlexCompRowMatrixSolver eqSolver = new EquationSolvers.FlexCompRowMatrixSolver(MatrixUtils.UNSYMMETRICAL_BUT_MIRROR_FROM_UP_HALF);
-        return new WeakformProcessor2D(shapeFunFactory, assemblier, workProblem, eqSolver);
+        return new WeakformProcessor(shapeFunFactory, assemblier, workProblem, eqSolver);
     }
 
-    public static WeakformProcessor2D timoshenkoBeam(double width, double height, double P, double E, double v, double lineSize, double spaceNdsDis, double penalty, Pipe pipe) {
+    public static WeakformProcessor timoshenkoBeam(double width, double height, double P, double E, double v, double lineSize, double spaceNdsDis, double penalty, Pipe pipe) {
         int power = 4;
         int baseOrder = 2;
         int minNdNum = 15;
@@ -80,7 +81,7 @@ public class WeakformProcessor2DDemoUtils {
         return weakformProcessor(geomUtils, coreFun, baseOrder, minNdNum, maxNdNum, conLaw, penalty, workProblem);
     }
 
-    public static WeakformProcessor2D timoshenkoBeam(Pipe pipe) {
+    public static WeakformProcessor timoshenkoBeam(Pipe pipe) {
         return timoshenkoBeam(48, 12, -1000, 3e7, 0.3, 2, 2, 3e7 * 1e7, pipe);
     }
 
@@ -114,7 +115,7 @@ public class WeakformProcessor2DDemoUtils {
 
     public static void main(String[] args) {
         Pipe pipe = new Pipe();
-        WeakformProcessor2D processor = timoshenkoBeam(pipe);
+        WeakformProcessor processor = timoshenkoBeam(pipe);
         processor.process();
         processor.solveEquation();
 

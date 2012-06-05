@@ -4,12 +4,13 @@
  */
 package net.epsilony.simpmeshfree.utils;
 
+import net.epsilony.simpmeshfree.model.WeakformProcessor;
 import net.epsilony.simpmeshfree.model2d.WeakformAssembliers2D.SimpAssemblier;
-import net.epsilony.simpmeshfree.model2d.WeakformProcessor2D;
 
 /**
+ * TODO translate to English
  * 该接口用于并行计算，类似于factory + 实例合并。一个实现的例子见{@link SimpAssemblier}，
- * 应用的例子见{@link WeakformProcessor2D#process(int) }的原代码
+ * 应用的例子见{@link WeakformProcessor#process(int) }的原代码
  * @param <A> 
  * @author epsilon
  */
