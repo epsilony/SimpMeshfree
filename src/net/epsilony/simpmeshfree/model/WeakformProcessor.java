@@ -223,39 +223,9 @@ public class WeakformProcessor {
             throw new UnsupportedOperationException();
         }
     }
-    ShapeFunction shapeFunction;
-
+    
     public void solveEquation() {
         equationResultVector = equationSolver.solve(assemblier.getEquationMatrix(), assemblier.getEquationVector());
-    }
-
-    public List<double[]> result(List<? extends Coordinate> coords, List<? extends Boundary> bnds) {
-
-        if (null == shapeFunction) {
-            shapeFunction = shapeFunFactory.factory();
-        }
-        shapeFunction.setDiffOrder(1);
-        LinkedList<double[]> results = new LinkedList<>();
-        ArrayList<Node> shapeFunNodes = new ArrayList<>(arrayListSize);
-        Iterator<? extends Boundary> bndIter = (bnds != null ? bnds.iterator() : null);
-        TDoubleArrayList[] shapeFunVals = ShapeFunctions2D.initOutputResult(1);
-        for (Coordinate coord : coords) {
-            Boundary bnd = (bndIter != null ? bndIter.next() : null);
-
-
-            shapeFunction.values(coord, bnd, shapeFunVals, shapeFunNodes);
-
-            double[] result = new double[2];
-            int nodeCount = 0;
-            for (Node nd : shapeFunNodes) {
-                int index = nd.id * 2;
-                double shapeValue = shapeFunVals[0].get(nodeCount++);
-                result[0] += shapeValue * equationResultVector.get(index);
-                result[1] += shapeValue * equationResultVector.get(index + 1);
-            }
-            results.add(result);
-        }
-        return results;
     }
 
     public DenseVector getNodesValue() {
