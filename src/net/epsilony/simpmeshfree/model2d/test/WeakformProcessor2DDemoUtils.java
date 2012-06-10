@@ -4,13 +4,12 @@
  */
 package net.epsilony.simpmeshfree.model2d.test;
 
-import net.epsilony.simpmeshfree.model.WeakformProcessor;
 import java.util.ArrayList;
 import net.epsilony.simpmeshfree.model.*;
 import net.epsilony.simpmeshfree.model2d.WeakformAssembliers2D.SimpAssemblier;
 import net.epsilony.simpmeshfree.model2d.*;
-import net.epsilony.simpmeshfree.utils.Complete2DPolynomialBases;
 import net.epsilony.simpmeshfree.utils.BasesFunction;
+import net.epsilony.simpmeshfree.utils.Complete2DPolynomialBases;
 import net.epsilony.utils.math.EquationSolvers;
 import net.epsilony.utils.math.EquationSolvers.FlexCompRowMatrixSolver;
 import net.epsilony.utils.math.MatrixUtils;
