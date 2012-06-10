@@ -16,24 +16,24 @@ public class ConstitutiveLaws2D {
     }
     
     
-    public static DenseMatrix getPlanseStrain(double E,double v){
-        return getPlaneStress(E/(1-v*v),v/(1-v));
+    public static DenseMatrix getPlanseStrain(double E,double nu){
+        return getPlaneStress(E/(1-nu*nu),nu/(1-nu));
     }
     
     /**
      * 
      * @param E elastic module
-     * @param v Poisson's ratio
+     * @param nu Poisson's ratio
      * @return Plane Stress
      */
-    public static DenseMatrix getPlaneStress(double E,double v){
-        double factor=E/(1-v*v);
+    public static DenseMatrix getPlaneStress(double E,double nu){
+        double factor=E/(1-nu*nu);
         DenseMatrix result=new DenseMatrix(3,3);
         result.set(0,0,factor);
         result.set(1,1,factor);
-        result.set(2,2,(1-v)/2*factor);
-        result.set(0,1,v*factor);
-        result.set(1,0,v*factor);
+        result.set(2,2,(1-nu)/2*factor);
+        result.set(0,1,nu*factor);
+        result.set(1,0,nu*factor);
         return result;
     }
 }

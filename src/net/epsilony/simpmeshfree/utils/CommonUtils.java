@@ -4,10 +4,10 @@
  */
 package net.epsilony.simpmeshfree.utils;
 
-import gnu.trove.list.array.TDoubleArrayList;
-import java.util.ArrayList;
-import no.uib.cipr.matrix.DenseVector;
+import no.uib.cipr.matrix.Matrix;
+import no.uib.cipr.matrix.MatrixEntry;
 import org.apache.commons.math.util.MathUtils;
+import org.ejml.data.DenseMatrix64F;
 
 /**
  *
@@ -35,6 +35,14 @@ public class CommonUtils {
             default:
                 throw new UnsupportedOperationException();
         }
+    }
+    
+    public static DenseMatrix64F toDenseMatrix64F(Matrix mat){
+        DenseMatrix64F result=new DenseMatrix64F(mat.numRows(),mat.numColumns());
+        for (MatrixEntry me:mat){
+            result.set(me.row(),me.column(),me.get());
+        }
+        return result;
     }
     
 }
