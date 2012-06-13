@@ -28,6 +28,6 @@ public interface WeakformAssemblier extends UniAvatarable<WeakformAssemblier>{
     DenseMatrix getConstitutiveLaw(Coordinate pos);
 
     Matrix getEquationMatrix();
-
+    
     DenseVector getEquationVector();
 }

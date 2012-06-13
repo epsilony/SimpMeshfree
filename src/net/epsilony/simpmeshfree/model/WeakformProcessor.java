@@ -6,9 +6,6 @@ package net.epsilony.simpmeshfree.model;
 
 import gnu.trove.list.array.TDoubleArrayList;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -225,7 +222,9 @@ public class WeakformProcessor {
     }
     
     public void solveEquation() {
+        logger.info("Start solving equation");
         equationResultVector = equationSolver.solve(assemblier.getEquationMatrix(), assemblier.getEquationVector());
+        logger.info("Equation solved");
     }
 
     public DenseVector getNodesValue() {

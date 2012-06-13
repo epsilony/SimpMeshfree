@@ -10,10 +10,13 @@ import net.epsilony.simpmeshfree.model2d.WeakformAssembliers2D.SimpAssemblier;
 import net.epsilony.simpmeshfree.model2d.*;
 import net.epsilony.simpmeshfree.utils.BasesFunction;
 import net.epsilony.simpmeshfree.utils.Complete2DPolynomialBases;
+import net.epsilony.utils.math.EquationSolver;
 import net.epsilony.utils.math.EquationSolvers;
 import net.epsilony.utils.math.EquationSolvers.FlexCompRowMatrixSolver;
 import net.epsilony.utils.math.MatrixUtils;
 import no.uib.cipr.matrix.DenseMatrix;
+import no.uib.cipr.matrix.DenseVector;
+import no.uib.cipr.matrix.sparse.CGS;
 
 /**
  *
@@ -55,15 +58,27 @@ public class WeakformProcessor2DDemoUtils {
         return new MLSShapeFunctionFactory(geomUtils, coreFunc, baseOrder, minNdNum, maxNdNum);
     }
 
+    
     public static WeakformProcessor weakformProcessor(GeomUtils geomUtils, WeightFunctionCore coreFunc, int baseOrder, int minNdNum, int maxNdNum, DenseMatrix constitutiveLaw, double penalty, WeakformProblem workProblem) {
+        return weakformProcessor(geomUtils, coreFunc, baseOrder, minNdNum, maxNdNum, constitutiveLaw, penalty, workProblem, false);
+    }
+    
+    public static WeakformProcessor weakformProcessor(GeomUtils geomUtils, WeightFunctionCore coreFunc, int baseOrder, int minNdNum, int maxNdNum, DenseMatrix constitutiveLaw, double penalty, WeakformProblem workProblem, boolean iterativeServer) {
         MLSShapeFunctionFactory shapeFunFactory = genShapeFunctionFactory(geomUtils, coreFunc, baseOrder, minNdNum, maxNdNum);
         int ndsSize = geomUtils.allNodes.size();
         SimpAssemblier assemblier = new WeakformAssembliers2D.SimpAssemblier(constitutiveLaw, penalty, ndsSize);
-        FlexCompRowMatrixSolver eqSolver = new EquationSolvers.FlexCompRowMatrixSolver(MatrixUtils.UNSYMMETRICAL_BUT_MIRROR_FROM_UP_HALF);
+        EquationSolver eqSolver;
+        if (iterativeServer) {
+            eqSolver=new EquationSolvers.SparseIterative(new CGS(new DenseVector(ndsSize*2)), true);
+        } else {
+            eqSolver = new EquationSolvers.FlexCompRowBand(MatrixUtils.UNSYMMETRICAL_BUT_MIRROR_FROM_UP_HALF);
+        }
         return new WeakformProcessor(shapeFunFactory, assemblier, workProblem, eqSolver);
     }
-
     public static WeakformProcessor timoshenkoBeam(double width, double height, double P, double E, double v, double lineSize, double spaceNdsDis, double penalty, Pipe pipe) {
+        return timoshenkoBeam(width, height, P, E, v, lineSize, spaceNdsDis, penalty, pipe, false);
+    }
+    public static WeakformProcessor timoshenkoBeam(double width, double height, double P, double E, double v, double lineSize, double spaceNdsDis, double penalty, Pipe pipe,boolean iterativeSolver) {
         int power = 4;
         int baseOrder = 2;
         int minNdNum = 15;
@@ -80,10 +95,12 @@ public class WeakformProcessor2DDemoUtils {
         return weakformProcessor(geomUtils, coreFun, baseOrder, minNdNum, maxNdNum, conLaw, penalty, workProblem);
     }
 
-    public static WeakformProcessor timoshenkoBeam(Pipe pipe) {
-        return timoshenkoBeam(48, 12, -1000, 3e7, 0.3, 2, 2, 3e7 * 1e7, pipe);
+    public static WeakformProcessor timoshenkoBeam(Pipe pipe,boolean iterativeSolver) {
+        return timoshenkoBeam(48, 12, -1000, 3e7, 0.3, 2, 2, 3e7 * 1e7, pipe,iterativeSolver);
     }
-
+    public static WeakformProcessor timoshenkoBeam(Pipe pipe){
+        return timoshenkoBeam(pipe,false);
+    }
     public static class Pipe {
 
         DenseMatrix conLaw;
@@ -114,7 +131,7 @@ public class WeakformProcessor2DDemoUtils {
 
     public static void main(String[] args) {
         Pipe pipe = new Pipe();
-        WeakformProcessor processor = timoshenkoBeam(pipe);
+        WeakformProcessor processor = timoshenkoBeam(pipe,true);
         processor.process();
         processor.solveEquation();
 
