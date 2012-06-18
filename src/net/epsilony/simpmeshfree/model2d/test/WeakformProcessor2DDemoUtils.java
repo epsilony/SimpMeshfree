@@ -6,13 +6,12 @@ package net.epsilony.simpmeshfree.model2d.test;
 
 import java.util.ArrayList;
 import net.epsilony.simpmeshfree.model.*;
-import net.epsilony.simpmeshfree.model2d.WeakformAssembliers2D.SimpAssemblier;
 import net.epsilony.simpmeshfree.model2d.*;
+import net.epsilony.simpmeshfree.model2d.WeakformAssembliers2D.SimpAssemblier;
 import net.epsilony.simpmeshfree.utils.BasesFunction;
 import net.epsilony.simpmeshfree.utils.Complete2DPolynomialBases;
 import net.epsilony.utils.math.EquationSolver;
 import net.epsilony.utils.math.EquationSolvers;
-import net.epsilony.utils.math.EquationSolvers.FlexCompRowMatrixSolver;
 import net.epsilony.utils.math.MatrixUtils;
 import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
