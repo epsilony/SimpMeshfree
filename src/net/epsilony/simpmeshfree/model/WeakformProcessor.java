@@ -31,6 +31,7 @@ public class WeakformProcessor {
 
     public void setMonitor(WeakformProcessorMonitor monitor) {
         this.monitor = monitor;
+        monitor.setProcessor(this);
     }
     ShapeFunctionFactory shapeFunFactory;
     public int arrayListSize = 100;
