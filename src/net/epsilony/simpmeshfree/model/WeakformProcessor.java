@@ -68,7 +68,8 @@ public class WeakformProcessor {
     }
 
     public void process() {
-        process(processThreadsNum);
+        int aviCoreNum = Runtime.getRuntime().availableProcessors();
+        process(aviCoreNum);
     }
 
     /**
@@ -78,8 +79,7 @@ public class WeakformProcessor {
      * availableProcessors()
      */
     public void process(int coreNum) {
-        int aviCoreNum = Runtime.getRuntime().availableProcessors();
-        aviCoreNum = (coreNum > aviCoreNum ? aviCoreNum : coreNum);
+        
 
         int[] numOut = new int[1];
         QuadraturePointIterator qpIter=workProblem.volumeIterator(numOut);
@@ -91,13 +91,13 @@ public class WeakformProcessor {
         qpIter=workProblem.dirichletIterator(numOut);
         dirichletIterator = (qpIter==null?null:QuadraturePointIterators.wrap(qpIter, numOut[0], true));
 
-        ExecutorService executor = Executors.newFixedThreadPool(aviCoreNum);
+        ExecutorService executor = Executors.newFixedThreadPool(coreNum);
 
-        logger.info(String.format("Start processing the weak form problem by %d parrel assembliers", aviCoreNum));
+        logger.info(String.format("Start processing the weak form problem by %d parrel assembliers", coreNum));
 
 
 
-        for (int i = 0; i < aviCoreNum; i++) {
+        for (int i = 0; i < coreNum; i++) {
             executor.execute(new Runnable() {
 
                 @Override
