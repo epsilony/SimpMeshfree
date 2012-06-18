@@ -34,6 +34,9 @@ public class WeakformProcessor {
     Logger logger = Logger.getLogger(this.getClass());
     public int processThreadsNum = Integer.MAX_VALUE;
     private int dim;
+    CountableQuadraturePointIterator balanceIterator;
+    CountableQuadraturePointIterator dirichletIterator;
+    CountableQuadraturePointIterator neumannIterator;
 
     /**
      *
@@ -79,17 +82,17 @@ public class WeakformProcessor {
      * availableProcessors()
      */
     public void process(int coreNum) {
-        
+
 
         int[] numOut = new int[1];
-        QuadraturePointIterator qpIter=workProblem.volumeIterator(numOut);
-        balanceIterator=(qpIter==null?null:QuadraturePointIterators.wrap(qpIter, numOut[0], true));
-        
-        qpIter= workProblem.neumannIterator(numOut);
-        neumannIterator=(qpIter==null?null:QuadraturePointIterators.wrap(qpIter, numOut[0], true));
-        
-        qpIter=workProblem.dirichletIterator(numOut);
-        dirichletIterator = (qpIter==null?null:QuadraturePointIterators.wrap(qpIter, numOut[0], true));
+        QuadraturePointIterator qpIter = workProblem.volumeIterator(numOut);
+        balanceIterator = (qpIter == null ? null : QuadraturePointIterators.wrap(qpIter, numOut[0], true));
+
+        qpIter = workProblem.neumannIterator(numOut);
+        neumannIterator = (qpIter == null ? null : QuadraturePointIterators.wrap(qpIter, numOut[0], true));
+
+        qpIter = workProblem.dirichletIterator(numOut);
+        dirichletIterator = (qpIter == null ? null : QuadraturePointIterators.wrap(qpIter, numOut[0], true));
 
         ExecutorService executor = Executors.newFixedThreadPool(coreNum);
 
@@ -98,24 +101,7 @@ public class WeakformProcessor {
 
 
         for (int i = 0; i < coreNum; i++) {
-            executor.execute(new Runnable() {
-
-                @Override
-                public void run() {
-                    ShapeFunction shapeFun = shapeFunFactory.factory();
-                    WeakformAssemblier assemblierAvator = assemblier.avatorInstance();
-
-                    assemblyBalanceEquation(shapeFun, assemblierAvator);
-
-                    if (null != neumannIterator) {
-                        assemblyNeumann(shapeFun, assemblierAvator);
-                    }
-
-                    if (null != dirichletIterator) {
-                        assemblyDirichlet(shapeFun, assemblierAvator);
-                    }
-                }
-            });
+            executor.execute(new ProcessCore(i));
         }
         executor.shutdown();
 
@@ -125,18 +111,45 @@ public class WeakformProcessor {
             } catch (InterruptedException ex) {
                 break;
             } finally {
-                logger.info(String.format("Assemblied: balance %d/%d, Dirichlet %d/%d, Neumann %d/%d", balanceIterator.dispatchedNum(), balanceIterator.sunNum(), dirichletIterator.dispatchedNum(), dirichletIterator.sunNum(), neumannIterator.dispatchedNum(),neumannIterator.sunNum()));
+                logger.info(String.format("Assemblied: balance %d/%d, Dirichlet %d/%d, Neumann %d/%d", balanceIterator.dispatchedNum(), balanceIterator.sunNum(), dirichletIterator.dispatchedNum(), dirichletIterator.sunNum(), neumannIterator.dispatchedNum(), neumannIterator.sunNum()));
             }
         }
         assemblier.uniteAvators();
     }
-    
-    CountableQuadraturePointIterator balanceIterator;
-    
-    CountableQuadraturePointIterator dirichletIterator;
-    
-    CountableQuadraturePointIterator neumannIterator;
-   
+
+    class ProcessCore implements Runnable {
+
+        int id;
+        ShapeFunction shapeFunction;
+        WeakformAssemblier weakformAssemblier;
+
+        public int getId() {
+            return id;
+        }
+
+        public ProcessCore(int id) {
+            this.id = id;
+        }
+
+        @Override
+        public void run() {
+            ShapeFunction shapeFun = shapeFunFactory.factory();
+            WeakformAssemblier assemblierAvator = assemblier.avatorInstance();
+            shapeFunction=shapeFun;
+            weakformAssemblier=assemblierAvator;
+
+            assemblyBalanceEquation(shapeFun, assemblierAvator);
+
+            if (null != neumannIterator) {
+                assemblyNeumann(shapeFun, assemblierAvator);
+            }
+
+            if (null != dirichletIterator) {
+                assemblyDirichlet(shapeFun, assemblierAvator);
+            }
+        }
+    }
+
     void assemblyBalanceEquation(ShapeFunction shapeFun, WeakformAssemblier assemblierAvator) {
 
         ArrayList<Node> shapeFunNodes = new ArrayList<>(arrayListSize);
@@ -193,7 +206,7 @@ public class WeakformProcessor {
             throw new UnsupportedOperationException();
         }
     }
-    
+
     public void solveEquation() {
         logger.info("Start solving equation");
         equationResultVector = equationSolver.solve(assemblier.getEquationMatrix(), assemblier.getEquationVector());
