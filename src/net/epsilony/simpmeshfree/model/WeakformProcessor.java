@@ -9,10 +9,11 @@ import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import net.epsilony.simpmeshfree.model2d.ShapeFunctions2D;
+import net.epsilony.simpmeshfree.utils.CountableQuadraturePointIterator;
 import net.epsilony.simpmeshfree.utils.QuadraturePoint;
 import net.epsilony.simpmeshfree.utils.QuadraturePointIterator;
+import net.epsilony.simpmeshfree.utils.QuadraturePointIterators;
 import net.epsilony.utils.geom.Coordinate;
 import net.epsilony.utils.math.EquationSolver;
 import no.uib.cipr.matrix.DenseVector;
@@ -81,16 +82,14 @@ public class WeakformProcessor {
         aviCoreNum = (coreNum > aviCoreNum ? aviCoreNum : coreNum);
 
         int[] numOut = new int[1];
-        balanceIterator = workProblem.volumeIterator(numOut);
-        int sumBalance = numOut[0];
-        neumannItrator = workProblem.neumannIterator(numOut);
-        int sumNeumann = numOut[0];
-        dirichletIterator = workProblem.dirichletIterator(numOut);
-        int sumDirichlet = numOut[0];
-
-        balanceCount.set(0);
-        dirichletCount.set(0);
-        neumannCount.set(0);
+        QuadraturePointIterator qpIter=workProblem.volumeIterator(numOut);
+        balanceIterator=(qpIter==null?null:QuadraturePointIterators.wrap(qpIter, numOut[0], true));
+        
+        qpIter= workProblem.neumannIterator(numOut);
+        neumannIterator=(qpIter==null?null:QuadraturePointIterators.wrap(qpIter, numOut[0], true));
+        
+        qpIter=workProblem.dirichletIterator(numOut);
+        dirichletIterator = (qpIter==null?null:QuadraturePointIterators.wrap(qpIter, numOut[0], true));
 
         ExecutorService executor = Executors.newFixedThreadPool(aviCoreNum);
 
@@ -108,7 +107,7 @@ public class WeakformProcessor {
 
                     assemblyBalanceEquation(shapeFun, assemblierAvator);
 
-                    if (null != neumannItrator) {
+                    if (null != neumannIterator) {
                         assemblyNeumann(shapeFun, assemblierAvator);
                     }
 
@@ -126,39 +125,18 @@ public class WeakformProcessor {
             } catch (InterruptedException ex) {
                 break;
             } finally {
-                logger.info(String.format("Assemblied: balance %d/%d, Dirichlet %d/%d, Neumann %d/%d", balanceCount.get(), sumBalance, dirichletCount.get(), sumDirichlet, neumannCount.get(), sumNeumann));
+                logger.info(String.format("Assemblied: balance %d/%d, Dirichlet %d/%d, Neumann %d/%d", balanceIterator.dispatchedNum(), balanceIterator.sunNum(), dirichletIterator.dispatchedNum(), dirichletIterator.sunNum(), neumannIterator.dispatchedNum(),neumannIterator.sunNum()));
             }
         }
-
         assemblier.uniteAvators();
     }
-    final Object balanceLock = new Object();
-
-    boolean nextBalanceQuadraturePoint(QuadraturePoint qp) {
-        synchronized (balanceLock) {
-            return balanceIterator.next(qp);
-        }
-    }
     
-    QuadraturePointIterator balanceIterator;
-    AtomicInteger balanceCount = new AtomicInteger();
-    QuadraturePointIterator neumannItrator;
-    final Object neumannLock = new Object();
-
-    private boolean nextNeumannQuadraturePoint(QuadraturePoint qp) {
-        synchronized (neumannLock) {
-            return neumannItrator.next(qp);
-        }
-    }
-    QuadraturePointIterator dirichletIterator;
-    final Object dirichletLock = new Object();
-
-    private boolean nextDirichletQuadraturePoint(QuadraturePoint qp) {
-        synchronized (dirichletLock) {
-            return dirichletIterator.next(qp);
-        }
-    }
-
+    CountableQuadraturePointIterator balanceIterator;
+    
+    CountableQuadraturePointIterator dirichletIterator;
+    
+    CountableQuadraturePointIterator neumannIterator;
+   
     void assemblyBalanceEquation(ShapeFunction shapeFun, WeakformAssemblier assemblierAvator) {
 
         ArrayList<Node> shapeFunNodes = new ArrayList<>(arrayListSize);
@@ -167,26 +145,22 @@ public class WeakformProcessor {
         QuadraturePoint qp = new QuadraturePoint();
         Coordinate qPoint = qp.coordinate;
         TDoubleArrayList[] shapeFunVals = initShapeFunVals(1);
-        while (nextBalanceQuadraturePoint(qp)) {
+        while (balanceIterator.next(qp)) {
             shapeFun.values(qPoint, null, shapeFunVals, shapeFunNodes);
             assemblierAvator.asmBalance(qp, shapeFunNodes, shapeFunVals, volumnBoundaryCondition);
-            balanceCount.incrementAndGet();
         }
     }
-    public AtomicInteger dirichletCount = new AtomicInteger();
-    public AtomicInteger neumannCount = new AtomicInteger();
 
     void assemblyNeumann(ShapeFunction shapeFun, WeakformAssemblier assemblierAvator) {
         shapeFun.setDiffOrder(0);
         QuadraturePoint qp = new QuadraturePoint();
         ArrayList<Node> shapeFunNds = new ArrayList<>(arrayListSize);
         TDoubleArrayList[] shapeFunVals = initShapeFunVals(0);
-        while (nextNeumannQuadraturePoint(qp)) {
+        while (neumannIterator.next(qp)) {
             Coordinate qPoint = qp.coordinate;
             Boundary bound = qp.boundary;
             shapeFun.values(qPoint, bound, shapeFunVals, shapeFunNds);
             assemblierAvator.asmNeumann(qp, shapeFunNds, shapeFunVals);
-            neumannCount.incrementAndGet();
         }
     }
 
@@ -196,12 +170,11 @@ public class WeakformProcessor {
         shapeFun.setDiffOrder(0);
         QuadraturePoint qp = new QuadraturePoint();
         TDoubleArrayList[] shapeFunVals = initShapeFunVals(0);
-        while (nextDirichletQuadraturePoint(qp)) {
+        while (dirichletIterator.next(qp)) {
             Coordinate qPoint = qp.coordinate;
             Boundary bound = qp.boundary;
             shapeFun.values(qPoint, bound, shapeFunVals, shapeFunNds);
             assemblierAvator.asmDirichlet(qp, shapeFunNds, shapeFunVals);
-            dirichletCount.incrementAndGet();
         }
     }
 
