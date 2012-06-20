@@ -6,6 +6,7 @@ package net.epsilony.simpmeshfree.utils;
 
 import java.util.Arrays;
 import net.epsilony.simpmeshfree.model.Boundary;
+import net.epsilony.simpmeshfree.model.WithId;
 import net.epsilony.utils.geom.Coordinate;
 import net.epsilony.utils.math.GaussLegendreQuadratureUtils;
 import net.epsilony.utils.math.TriangleSymmetricQuadrature;
@@ -14,7 +15,7 @@ import net.epsilony.utils.math.TriangleSymmetricQuadrature;
  * used for quadrature a field not more complex than 3D
  * @author epsilonyuan@gmail.com
  */
-public class QuadraturePoint{
+public class QuadraturePoint implements WithId{
     /**
      * the weight for quadrature</br>
      * when quadrature with the help of {@link TriangleSymmetricQuadrature} 
@@ -23,6 +24,7 @@ public class QuadraturePoint{
      * weight=weight_u*weight_v*determinat(Jaccobi((x,y)/(u,v)))
      */
     public double weight; 
+    
     /**
      * the coordinate of quadrature point in the common 1D 2D or 3D space
      */
@@ -33,6 +35,7 @@ public class QuadraturePoint{
     public double[] values=new double[3];
     
     public boolean[] validities=new boolean[3];
+    public int id;
     public QuadraturePoint(){
         
     }
@@ -52,6 +55,16 @@ public class QuadraturePoint{
             validities=qp.validities;
         }
         boundary=qp.boundary;
-        
+        id=qp.id;
+    }
+
+    @Override
+    public int getId() {
+        return id;
+    }
+
+    @Override
+    public void setId(int id) {
+        this.id=id;
     }
 }

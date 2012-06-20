@@ -14,8 +14,6 @@ import net.epsilony.simpmeshfree.utils.QuadraturePointIterators;
 import net.epsilony.utils.geom.Coordinate;
 import net.epsilony.utils.geom.Quadrangle;
 import net.epsilony.utils.geom.Triangle;
-import net.epsilony.utils.math.GaussLegendreQuadratureUtils;
-import net.epsilony.utils.math.TriangleSymmetricQuadrature;
 
 /**
  * Same standard mechanical sample problems, including</br> <ul> <li>{@link #timoshenkoCantilevel(double, double, double, double, double, double, double)  Timoshenko's exact cantilevel}
@@ -53,7 +51,7 @@ public class WeakformProblems2D {
         }
 
         @Override
-        public QuadraturePointIterator volumeIterator(int[] numOut) {
+        public QuadraturePointIterator volumeIterator() {
             ArrayList<QuadraturePointIterator> iters = new ArrayList<>(2);
             if (null != triQuads) {
                 QuadraturePointIterators.TriangleIterator triIter = new QuadraturePointIterators.TriangleIterator(power, triQuads);
@@ -63,36 +61,18 @@ public class WeakformProblems2D {
                 QuadraturePointIterators.QuadrangleIterator quadIter = new QuadraturePointIterators.QuadrangleIterator(power, quadQuads);
                 iters.add(quadIter);
             }
-            if (null != numOut) {
-                numOut[0]=0;
-                int triNum = TriangleSymmetricQuadrature.getNumPoints(power);
-                int quadNum = GaussLegendreQuadratureUtils.getNumPoints(power);
-                quadNum *= quadNum;
-                if(null!=triQuads){
-                    numOut[0]+=triNum*triQuads.size();
-                }
-                if(null!=quadQuads){
-                    numOut[0]+=quadNum*quadQuads.size();
-                }
-            }
             return QuadraturePointIterators.compoundIterators(iters);
         }
 
         @Override
-        public QuadraturePointIterator neumannIterator(int[] numOut) {
+        public QuadraturePointIterator neumannIterator() {
             Collection<LineBoundary> neumannBnds = getNeumannBnds();
-            if (numOut != null) {
-                numOut[0] = GaussLegendreQuadratureUtils.getNumPoints(power) * neumannBnds.size();
-            }
             return new QuadraturePointIterators.LineBoundaryConditionIterator(power, neumannBnds, getNeumannBC());
         }
 
         @Override
-        public QuadraturePointIterator dirichletIterator(int[] numOut) {
+        public QuadraturePointIterator dirichletIterator() {
             Collection<LineBoundary> dirichletBnds = getDirichletBnds();
-            if (numOut != null) {
-                numOut[0] = GaussLegendreQuadratureUtils.getNumPoints(power) * dirichletBnds.size();
-            }
             return new QuadraturePointIterators.LineBoundaryConditionIterator(power, dirichletBnds, getDirichletBC());
         }
     }

@@ -5,6 +5,7 @@
 package net.epsilony.simpmeshfree.utils;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.locks.ReentrantLock;
 import net.epsilony.simpmeshfree.model.BoundaryCondition;
@@ -33,17 +34,20 @@ public class QuadraturePointIterators {
         double lineLen;
         int cIdx;
         Coordinate linePar = new Coordinate();
+        int count = 0;
+        private int sumNum;
 
-        private void init(int power, Iterable<LineBoundary> lines) {
+        private void init(int power, Collection<LineBoundary> lines) {
             this.lines = lines.iterator();
             int numOfPtsPerDim = (int) Math.ceil((power + 1) / 2.0);
             quadNum = numOfPtsPerDim;
             weights = GaussLegendreQuadratureUtils.getWeights(numOfPtsPerDim);
             coords = GaussLegendreQuadratureUtils.getPositions(numOfPtsPerDim);
             cIdx = quadNum;
+            sumNum = lines.size() * quadNum;
         }
 
-        public LineBoundaryIterator(int power, Iterable<LineBoundary> lines) {
+        public LineBoundaryIterator(int power, Collection<LineBoundary> lines) {
             init(power, lines);
         }
 
@@ -77,12 +81,24 @@ public class QuadraturePointIterators {
             c.z = start.z * (1 - t) + end.z * t;
             qp.weight = weight;
             qp.boundary = line;
+            qp.id = count;
             cIdx++;
+            count++;
             return true;
         }
 
         protected Coordinate getBoundaryParameter() {
             return linePar;
+        }
+
+        @Override
+        public int getDispatchedNum() {
+            return count;
+        }
+
+        @Override
+        public int getSumNum() {
+            return sumNum;
         }
     }
 
@@ -95,7 +111,7 @@ public class QuadraturePointIterators {
             this.bc = bc;
         }
 
-        public LineBoundaryConditionIterator(int power, Iterable<LineBoundary> lines, BoundaryCondition bc) {
+        public LineBoundaryConditionIterator(int power, Collection<LineBoundary> lines, BoundaryCondition bc) {
             super(power, lines);
             init(bc);
         }
@@ -131,13 +147,15 @@ public class QuadraturePointIterators {
 
     public static class TriangleIterator implements QuadraturePointIterator {
 
-        Iterator<Triangle> triangles;
-        int power;
+        private Iterator<Triangle> triangles;
+        private int power;
         private int numPtsPerTri;
         private Coordinate[] coords;
         private double[] weights;
         private int coordIdx;
-        double triArea;
+        private double triArea;
+        private int count = 0;
+        private int sumNum;
 
         private void init(int power, Iterable<Triangle> triangles) {
             this.triangles = triangles.iterator();
@@ -173,16 +191,30 @@ public class QuadraturePointIterators {
             }
             qp.coordinate.set(coords[coordIdx]);
             qp.weight = weights[coordIdx] * triArea;
+            qp.id = count;
             coordIdx++;
+            count++;
             return true;
+        }
+
+        @Override
+        public int getDispatchedNum() {
+            return count;
+        }
+
+        @Override
+        public int getSumNum() {
+            return sumNum;
         }
     }
 
     public static class QuadrangleIterator implements QuadraturePointIterator {
 
-        Iterator<Quadrangle> quadrangles;
+        private Iterator<Quadrangle> quadrangles;
+        private int count = 0;
+        private int sumNum;
 
-        private void init(int power, Iterable<Quadrangle> quadrangles) {
+        private void init(int power, Collection<Quadrangle> quadrangles) {
             this.quadrangles = quadrangles.iterator();
             int numOfPtsPerDim = (int) Math.ceil((power + 1) / 2.0);
             quadSize = numOfPtsPerDim;
@@ -190,9 +222,10 @@ public class QuadraturePointIterators {
             uvs = GaussLegendreQuadratureUtils.getPositions(numOfPtsPerDim);
             uIdx = quadSize;
             vIdx = quadSize;
+            sumNum = uIdx * vIdx * quadrangles.size();
         }
 
-        public QuadrangleIterator(int power, Iterable<Quadrangle> quadrangles) {
+        public QuadrangleIterator(int power, Collection<Quadrangle> quadrangles) {
             init(power, quadrangles);
         }
 
@@ -235,15 +268,29 @@ public class QuadraturePointIterators {
             qp.coordinate.x = xyJacb[0];
             qp.coordinate.y = xyJacb[1];
             qp.weight = xyJacb[2] * weights[uIdx] * weights[vIdx];
+            qp.id = count;
+            count++;
             uIdx++;
             return true;
+        }
+
+        @Override
+        public int getDispatchedNum() {
+            return count;
+        }
+
+        @Override
+        public int getSumNum() {
+            return sumNum;
         }
     }
 
     public static class CompoundIterator implements QuadraturePointIterator {
 
-        Iterator<QuadraturePointIterator> iters;
-        QuadraturePointIterator currentIter = null;
+        private Iterator<QuadraturePointIterator> iters;
+        private QuadraturePointIterator currentIter = null;
+        private int count = 0;
+        private int sumNum;
 
         @Override
         public boolean next(QuadraturePoint qp) {
@@ -257,97 +304,79 @@ public class QuadraturePointIterators {
                 } else {
                     boolean res = currentIter.next(qp);
                     if (res) {
+                        qp.id = count;
+                        count++;
                         return true;
                     } else {
                         currentIter = null;
                     }
                 }
+
             } while (true);
         }
 
-        private void init(Iterable<QuadraturePointIterator> iters) {
+        private void init(Collection<QuadraturePointIterator> iters) {
+            sumNum = 0;
+            for (QuadraturePointIterator iter : iters) {
+                sumNum += iter.getSumNum();
+            }
             this.iters = iters.iterator();
         }
 
-        public CompoundIterator(Iterable<QuadraturePointIterator> iters) {
+        public CompoundIterator(Collection<QuadraturePointIterator> iters) {
             init(iters);
+        }
+
+        @Override
+        public int getDispatchedNum() {
+            return count;
+        }
+
+        @Override
+        public int getSumNum() {
+            return sumNum;
         }
     }
 
-    public static QuadraturePointIterator compoundIterators(Iterable<QuadraturePointIterator> iters) {
+    public static QuadraturePointIterator compoundIterators(Collection<QuadraturePointIterator> iters) {
         return new CompoundIterator(iters);
     }
 
-    public static QuadraturePointIterator fromLineBoundaries(int power, Iterable<LineBoundary> lines) {
+    public static QuadraturePointIterator fromLineBoundaries(int power, Collection<LineBoundary> lines) {
         return new LineBoundaryIterator(power, lines);
     }
 
-    public static QuadraturePointIterator fromLineBoundariesAndBC(int power, Iterable<LineBoundary> lines, BoundaryCondition bc) {
+    public static QuadraturePointIterator fromLineBoundariesAndBC(int power, Collection<LineBoundary> lines, BoundaryCondition bc) {
         return new LineBoundaryConditionIterator(power, lines, bc);
     }
 
-    public static QuadraturePointIterator fromQuadrangles(int power, Iterable<Quadrangle> quads) {
+    public static QuadraturePointIterator fromQuadrangles(int power, Collection<Quadrangle> quads) {
         return new QuadrangleIterator(power, quads);
     }
 
-    public static QuadraturePointIterator fromTriangles(int power, Iterable<Triangle> tris) {
+    public static QuadraturePointIterator fromTriangles(int power, Collection<Triangle> tris) {
         return new TriangleIterator(power, tris);
     }
 
-    public static class CountableWrapper implements CountableQuadraturePointIterator {
+    public static class SynchronizedCountableWrapper implements QuadraturePointIterator {
 
-        private int sumNum;
-        private int dispatchedNum = 0;
-        private QuadraturePointIterator qpIter;
-
-        public CountableWrapper(QuadraturePointIterator qpIter, int sumNum) {
-            this.sumNum = sumNum;
-            this.qpIter = qpIter;
-        }
-
-        @Override
-        public int sunNum() {
-            return sumNum;
-        }
-
-        @Override
-        public int dispatchedNum() {
-            return dispatchedNum;
-        }
-
-        @Override
-        public boolean next(QuadraturePoint qp) {
-            boolean res = qpIter.next(qp);
-            if (res) {
-                dispatchedNum++;
-            }
-            return res;
-        }
-    }
-
-    public static class SynchronizedCountableWrapper implements CountableQuadraturePointIterator {
-
-        private int sumNum;
-        private int dispatched;
         private QuadraturePointIterator qpIter;
         ReentrantLock lock = new ReentrantLock();
 
-        public SynchronizedCountableWrapper(QuadraturePointIterator qpIter, int sumNum) {
-            this.sumNum = sumNum;
+        public SynchronizedCountableWrapper(QuadraturePointIterator qpIter) {
             this.qpIter = qpIter;
-            dispatched = 0;
         }
 
         @Override
-        public int sunNum() {
-            return sumNum;
+        public int getSumNum() {
+            return qpIter.getSumNum();
         }
 
         @Override
-        public int dispatchedNum() {
+        public int getDispatchedNum() {
             lock.lock();
             try {
-                return dispatched;
+                return qpIter.getDispatchedNum();
             } finally {
                 lock.unlock();
             }
@@ -359,9 +388,6 @@ public class QuadraturePointIterators {
             boolean res;
             try {
                 res = qpIter.next(qp);
-                if (res) {
-                    dispatched++;
-                }
             } finally {
                 lock.unlock();
             }
@@ -369,11 +395,7 @@ public class QuadraturePointIterators {
         }
     }
 
-    public static CountableQuadraturePointIterator wrap(QuadraturePointIterator qpIter, int sumNum, boolean isSynchronized) {
-        if (isSynchronized) {
-            return new SynchronizedCountableWrapper(qpIter, sumNum);
-        } else {
-            return new CountableWrapper(qpIter, sumNum);
-        }
+    public static QuadraturePointIterator synchronizedWrapper(QuadraturePointIterator qpIter) {
+        return new SynchronizedCountableWrapper(qpIter);
     }
 }

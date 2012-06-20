@@ -10,7 +10,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import net.epsilony.simpmeshfree.model2d.ShapeFunctions2D;
-import net.epsilony.simpmeshfree.utils.CountableQuadraturePointIterator;
 import net.epsilony.simpmeshfree.utils.QuadraturePoint;
 import net.epsilony.simpmeshfree.utils.QuadraturePointIterator;
 import net.epsilony.simpmeshfree.utils.QuadraturePointIterators;
@@ -42,9 +41,9 @@ public class WeakformProcessor {
     
     public int processThreadsNum = Integer.MAX_VALUE;
     private int dim;
-    CountableQuadraturePointIterator balanceIterator;
-    CountableQuadraturePointIterator dirichletIterator;
-    CountableQuadraturePointIterator neumannIterator;
+    QuadraturePointIterator balanceIterator;
+    QuadraturePointIterator dirichletIterator;
+    QuadraturePointIterator neumannIterator;
 
     /**
      *
@@ -89,15 +88,15 @@ public class WeakformProcessor {
             monitor.setProcessor(this);
         }
 
-        int[] numOut = new int[1];
-        QuadraturePointIterator qpIter = workProblem.volumeIterator(numOut);
-        balanceIterator = (qpIter == null ? null : QuadraturePointIterators.wrap(qpIter, numOut[0], true));
 
-        qpIter = workProblem.neumannIterator(numOut);
-        neumannIterator = (qpIter == null ? null : QuadraturePointIterators.wrap(qpIter, numOut[0], true));
+        QuadraturePointIterator qpIter = workProblem.volumeIterator();
+        balanceIterator = (qpIter == null ? null : QuadraturePointIterators.synchronizedWrapper(qpIter));
 
-        qpIter = workProblem.dirichletIterator(numOut);
-        dirichletIterator = (qpIter == null ? null : QuadraturePointIterators.wrap(qpIter, numOut[0], true));
+        qpIter = workProblem.neumannIterator();
+        neumannIterator = (qpIter == null ? null : QuadraturePointIterators.synchronizedWrapper(qpIter));
+
+        qpIter = workProblem.dirichletIterator();
+        dirichletIterator = (qpIter == null ? null : QuadraturePointIterators.synchronizedWrapper(qpIter));
 
         ExecutorService executor = Executors.newFixedThreadPool(coreNum);
         

@@ -10,4 +10,8 @@ package net.epsilony.simpmeshfree.utils;
  */
 public interface QuadraturePointIterator {
     boolean next(QuadraturePoint qp);
+
+    int getDispatchedNum();
+
+    int getSumNum();
 }

@@ -12,11 +12,11 @@ import net.epsilony.simpmeshfree.utils.QuadraturePointIterator;
  */
 public interface WeakformProblem {
 
-    QuadraturePointIterator volumeIterator(int[] numOut);
+    QuadraturePointIterator volumeIterator();
 
-    QuadraturePointIterator neumannIterator(int[] numOut);
+    QuadraturePointIterator neumannIterator();
 
-    QuadraturePointIterator dirichletIterator(int[] numOut);
+    QuadraturePointIterator dirichletIterator();
 
     VolumeCondition volumeCondition();
 }
