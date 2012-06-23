@@ -29,9 +29,9 @@ import org.junit.Test;
  * @version 20120528
  * @author epsilonyuan@gmail.com
  */
-public class WeakformAssembliers2DTest {
+public class SimpTest {
 
-    public WeakformAssembliers2DTest() {
+    public SimpTest() {
     }
 
     @BeforeClass
@@ -51,7 +51,7 @@ public class WeakformAssembliers2DTest {
      */
     @Test
     public void testSimpAsmBalance() {
-        WeakformAssemblier assemblier = new WeakformAssembliers2D.SimpAssemblier(new DenseMatrix(new double[][]{{11, 12, 13}, {00, 22, 23}, {00, 00, 33}}), 1e8, 25);
+        WeakformAssemblier assemblier = new WeakformAssembliers2D.Simp(new DenseMatrix(new double[][]{{11, 12, 13}, {00, 22, 23}, {00, 00, 33}}), 1e8, 25);
         QuadraturePoint qp = new QuadraturePoint();
         qp.coordinate.x = 33;
         qp.coordinate.y = 34;
@@ -128,7 +128,7 @@ public class WeakformAssembliers2DTest {
 
     @Test
     public void testSimpAsmNeumann() {
-        WeakformAssemblier assemblier = new WeakformAssembliers2D.SimpAssemblier(new DenseMatrix(new double[][]{{11, 12, 13}, {00, 22, 23}, {00, 00, 33}}), 1e8, 25);
+        WeakformAssemblier assemblier = new WeakformAssembliers2D.Simp(new DenseMatrix(new double[][]{{11, 12, 13}, {00, 22, 23}, {00, 00, 33}}), 1e8, 25);
         QuadraturePoint qp = new QuadraturePoint();
         qp.coordinate.x = 33;
         qp.coordinate.y = 34;
@@ -179,7 +179,7 @@ public class WeakformAssembliers2DTest {
     @Test
     public void testSimpAssemblyDirichlet() {
         double penalty = 1e8;
-        WeakformAssemblier assemblier = new WeakformAssembliers2D.SimpAssemblier(new DenseMatrix(new double[][]{{11, 12, 13}, {00, 22, 23}, {00, 00, 33}}), penalty, 25);
+        WeakformAssemblier assemblier = new WeakformAssembliers2D.Simp(new DenseMatrix(new double[][]{{11, 12, 13}, {00, 22, 23}, {00, 00, 33}}), penalty, 25);
         QuadraturePoint qp = new QuadraturePoint();
         qp.coordinate.x = 33;
         qp.coordinate.y = 34;

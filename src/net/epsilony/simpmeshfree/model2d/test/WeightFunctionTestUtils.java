@@ -12,8 +12,8 @@ import java.util.LinkedList;
 import java.util.List;
 import net.epsilony.simpmeshfree.model.*;
 import net.epsilony.simpmeshfree.model2d.ShapeFunctions2D;
-import net.epsilony.simpmeshfree.utils.Complete2DPolynomialBases;
 import net.epsilony.simpmeshfree.utils.BasesFunction;
+import net.epsilony.simpmeshfree.utils.Complete2DPolynomialBases;
 import net.epsilony.utils.geom.Coordinate;
 
 /**

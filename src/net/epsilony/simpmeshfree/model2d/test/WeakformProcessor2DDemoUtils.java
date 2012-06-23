@@ -7,7 +7,7 @@ package net.epsilony.simpmeshfree.model2d.test;
 import java.util.ArrayList;
 import net.epsilony.simpmeshfree.model.*;
 import net.epsilony.simpmeshfree.model2d.*;
-import net.epsilony.simpmeshfree.model2d.WeakformAssembliers2D.SimpAssemblier;
+import net.epsilony.simpmeshfree.model2d.WeakformAssembliers2D.Simp;
 import net.epsilony.simpmeshfree.utils.BasesFunction;
 import net.epsilony.simpmeshfree.utils.Complete2DPolynomialBases;
 import net.epsilony.utils.math.EquationSolver;
@@ -65,7 +65,7 @@ public class WeakformProcessor2DDemoUtils {
     public static WeakformProcessor weakformProcessor(GeomUtils geomUtils, WeightFunctionCore coreFunc, int baseOrder, int minNdNum, int maxNdNum, DenseMatrix constitutiveLaw, double penalty, WeakformProblem workProblem, boolean iterativeServer) {
         MLSShapeFunctionFactory shapeFunFactory = genShapeFunctionFactory(geomUtils, coreFunc, baseOrder, minNdNum, maxNdNum);
         int ndsSize = geomUtils.allNodes.size();
-        SimpAssemblier assemblier = new WeakformAssembliers2D.SimpAssemblier(constitutiveLaw, penalty, ndsSize);
+        Simp assemblier = new WeakformAssembliers2D.Simp(constitutiveLaw, penalty, ndsSize);
         EquationSolver eqSolver;
         if (iterativeServer) {
             eqSolver=new EquationSolvers.SparseIterative(new CGS(new DenseVector(ndsSize*2)), true);

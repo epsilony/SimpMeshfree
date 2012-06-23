@@ -14,6 +14,7 @@ import net.epsilony.utils.geom.Coordinate;
 import net.epsilony.utils.geom.Coordinates;
 import net.epsilony.utils.geom.GeometryMath;
 import static net.epsilony.utils.geom.GeometryMath.*;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -742,6 +743,8 @@ public class GeomUtils implements Avatarable<GeomUtils> {
             } while (outputs.size() < k && iter <= maxIter);
 
             if (outputs.size() < k) {
+                Logger logger=Logger.getLogger(this.getClass());
+                logger.info("bad domain search, only "+outputs.size()+" nodes searched at"+center);
                 throw new IllegalStateException();
             }
 

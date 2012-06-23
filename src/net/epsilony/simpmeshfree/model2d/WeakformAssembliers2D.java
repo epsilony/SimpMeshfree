@@ -21,7 +21,7 @@ import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
  */
 public class WeakformAssembliers2D {
 
-    public static class SimpAssemblier implements WeakformAssemblier {
+    public static class Simp implements WeakformAssemblier {
 
         DenseMatrix constitutiveLaw;
         FlexCompRowMatrix mainMatrix;
@@ -29,7 +29,7 @@ public class WeakformAssembliers2D {
         int[] nodesIds;
         double neumannPenalty;
 
-        public SimpAssemblier(DenseMatrix constitutiveLaw, double neumannPenalty, int nodesSize) {
+        public Simp(DenseMatrix constitutiveLaw, double neumannPenalty, int nodesSize) {
             this.constitutiveLaw = constitutiveLaw;
             this.neumannPenalty = neumannPenalty;
             mainMatrix = new FlexCompRowMatrix(nodesSize * 2, nodesSize * 2);
@@ -213,24 +213,20 @@ public class WeakformAssembliers2D {
         public DenseVector getEquationVector() {
             return mainVector;
         }
-        LinkedList<SimpAssemblier> avators = new LinkedList<>();
+        LinkedList<Simp> avators = new LinkedList<>();
 
         @Override
         synchronized public WeakformAssemblier avatorInstance() {
-            SimpAssemblier avator = new SimpAssemblier(constitutiveLaw, neumannPenalty, mainVector.size() / 2);
+            Simp avator = new Simp(constitutiveLaw, neumannPenalty, mainVector.size() / 2);
             avators.add(avator);
             return avator;
         }
       
         @Override
         public void uniteAvators() {
-            for (SimpAssemblier avator : avators) {
-                for (MatrixEntry me : avator.mainMatrix) {
-                    mainMatrix.add(me.row(), me.column(), me.get());
-                }
-                for (VectorEntry ve : avator.mainVector) {
-                    mainVector.add(ve.index(), ve.get());
-                }
+            for (Simp avator : avators) {
+                mainMatrix.add(avator.mainMatrix);
+                mainVector.add(avator.mainVector);
             }
             avators.clear();
         }
