@@ -10,10 +10,11 @@ import java.util.List;
 import net.epsilony.simpmeshfree.model.Node;
 import net.epsilony.simpmeshfree.model.VolumeCondition;
 import net.epsilony.simpmeshfree.model.WeakformAssemblier;
+import net.epsilony.simpmeshfree.utils.CommonUtils;
 import net.epsilony.simpmeshfree.utils.QuadraturePoint;
-import net.epsilony.utils.geom.Coordinate;
 import no.uib.cipr.matrix.*;
 import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
+import org.ejml.data.DenseMatrix64F;
 
 /**
  * @version 20120528
@@ -23,17 +24,18 @@ public class WeakformAssembliers2D {
 
     public static class Simp implements WeakformAssemblier {
 
-        DenseMatrix constitutiveLaw;
+        DenseMatrix64F constitutiveLaw;
         FlexCompRowMatrix mainMatrix;
         DenseVector mainVector;
         int[] nodesIds;
         double neumannPenalty;
 
+        public Simp(DenseMatrix64F constitutiveLaw, double neumannPenalty, int nodesSize) {
+            init(constitutiveLaw, neumannPenalty, nodesSize);
+        }
+        
         public Simp(DenseMatrix constitutiveLaw, double neumannPenalty, int nodesSize) {
-            this.constitutiveLaw = constitutiveLaw;
-            this.neumannPenalty = neumannPenalty;
-            mainMatrix = new FlexCompRowMatrix(nodesSize * 2, nodesSize * 2);
-            mainVector = new DenseVector(nodesSize * 2);
+            init(CommonUtils.toDenseMatrix64F(constitutiveLaw), neumannPenalty, nodesSize);
         }
 
         @Override
@@ -54,13 +56,13 @@ public class WeakformAssembliers2D {
                 nIds[i] = nd.id;
                 i++;
             }
-            DenseMatrix cLaw = constitutiveLaw;
-            double d00 = cLaw.get(0, 0) * weight,
-                    d01 = cLaw.get(0, 1) * weight,
-                    d02 = cLaw.get(0, 2) * weight,
-                    d11 = cLaw.get(1, 1) * weight,
-                    d12 = cLaw.get(1, 2) * weight,
-                    d22 = cLaw.get(2, 2) * weight;
+            DenseMatrix64F cLaw = constitutiveLaw;
+            double d00 = cLaw.unsafe_get(0, 0) * weight,
+                    d01 = cLaw.unsafe_get(0, 1) * weight,
+                    d02 = cLaw.unsafe_get(0, 2) * weight,
+                    d11 = cLaw.unsafe_get(1, 1) * weight,
+                    d12 = cLaw.unsafe_get(1, 2) * weight,
+                    d22 = cLaw.unsafe_get(2, 2) * weight;
             FlexCompRowMatrix mat = mainMatrix;
             double[] bcValue = new double[3];
             double bcAndWeightX = 0, bcAndWeightY = 0;
@@ -200,11 +202,6 @@ public class WeakformAssembliers2D {
         }
 
         @Override
-        public DenseMatrix getConstitutiveLaw(Coordinate pos) {
-            return constitutiveLaw;
-        }
-
-        @Override
         public Matrix getEquationMatrix() {
             return mainMatrix;
         }
@@ -229,6 +226,13 @@ public class WeakformAssembliers2D {
                 mainVector.add(avator.mainVector);
             }
             avators.clear();
+        }
+
+        private void init(DenseMatrix64F constitutiveLaw, double neumannPenalty, int nodesSize) {
+            this.constitutiveLaw = new DenseMatrix64F(constitutiveLaw);
+            this.neumannPenalty = neumannPenalty;
+            mainMatrix = new FlexCompRowMatrix(nodesSize * 2, nodesSize * 2);
+            mainVector = new DenseVector(nodesSize * 2);
         }
     }
 }
