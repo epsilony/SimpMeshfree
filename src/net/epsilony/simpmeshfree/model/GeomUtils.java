@@ -4,7 +4,9 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.set.hash.TIntHashSet;
 import java.util.*;
 import net.epsilony.simpmeshfree.utils.Avatarable;
 import net.epsilony.utils.CenterDistanceSearcher;
@@ -603,25 +605,31 @@ public class GeomUtils implements Avatarable<GeomUtils> {
      * @param result can be null
      * @return nodesTree without duplication
      */
-    public List<Node> getBndsNodes(Collection<Boundary> bnds, List<Node> result) {
+    public List<Node> getBndsNodes(Collection<Boundary> bnds, List<Node> result,TIntHashSet setCache) {
         if (result == null) {
             result = new LinkedList<>();
         } else {
             result.clear();
         }
-        for (Boundary bnd : bnds) {
-            for (int i = 0; i < bnd.num(); i++) {
-                Node node = bnd.getNode(i);
-                if (nodeStatusCache[node.id] == -1) {
-                    nodeStatusCache[node.id] = 1;
-                    result.add(node);
-                }
+        if(null==setCache){
+            setCache=new TIntHashSet();
+        }else{
+            setCache.clear();
+        }
+        for(Boundary bnd:bnds){
+            for(int i=0;i<bnd.num();i++){
+                setCache.add(bnd.getNode(i).id);
             }
         }
-        for (Node nd : result) {
-            nodeStatusCache[nd.id] = -1;
+        TIntIterator iterator = setCache.iterator();
+        while(iterator.hasNext()){
+            result.add(allNodes.get(iterator.next()));
         }
         return result;
+    }
+    
+    public List<Node> getBndsNodes(Collection<Boundary> bnds, List<Node> result){
+        return getBndsNodes(bnds, result, null);
     }
 
     /**
@@ -704,6 +712,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
         LinkedList<Node> bndNds = new LinkedList<>();
         TIntArrayList blockedNum = new TIntArrayList(defaultMaxNodeNumInSupportDomain);
         TIntArrayList blockedBndId = new TIntArrayList(defaultMaxNodeNumInSupportDomain);
+        TIntHashSet set=new TIntHashSet(bndNodeNum);
 
         public NearestKVisibleDomainSizer(int k, double rInit) {
             this.k = k;
@@ -729,7 +738,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
                     }
                     idx++;
                 }
-                getBndsNodes(bnds, bndNds);
+                getBndsNodes(bnds, bndNds,set);
                 visibleStatus(center, bndNds, true, bnds, blockedNum, blockedBndId);
                 idx = 0;
                 for (Node nd : bndNds) {

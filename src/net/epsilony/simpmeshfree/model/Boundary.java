@@ -4,6 +4,8 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import java.io.Serializable;
+import javax.imageio.spi.ServiceRegistry;
 import net.epsilony.utils.geom.Coordinate;
 
 /**
@@ -42,7 +44,7 @@ import net.epsilony.utils.geom.Coordinate;
  * @see GeomUtils
  * @author epsilonyuan@gmail.com
  */
-public interface Boundary extends WithId{
+public interface Boundary extends WithId,Serializable{
 
     /**
      * @param index in the range of [0,num())

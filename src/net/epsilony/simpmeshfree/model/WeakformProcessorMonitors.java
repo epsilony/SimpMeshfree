@@ -5,6 +5,7 @@
 package net.epsilony.simpmeshfree.model;
 
 import gnu.trove.list.array.TDoubleArrayList;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -135,15 +136,30 @@ public class WeakformProcessorMonitors {
         }
     }
 
-    public static WeakformProcessorMonitor recorder(){
+    public static WeakformProcessorMonitor recorder() {
         return new Recorder();
     }
-    
+
+    public static class ShapeFunctionRecordNode implements Serializable{
+
+        public QuadraturePoint qp;
+        public ArrayList<Node> supNds;
+        public TDoubleArrayList[] shapeFunVals;
+
+        public final void set(QuadraturePoint qp, List<Node> supNds, TDoubleArrayList[] shapeFunVals) {
+            this.qp = new QuadraturePoint(qp);
+            this.supNds = new ArrayList<>(supNds);
+            this.shapeFunVals = CommonUtils.copyTDoubleArrayListArray(shapeFunVals);
+        }
+
+        public ShapeFunctionRecordNode(QuadraturePoint qp, List<Node> supNds, TDoubleArrayList[] shapeFunVals) {
+            set(qp, supNds, shapeFunVals);
+        }
+    }
+
     public static class Recorder extends Adapter {
 
-        public List<List<List<QuadraturePoint>>> qpRecords;
-        public List<List<List<List<Node>>>> supNdsRecords;
-        public List<List<List<TDoubleArrayList[]>>> shapeFunValsRecords;
+        public ArrayList<ArrayList<List<ShapeFunctionRecordNode>>> shapeFunRecords = new ArrayList<>(3);
         public static final int BALANCE_IDX = 0, DIRICHLET_IDX = 1, NEUMANN_IDX = 2;
 
         @Override
@@ -153,17 +169,10 @@ public class WeakformProcessorMonitors {
         }
 
         private void initRecords(int coreNum) {
-            qpRecords = new ArrayList<>(3);
-            shapeFunValsRecords = new ArrayList<>(3);
-            supNdsRecords = new ArrayList<>(3);
             for (int i = 0; i < 3; i++) {
-                qpRecords.add(new ArrayList<List<QuadraturePoint>>(coreNum));
-                shapeFunValsRecords.add(new ArrayList<List<TDoubleArrayList[]>>(coreNum));
-                supNdsRecords.add(new ArrayList<List<List<Node>>>());
+                shapeFunRecords.add(new ArrayList<List<ShapeFunctionRecordNode>>(coreNum));
                 for (int j = 0; j < coreNum; j++) {
-                    qpRecords.get(i).add(new LinkedList<QuadraturePoint>());
-                    shapeFunValsRecords.get(i).add(new LinkedList<TDoubleArrayList[]>());
-                    supNdsRecords.get(i).add(new LinkedList<List<Node>>());
+                    shapeFunRecords.get(i).add(new LinkedList<ShapeFunctionRecordNode>());
                 }
             }
         }
@@ -171,13 +180,24 @@ public class WeakformProcessorMonitors {
         @Override
         public void balanceAsmed(QuadraturePoint qp, List<Node> nodes, TDoubleArrayList[] shapeFunVals, VolumeCondition volBc, int asmId) {
             super.balanceAsmed(qp, nodes, shapeFunVals, volBc, asmId);
-            List<QuadraturePoint> qpRecord = qpRecords.get(BALANCE_IDX).get(asmId);
-            List<List<Node>> supNdsRecord = supNdsRecords.get(BALANCE_IDX).get(asmId);
-            List<TDoubleArrayList[]> shapeFunRecord = shapeFunValsRecords.get(BALANCE_IDX).get(asmId);
+            recordShapeFunction(BALANCE_IDX,asmId, qp, nodes, shapeFunVals);
+        }
 
-            qpRecord.add(new QuadraturePoint(qp));
-            supNdsRecord.add(new ArrayList<>(nodes));
-            shapeFunRecord.add(CommonUtils.copyTDoubleArrayListArray(shapeFunVals));
+        @Override
+        public void dirichletAsmed(QuadraturePoint qp, List<Node> nodes, TDoubleArrayList[] shapeFunVals, int asmId) {
+            super.dirichletAsmed(qp, nodes, shapeFunVals, asmId);
+            recordShapeFunction(DIRICHLET_IDX,asmId, qp, nodes, shapeFunVals);
+        }
+
+        @Override
+        public void neumannAsmed(QuadraturePoint qp, List<Node> nodes, TDoubleArrayList[] shapeFunVals, int asmId) {
+            super.neumannAsmed(qp, nodes, shapeFunVals, asmId);
+            recordShapeFunction(NEUMANN_IDX,asmId, qp, nodes, shapeFunVals);
+        }
+
+        private void recordShapeFunction(int recordIdx,int asmId, QuadraturePoint qp, List<Node> nodes, TDoubleArrayList[] shapeFunVals) {
+            List<ShapeFunctionRecordNode> record = shapeFunRecords.get(recordIdx).get(asmId);
+            record.add(new ShapeFunctionRecordNode(qp, nodes, shapeFunVals));
         }
     }
 

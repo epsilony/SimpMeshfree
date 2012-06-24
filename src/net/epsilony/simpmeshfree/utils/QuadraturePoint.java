@@ -4,6 +4,7 @@
  */
 package net.epsilony.simpmeshfree.utils;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import net.epsilony.simpmeshfree.model.Boundary;
 import net.epsilony.simpmeshfree.model.WithId;
@@ -15,7 +16,7 @@ import net.epsilony.utils.math.TriangleSymmetricQuadrature;
  * used for quadrature a field not more complex than 3D
  * @author epsilonyuan@gmail.com
  */
-public class QuadraturePoint implements WithId{
+public class QuadraturePoint implements WithId,Serializable{
     /**
      * the weight for quadrature</br>
      * when quadrature with the help of {@link TriangleSymmetricQuadrature} 
