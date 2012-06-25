@@ -95,6 +95,7 @@ public class WeakformProcessorMonitors {
         @Override
         public void beforeProcess(ExecutorService executor, int coreNum) {
             logger.info(String.format("Start processing the weak form problem by %d parrel assembliers", coreNum));
+            logger.info("Using "+processor.assemblier.getClass().getSimpleName());
 
         }
 
@@ -126,7 +127,7 @@ public class WeakformProcessorMonitors {
 
         @Override
         public void equationSolved() {
-            logger.info("Equation solved");
+            logger.info("Equation solved, using "+ processor.equationSolver);
         }
 
         @Override
