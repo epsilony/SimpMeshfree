@@ -6,6 +6,7 @@ package net.epsilony.simpmeshfree.model2d;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import net.epsilony.simpmeshfree.model.*;
@@ -74,6 +75,17 @@ public class WeakformProblems2D {
         public QuadraturePointIterator dirichletIterator() {
             Collection<LineBoundary> dirichletBnds = getDirichletBnds();
             return new QuadraturePointIterators.LineBoundaryConditionIterator(power, dirichletBnds, getDirichletBC());
+        }
+        
+        @Override
+        public List<Node> dirichletNodes() {
+            HashSet<Node> set=new HashSet<>();
+            Collection<LineBoundary> dirichletBnds = getDirichletBnds();
+            for(LineBoundary bnd:dirichletBnds){
+                set.add(bnd.start);
+                set.add(bnd.end);
+            }
+            return new ArrayList<>(set);
         }
     }
 

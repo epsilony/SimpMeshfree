@@ -4,6 +4,7 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import java.util.List;
 import net.epsilony.simpmeshfree.utils.QuadraturePointIterator;
 
 /**
@@ -17,6 +18,8 @@ public interface WeakformProblem {
     QuadraturePointIterator neumannIterator();
 
     QuadraturePointIterator dirichletIterator();
+    
+    List<Node> dirichletNodes();
 
     VolumeCondition volumeCondition();
 }
