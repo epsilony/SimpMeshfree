@@ -26,10 +26,9 @@ public class WeakformProcessor2DDemoUtils {
         WeightFunctionCore coreFun;
         int baseOrder;
         int minNdNum, maxNdNum;
-
         private Object[] genArgs() {
-            SupportDomainCritierion critierion = geomUtils.new VisibleCritieron(minNdNum, maxNdNum);
-//            SupportDomainCritierion critierion = SupportDomainUtils.simpCriterion(4.5, geomUtils.allNodes);
+            //SupportDomainCritierion critierion = geomUtils.new VisibleCritieron(minNdNum, maxNdNum);
+            SupportDomainCritierion critierion = SupportDomainUtils.simpCriterion(4.5, geomUtils.allNodes);
             WeightFunction weightFunction = WeightFunctions.factory(coreFun.avatorInstance(), critierion.getDistanceSquareFunction());
             BasesFunction baseFun = Complete2DPolynomialBases.complete2DPolynomialBase(baseOrder);
             Object[] results = new Object[]{weightFunction, baseFun, critierion};

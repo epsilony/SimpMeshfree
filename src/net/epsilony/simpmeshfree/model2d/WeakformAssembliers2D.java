@@ -181,9 +181,12 @@ public class WeakformAssembliers2D {
             for (Node nd : nodes) {
                 int matIndexI = nd.id * 2;
                 double vi = vs.getQuick(i);
-                vec.add(matIndexI, vi * values[0] * factor);
-                vec.add(matIndexI + 1, vi * values[1] * factor);
-
+                if (vb1) {
+                    vec.add(matIndexI, vi * values[0] * factor);
+                }
+                if (vb2) {
+                    vec.add(matIndexI + 1, vi * values[1] * factor);
+                }
                 for (int j = i; j < nodes.size(); j++) {
                     int matIndexJ = ids[j] * 2;
                     double vij = factor * vi * vs.getQuick(j);
@@ -305,27 +308,27 @@ public class WeakformAssembliers2D {
             double weight = qp.weight;
             for (Node nd : nodes) {
                 double phi_i = phis.getQuick(i);
-                double g_i0 = weight * phi_i * n_0;
-                double g_i1 = weight * phi_i * n_1;
-                double q_i0 = weight * n_0;
-                double q_i1  = weight * n_1;
+                double g_i0 = -weight * phi_i * n_0;
+                double g_i1 = -weight * phi_i * n_1;
                 int row_index = nd.id * 2;
 
                 if (qp.validities[0]) {
                     g.add(row_index, col_index_0, g_i0);
                     g.add(row_index, col_index_1, g_i1);
-                    q.add(col_index_0, q_i0 * qp.values[0]);
-                    q.add(col_index_1, q_i1 * qp.values[0]);
                 }
 
                 if (qp.validities[1]) {
                     g.add(row_index + 1, col_index_0 + 1, g_i0);
                     g.add(row_index + 1, col_index_1 + 1, g_i1);
-                    q.add(col_index_0 + 1, q_i0 * qp.values[1]);
-                    q.add(col_index_1 + 1, q_i1 * qp.values[1]);
                 }
                 i++;
             }
+            double q_i0 = -weight * n_0;
+            double q_i1 = -weight * n_1;
+            q.add(col_index_0, q_i0 * qp.values[0]);
+            q.add(col_index_1, q_i1 * qp.values[0]);
+            q.add(col_index_0 + 1, q_i0 * qp.values[1]);
+            q.add(col_index_1 + 1, q_i1 * qp.values[1]);
         }
 
         @Override
