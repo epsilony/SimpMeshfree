@@ -101,7 +101,6 @@ public class QuadraturePointIteratorsTest {
 //        }
 //        return result;
 //    }
-
     /**
      * Test of fromLineBoundariesAndBC method, of class
      * QuadraturePointIterators.
@@ -109,7 +108,7 @@ public class QuadraturePointIteratorsTest {
     @Test
     public void testFromLineBoundariesAndBC() {
         ArrayList<LineBoundary> lines = sampleLines();
-        
+
 
         double exp = 0;
         for (LineBoundary line : lines) {
@@ -133,18 +132,18 @@ public class QuadraturePointIteratorsTest {
             }
             assertEquals(exp, act, 1e-6);
         }
-        
-        exp=0;
-        double a=1.021,b=-3.42,c=2.07;
-        
-        for(LineBoundary line:lines){
-            Node start=line.start;
-            Node end=line.end;
-            exp+=dot(a,b,c,(scale(add(end,start),0.5)))*distance(end, start);
+
+        exp = 0;
+        double a = 1.021, b = -3.42, c = 2.07;
+
+        for (LineBoundary line : lines) {
+            Node start = line.start;
+            Node end = line.end;
+            exp += dot(a, b, c, (scale(add(end, start), 0.5))) * distance(end, start);
         }
-        
+
         for (int power : powers) {
-            BoundaryCondition bc = sampleBC2(a,b,c);
+            BoundaryCondition bc = sampleBC2(a, b, c);
             QuadraturePoint qp = new QuadraturePoint();
             QuadraturePointIterator bcIter = QuadraturePointIterators.fromLineBoundariesAndBC(power, lines, bc);
             double act = 0;
@@ -152,7 +151,7 @@ public class QuadraturePointIteratorsTest {
                 int i = 0;
                 for (boolean bl : qp.validities) {
                     if (bl) {
-                        assertEquals(true,i<1);
+                        assertEquals(true, i < 1);
                         act += qp.weight * qp.values[i];
                     }
                     i++;
@@ -160,12 +159,11 @@ public class QuadraturePointIteratorsTest {
             }
             assertEquals(exp, act, 1e-6);
         }
-        
+
     }
 
     BoundaryCondition sampleBC() {
         return new BoundaryCondition() {
-
             Boundary bnd = null;
 
             @Override
@@ -184,10 +182,10 @@ public class QuadraturePointIteratorsTest {
             }
         };
     }
-    
-        BoundaryCondition sampleBC2(final double a,final double b,final double c) {
+
+    BoundaryCondition sampleBC2(final double a, final double b, final double c) {
         return new BoundaryCondition() {
-            double []abc=new double[]{a,b,c};
+            double[] abc = new double[]{a, b, c};
             Boundary bnd = null;
 
             @Override
@@ -199,11 +197,11 @@ public class QuadraturePointIteratorsTest {
             @Override
             public void values(Coordinate input, double[] results, boolean[] validities) {
                 Arrays.fill(validities, false);
-                results[0]=0;
-                for(int i=0;i<3;i++){
-                    results[0]+=input.getDim(i)*abc[i];
+                results[0] = 0;
+                for (int i = 0; i < 3; i++) {
+                    results[0] += input.getDim(i) * abc[i];
                 }
-                validities[0]=true;
+                validities[0] = true;
             }
         };
     }
@@ -217,7 +215,7 @@ public class QuadraturePointIteratorsTest {
         double height = 33;
         double lineSize = 5;
         double spaceNdsDis = 3;
-        double a=1.1,b=-2.35;
+        double a = 1.1, b = -2.35;
         RectangleModel rm = new RectangleModel(width, height, lineSize, spaceNdsDis);
         double exp = width * height;
         int[] powers = new int[]{2, 3, 4, 5};
@@ -230,14 +228,14 @@ public class QuadraturePointIteratorsTest {
             }
             assertEquals(exp, act, 1e-6);
         }
-        
-        exp=0.5*a*width*width*height;
-        for(int power:powers){
+
+        exp = 0.5 * a * width * width * height;
+        for (int power : powers) {
             QuadraturePointIterator quadIter = QuadraturePointIterators.fromQuadrangles(power, rm.quadrangles());
             QuadraturePoint qp = new QuadraturePoint();
             double act = 0;
             while (quadIter.next(qp)) {
-                act += qp.weight*(a*qp.coordinate.x+b*qp.coordinate.y);
+                act += qp.weight * (a * qp.coordinate.x + b * qp.coordinate.y);
             }
             assertEquals(exp, act, 1e-6);
         }
@@ -252,15 +250,15 @@ public class QuadraturePointIteratorsTest {
         double height = 33;
         double lineSize = 2;
         double spaceNdsDis = 3;
-        double a=1.1,b=-2.35;
+        double a = 1.1, b = -2.35;
         RectangleModel rm = new RectangleModel(width, height, lineSize, spaceNdsDis);
         double exp = width * height;
         int[] powers = new int[]{2, 3, 4, 5};
-        double area=0;
-        for(Triangle tri:rm.triangles()){
-            area+=GeometryMath.triangleArea2D(tri.c1.x, tri.c1.y, tri.c2.x, tri.c2.y, tri.c3.x,tri.c3.y);
+        double area = 0;
+        for (Triangle tri : rm.triangles()) {
+            area += GeometryMath.triangleArea2D(tri.c1.x, tri.c1.y, tri.c2.x, tri.c2.y, tri.c3.x, tri.c3.y);
         }
-        assertEquals(exp,area,1e-6);
+        assertEquals(exp, area, 1e-6);
         for (int power : powers) {
             QuadraturePointIterator triIter = QuadraturePointIterators.fromTriangles(power, rm.triangles());
             QuadraturePoint qp = new QuadraturePoint();
@@ -270,14 +268,76 @@ public class QuadraturePointIteratorsTest {
             }
             assertEquals(exp, act, 1e-6);
         }
-        
-        exp=0.5*a*width*width*height;
-        for(int power:powers){
+
+        exp = 0.5 * a * width * width * height;
+        for (int power : powers) {
             QuadraturePointIterator triIter = QuadraturePointIterators.fromTriangles(power, rm.triangles());
             QuadraturePoint qp = new QuadraturePoint();
             double act = 0;
             while (triIter.next(qp)) {
-                act += qp.weight*(a*qp.coordinate.x+b*qp.coordinate.y);
+                act += qp.weight * (a * qp.coordinate.x + b * qp.coordinate.y);
+            }
+            assertEquals(exp, act, 1e-6);
+        }
+        
+                
+    }
+
+    @Test
+    public void testQuadratureDomainBased() {
+        double width = 105;
+        double height = 33;
+        double lineSize = 2;
+        double spaceNdsDis = 3;
+        double a = 1.1, b = -2.35;
+        RectangleModel rm = new RectangleModel(width, height, lineSize, spaceNdsDis);
+        
+        int[] powers = new int[]{2, 3, 4, 5};
+        double area = 0;
+        for (Triangle tri : rm.triangles()) {
+            area += GeometryMath.triangleArea2D(tri.c1.x, tri.c1.y, tri.c2.x, tri.c2.y, tri.c3.x, tri.c3.y);
+        }
+        double exp = width * height;
+        assertEquals(exp, area, 1e-6);
+        for (int power : powers) {
+            QuadraturePointIterator triIter=QuadraturePointIterators.fromDomains(QuadratureDomains.fromTriangles(rm.triangles()),power);
+            QuadraturePoint qp = new QuadraturePoint();
+            double act = 0;
+            while (triIter.next(qp)) {
+                act += qp.weight;
+            }
+            assertEquals(exp, act, 1e-6);
+        }
+
+        exp = 0.5 * a * width * width * height;
+        for (int power : powers) {
+            QuadraturePointIterator triIter=QuadraturePointIterators.fromDomains(QuadratureDomains.fromTriangles(rm.triangles()),power);
+            QuadraturePoint qp = new QuadraturePoint();
+            double act = 0;
+            while (triIter.next(qp)) {
+                act += qp.weight * (a * qp.coordinate.x + b * qp.coordinate.y);
+            }
+            assertEquals(exp, act, 1e-6);
+        }
+        
+        exp = width * height;
+        for (int power : powers) {
+            QuadraturePointIterator quadIter=QuadraturePointIterators.fromDomains(QuadratureDomains.fromQuadrangles(rm.quadrangles()),power);
+            QuadraturePoint qp = new QuadraturePoint();
+            double act = 0;
+            while (quadIter.next(qp)) {
+                act += qp.weight;
+            }
+            assertEquals(exp, act, 1e-6);
+        }
+
+        exp = 0.5 * a * width * width * height;
+        for (int power : powers) {
+            QuadraturePointIterator quadIter=QuadraturePointIterators.fromDomains(QuadratureDomains.fromQuadrangles(rm.quadrangles()),power);
+            QuadraturePoint qp = new QuadraturePoint();
+            double act = 0;
+            while (quadIter.next(qp)) {
+                act += qp.weight * (a * qp.coordinate.x + b * qp.coordinate.y);
             }
             assertEquals(exp, act, 1e-6);
         }

@@ -338,6 +338,64 @@ public class QuadraturePointIterators {
         }
     }
 
+    public static class DomainsBased implements QuadraturePointIterator {
+
+        Collection<QuadratureDomain> domains;
+        int power;
+        private int sum;
+        private Iterator<QuadratureDomain> iter;
+        int domainSize = -1;
+        int domainIndex = -1;
+        QuadratureDomain currentDomain = null;
+        int dispatched=0;
+
+        private void init(Collection<QuadratureDomain> domains, int power) {
+            this.power = power;
+            this.domains = domains;
+            int sumPts = 0;
+            for (QuadratureDomain qd : domains) {
+                qd.setPower(power);
+                sumPts += qd.size();
+            }
+            sum = sumPts;
+            iter = domains.iterator();
+        }
+
+        public DomainsBased(Collection<QuadratureDomain> domains, int power) {
+            init(domains,power);
+        }
+
+        @Override
+        public boolean next(QuadraturePoint qp) {
+            do {
+                if (domainIndex >= domainSize) {
+                    if (iter.hasNext()) {
+                        currentDomain = iter.next();
+                        domainSize = currentDomain.size();
+                        domainIndex = 0;
+                        continue;
+                    } else {
+                        return false;
+                    }
+                }
+                qp.weight=currentDomain.coordinateAndWeight(domainIndex, qp.coordinate);
+                domainIndex++;
+                dispatched++;
+                return true;
+            } while (true);
+        }
+
+        @Override
+        public int getDispatchedNum() {
+            return dispatched;
+        }
+
+        @Override
+        public int getSumNum() {
+            return sum;
+        }
+    }
+
     public static QuadraturePointIterator compoundIterators(Collection<QuadraturePointIterator> iters) {
         return new CompoundIterator(iters);
     }
@@ -393,6 +451,10 @@ public class QuadraturePointIterators {
             }
             return res;
         }
+    }
+    
+    public static QuadraturePointIterator fromDomains(Collection<QuadratureDomain>domains,int power){
+        return new DomainsBased(domains,power);
     }
 
     public static QuadraturePointIterator synchronizedWrapper(QuadraturePointIterator qpIter) {

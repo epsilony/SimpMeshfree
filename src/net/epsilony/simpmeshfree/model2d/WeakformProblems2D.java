@@ -10,6 +10,8 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import net.epsilony.simpmeshfree.model.*;
+import net.epsilony.simpmeshfree.utils.QuadratureDomain;
+import net.epsilony.simpmeshfree.utils.QuadratureDomains;
 import net.epsilony.simpmeshfree.utils.QuadraturePointIterator;
 import net.epsilony.simpmeshfree.utils.QuadraturePointIterators;
 import net.epsilony.utils.geom.Coordinate;
@@ -17,8 +19,12 @@ import net.epsilony.utils.geom.Quadrangle;
 import net.epsilony.utils.geom.Triangle;
 
 /**
- * Same standard mechanical sample problems, including</br> <ul> <li>{@link #timoshenkoCantilevel(double, double, double, double, double, double, double)  Timoshenko's exact cantilevel}
- * </li> <li>{@link #tensionBarHorizontal(double, double, double, double, double, double, double) horizontal tension bar}</li> <li>{@link #tensionBarVertical(double, double, double, double, double, double, double) vertical tension bar}</li> <li>{@link #displacementTensionBar(double, double, double, double, double, double, double) tension bar by displacement (Neumann boundary conditions only)}</li>
+ * Same standard mechanical sample problems, including</br> <ul>
+ * <li>{@link #timoshenkoCantilevel(double, double, double, double, double, double, double)  Timoshenko's exact cantilevel}
+ * </li>
+ * <li>{@link #tensionBarHorizontal(double, double, double, double, double, double, double) horizontal tension bar}</li>
+ * <li>{@link #tensionBarVertical(double, double, double, double, double, double, double) vertical tension bar}</li>
+ * <li>{@link #displacementTensionBar(double, double, double, double, double, double, double) tension bar by displacement (Neumann boundary conditions only)}</li>
  * </ul>
  *
  * @author epsilonyuan@gmail.com
@@ -53,16 +59,15 @@ public class WeakformProblems2D {
 
         @Override
         public QuadraturePointIterator volumeIterator() {
-            ArrayList<QuadraturePointIterator> iters = new ArrayList<>(2);
+            ArrayList<QuadratureDomain> domains = new ArrayList();
             if (null != triQuads) {
-                QuadraturePointIterators.TriangleIterator triIter = new QuadraturePointIterators.TriangleIterator(power, triQuads);
-                iters.add(triIter);
+                domains.addAll(QuadratureDomains.fromTriangles(triQuads));
             }
+
             if (null != quadQuads) {
-                QuadraturePointIterators.QuadrangleIterator quadIter = new QuadraturePointIterators.QuadrangleIterator(power, quadQuads);
-                iters.add(quadIter);
+                domains.addAll(QuadratureDomains.fromQuadrangles(quadQuads));
             }
-            return QuadraturePointIterators.compoundIterators(iters);
+            return new QuadraturePointIterators.DomainsBased(domains, power);
         }
 
         @Override
@@ -76,12 +81,12 @@ public class WeakformProblems2D {
             Collection<LineBoundary> dirichletBnds = getDirichletBnds();
             return new QuadraturePointIterators.LineBoundaryConditionIterator(power, dirichletBnds, getDirichletBC());
         }
-        
+
         @Override
         public List<Node> dirichletNodes() {
-            HashSet<Node> set=new HashSet<>();
+            HashSet<Node> set = new HashSet<>();
             Collection<LineBoundary> dirichletBnds = getDirichletBnds();
-            for(LineBoundary bnd:dirichletBnds){
+            for (LineBoundary bnd : dirichletBnds) {
                 set.add(bnd.start);
                 set.add(bnd.end);
             }
@@ -161,7 +166,6 @@ public class WeakformProblems2D {
         @Override
         protected BoundaryCondition getDirichletBC() {
             return new BoundaryCondition() {
-
                 @Override
                 public boolean setBoundary(Boundary bnd) {
                     return true;
@@ -196,7 +200,6 @@ public class WeakformProblems2D {
         @Override
         protected BoundaryCondition getNeumannBC() {
             return new BoundaryCondition() {
-
                 @Override
                 public boolean setBoundary(Boundary bnd) {
                     return true;

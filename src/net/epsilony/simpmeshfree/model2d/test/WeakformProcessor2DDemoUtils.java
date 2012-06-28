@@ -90,7 +90,9 @@ public class WeakformProcessor2DDemoUtils {
         RectangleModel rectModel = new RectangleModel(width, height, lineSize, spaceNdsDis);
         ArrayList<LineBoundary> bnds = rectModel.boundaries();
         GeomUtils geomUtils = new GeomUtils(bnds, rectModel.spaceNodes(), 2);
-        WeakformProblem workProblem = new WeakformProblems2D.TimoshenkoExactBeamProblem(width, height, E, v, P, bnds, null, rectModel.quadrangles(), power);
+//        WeakformProblem workProblem = new WeakformProblems2D.TimoshenkoExactBeamProblem(width, height, E, v, P, bnds, null, rectModel.quadrangles(), power);
+        WeakformProblem workProblem = new WeakformProblems2D.TimoshenkoExactBeamProblem(width, height, E, v, P, bnds, rectModel.triangles(),null, power);
+
         if (null != pipe) {
             pipe.set(conLaw, coreFun, rectModel, geomUtils, workProblem);
         }
@@ -135,7 +137,7 @@ public class WeakformProcessor2DDemoUtils {
 
     public static void main(String[] args) {
         Pipe pipe = new Pipe();
-        WeakformProcessor processor = timoshenkoBeam(pipe, true,true);
+        WeakformProcessor processor = timoshenkoBeam(pipe);
         processor.process();
         processor.solveEquation();
 
