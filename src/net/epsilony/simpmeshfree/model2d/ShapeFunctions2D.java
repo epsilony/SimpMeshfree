@@ -12,6 +12,7 @@ import net.epsilony.simpmeshfree.model.*;
 import net.epsilony.simpmeshfree.utils.BasesFunction;
 import static net.epsilony.simpmeshfree.utils.CommonUtils.len2DBase;
 import net.epsilony.utils.geom.Coordinate;
+import net.epsilony.utils.geom.GeometryMath;
 import org.ejml.alg.dense.decomposition.lu.LUDecompositionAlt;
 import org.ejml.alg.dense.linsol.lu.LinearSolverLu;
 import org.ejml.data.DenseMatrix64F;
@@ -72,6 +73,7 @@ public class ShapeFunctions2D {
      * 移动最小二乘法，没有通过白盒测试。测试样例证明了其的单位分解性和再生性。
      */
     public static class MLS implements ShapeFunction {
+
         private DenseMatrix64F A_bak;
         private LinearSolverLu luSolver;
 
@@ -90,6 +92,8 @@ public class ShapeFunctions2D {
         List<ArrayList<TDoubleArrayList>> Bs;
         double[][] ps_arr;
         private DenseMatrix64F tv;
+        public boolean areBasesRelative = true;  // Commonly, for complete nth order polynomial,
+        //just a mark variable to mark that relative base coordinate are using.
 
         @Override
         public TDoubleArrayList[] values(Coordinate center, Boundary centerBnd, TDoubleArrayList[] shapeFunVals, ArrayList<Node> resNodes) {
@@ -101,6 +105,8 @@ public class ShapeFunctions2D {
             int baseDim = basesFunction.getDim();
 
             weightFunction.values(resNodes, supR, nodesWeights);
+            Coordinate zero = new Coordinate(0, 0, 0);
+            Coordinate radCoord = new Coordinate(0, 0, 0);
 
             for (int i = 0; i < diffDim; i++) {
                 As[i].zero();
@@ -121,7 +127,12 @@ public class ShapeFunctions2D {
                 double[] tp = ps_arr[0];
                 int ndIdx = 0;
                 for (Node nd : resNodes) {
-                    basesFunction.values(nd, ps_arr);
+                    if (areBasesRelative) {
+                        GeometryMath.minus(nd, center, radCoord);
+                        basesFunction.values(radCoord, ps_arr);
+                    } else {
+                        basesFunction.values(nd, ps_arr);
+                    }
                     double weight_d = weights_d.getQuick(ndIdx);
                     for (int i = 0; i < baseDim; i++) {
                         double p_i = tp[i];
@@ -136,8 +147,12 @@ public class ShapeFunctions2D {
 
             }
             basesFunction.setDiffOrder(diffOrder);
-            basesFunction.values(center, ps_arr);
-        
+            if (areBasesRelative) {
+                basesFunction.values(zero, ps_arr);
+            } else {
+                basesFunction.values(center, ps_arr);
+            }
+
             A_bak.set(A);
             luSolver.setA(A_bak);
 
@@ -160,7 +175,7 @@ public class ShapeFunctions2D {
             tv.zero();
             CommonOps.mult(-1, A_y, gamma, tv);
             CommonOps.add(p_y, tv, tv);
-            luSolver.solve(tv,gamma_y);
+            luSolver.solve(tv, gamma_y);
 //            CommonOps.solve(A, tv, gamma_y);
 
             multAddTo(gamma_x, B, results[1]);
@@ -223,8 +238,8 @@ public class ShapeFunctions2D {
             p_y = DenseMatrix64F.wrap(ps_arr[2].length, 1, ps_arr[2]);
 
             tv = new DenseMatrix64F(baseDim, 1);
-            luSolver=new LinearSolverLu(new LUDecompositionAlt());
-            A_bak= new DenseMatrix64F(baseDim,baseDim);
+            luSolver = new LinearSolverLu(new LUDecompositionAlt());
+            A_bak = new DenseMatrix64F(baseDim, baseDim);
         }
     }
 }
