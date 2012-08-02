@@ -11,6 +11,10 @@ import net.epsilony.utils.geom.Coordinate;
  *
  * @author epsilon
  */
-public interface SupportDomainSizer {
+public interface DomainSizer {
+    //outputs can be null
     double domain(Coordinate center, List<Node> outputs);
+    
+    //infSizer can be null
+    void setInfluenceDomainSizer(InfluenceDomainSizer infSizer);
 }

@@ -11,6 +11,8 @@ import java.util.List;
 import net.epsilony.simpmeshfree.model.*;
 import net.epsilony.simpmeshfree.utils.BasesFunction;
 import static net.epsilony.simpmeshfree.utils.CommonUtils.len2DBase;
+import net.epsilony.simpmeshfree.utils.Complete2DPolynomialBases;
+import net.epsilony.simpmeshfree.utils.SomeFactory;
 import net.epsilony.utils.geom.Coordinate;
 import net.epsilony.utils.geom.GeometryMath;
 import org.ejml.alg.dense.decomposition.lu.LUDecompositionAlt;
@@ -69,6 +71,59 @@ public class ShapeFunctions2D {
         }
     }
 
+    public static MLSFactory createMLSFactory(final GeomUtils gu, int minNodesNumOfInfluenceDomain, double influenceDomainInitSearchRadiu) {
+        final InfluenceDomainSizer infSizer = new InfluenceDomainSizers.Array(gu.allNodes, gu.new NearestKVisibleDomainSizer(minNodesNumOfInfluenceDomain, influenceDomainInitSearchRadiu));
+        SomeFactory<SupportDomainCritierion> critierionFactory = new SomeFactory<SupportDomainCritierion>() {
+            @Override
+            public SupportDomainCritierion produce() {
+                return gu.new VisibleCritieron(infSizer);
+            }
+        };
+        return new MLSFactory(infSizer, critierionFactory);
+    }
+
+    public static class MLSFactory implements SomeFactory<ShapeFunction> {
+
+        SomeFactory<WeightFunctionCore> weightFunctionCoreFactory;
+        SomeFactory<WeightFunction> weightFunctionFactory;
+        SomeFactory<BasesFunction> basesFunctionFactory;
+        InfluenceDomainSizer influenceDomainSizer;
+        SomeFactory<SupportDomainCritierion> supportDomainCritierionFactory;
+        public static final int DEFAULT_BASE_ORDER = 2;
+
+        public MLSFactory(InfluenceDomainSizer influenceDomainSizer, SomeFactory<SupportDomainCritierion> supportDomainCritierionFactory) {
+
+            weightFunctionCoreFactory = WeightFunctionCores.triSplineFactory();
+            weightFunctionFactory = WeightFunctions.factory(weightFunctionCoreFactory);
+            basesFunctionFactory = Complete2DPolynomialBases.basesFunctionFactory(DEFAULT_BASE_ORDER);
+            this.influenceDomainSizer = influenceDomainSizer;
+            this.supportDomainCritierionFactory = supportDomainCritierionFactory;
+
+        }
+
+        public void setWeightFunctionCoreFactory(SomeFactory<WeightFunctionCore> weightFunctionCoreFactory) {
+            this.weightFunctionCoreFactory = weightFunctionCoreFactory;
+            weightFunctionFactory = WeightFunctions.factory(weightFunctionCoreFactory);
+        }
+
+        public void setComplete2DPolynomialBasesFactory(int baseOrder) {
+            basesFunctionFactory = Complete2DPolynomialBases.basesFunctionFactory(baseOrder);
+        }
+
+        public void setInfluenceDomainSizer(InfluenceDomainSizer influenceDomainSizer) {
+            this.influenceDomainSizer = influenceDomainSizer;
+        }
+
+        public void setSupportDomainCritierionFactory(SomeFactory<SupportDomainCritierion> supportDomainCritierionFactory) {
+            this.supportDomainCritierionFactory = supportDomainCritierionFactory;
+        }
+
+        @Override
+        public MLS produce() {
+            return new MLS(weightFunctionFactory.produce(), basesFunctionFactory.produce(), influenceDomainSizer, supportDomainCritierionFactory.produce());
+        }
+    }
+
     /**
      * 移动最小二乘法，没有通过白盒测试。测试样例证明了其的单位分解性和再生性。
      */
@@ -76,9 +131,11 @@ public class ShapeFunctions2D {
 
         private DenseMatrix64F A_bak;
         private LinearSolverLu luSolver;
+        private InfluenceDomainSizer infSizer;
+        private TDoubleArrayList infRads;
 
-        public MLS(WeightFunction weightFunction, BasesFunction basesFunction, SupportDomainCritierion criterion) {
-            init(weightFunction, basesFunction, criterion);
+        public MLS(WeightFunction weightFunction, BasesFunction basesFunction, InfluenceDomainSizer infSizer, SupportDomainCritierion criterion) {
+            init(weightFunction, basesFunction, infSizer, criterion);
         }
         private int diffOrder;
         WeightFunction weightFunction;
@@ -98,13 +155,15 @@ public class ShapeFunctions2D {
         @Override
         public TDoubleArrayList[] values(Coordinate center, Boundary centerBnd, TDoubleArrayList[] shapeFunVals, ArrayList<Node> resNodes) {
 
-            double supR = criterion.setCenter(center, centerBnd, resNodes);
+            TDoubleArrayList[] distSqs = nodesWeights;
+            criterion.getSupports(center, centerBnd, resNodes, distSqs);
             int ndsNum = resNodes.size();
             TDoubleArrayList[] results = initOutputResult(shapeFunVals, diffOrder, ndsNum);
             int diffDim = len2DBase(diffOrder);
             int baseDim = basesFunction.getDim();
 
-            weightFunction.values(resNodes, supR, nodesWeights);
+            InfluenceDomainSizers.getInfRadius(resNodes, infSizer, infRads);
+            weightFunction.values(distSqs, infRads, nodesWeights);
             Coordinate zero = new Coordinate(0, 0, 0);
             Coordinate radCoord = new Coordinate(0, 0, 0);
 
@@ -188,14 +247,15 @@ public class ShapeFunctions2D {
         }
 
         @Override
-        public void setDiffOrder(int partDimOrder) {
-            if (partDimOrder < 0 || partDimOrder >= 2) {
+        public void setDiffOrder(int partDiffOrder) {
+            if (partDiffOrder < 0 || partDiffOrder >= 2) {
                 throw new UnsupportedOperationException();
             }
-            this.diffOrder = partDimOrder;
-            weightFunction.setDiffOrder(partDimOrder);
-            basesFunction.setDiffOrder(partDimOrder);
-            nodesWeights = new TDoubleArrayList[len2DBase(partDimOrder)];
+            this.diffOrder = partDiffOrder;
+            weightFunction.setDiffOrder(partDiffOrder);
+            basesFunction.setDiffOrder(partDiffOrder);
+            criterion.setDiffOrder(partDiffOrder);
+            nodesWeights = new TDoubleArrayList[len2DBase(partDiffOrder)];
             for (int i = 0; i < nodesWeights.length; i++) {
                 nodesWeights[i] = new TDoubleArrayList(MAX_NODES_SIZE_ESTIMATION);
             }
@@ -206,10 +266,12 @@ public class ShapeFunctions2D {
             return diffOrder;
         }
 
-        private void init(WeightFunction weightFunction, BasesFunction baseFunction, SupportDomainCritierion criterion) {
+        private void init(WeightFunction weightFunction, BasesFunction baseFunction, InfluenceDomainSizer infSizer, SupportDomainCritierion criterion) {
             this.weightFunction = weightFunction;
             this.criterion = criterion;
             this.basesFunction = baseFunction;
+            this.infSizer = infSizer;
+            infRads = new TDoubleArrayList(MAX_NODES_SIZE_ESTIMATION);
             final int baseDim = baseFunction.getDim();
             A = new DenseMatrix64F(baseDim, baseDim);
             A_x = new DenseMatrix64F(baseDim, baseDim);

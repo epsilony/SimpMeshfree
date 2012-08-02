@@ -6,12 +6,32 @@ package net.epsilony.simpmeshfree.model;
 
 import static java.lang.Math.pow;
 import java.util.Arrays;
+import net.epsilony.simpmeshfree.utils.SomeFactory;
 
 /**
  *
  * @author epsilon
  */
 public class WeightFunctionCores {
+    public static SomeFactory<WeightFunctionCore> triSplineFactory(){
+        return new SomeFactory<WeightFunctionCore>() {
+
+            @Override
+            public WeightFunctionCore produce() {
+                return new TriSpline();
+            }
+        };
+    }
+    
+    public static SomeFactory<WeightFunctionCore> simpPowerFactory(final int power){
+        return new SomeFactory<WeightFunctionCore>() {
+
+            @Override
+            public WeightFunctionCore produce() {
+                return new SimpPower(power);
+            }
+        };
+    }
     public static class TriSpline implements WeightFunctionCore {
 
         private int diffOrder;
@@ -66,11 +86,6 @@ public class WeightFunctionCores {
 
 
         }
-
-        @Override
-        public WeightFunctionCore avatorInstance() {
-            return new TriSpline();
-        }
     }
 
     public static class SimpPower implements WeightFunctionCore {
@@ -114,11 +129,6 @@ public class WeightFunctionCores {
         @Override
         public int getDiffOrder() {
             return diffOrder;
-        }
-
-        @Override
-        public WeightFunctionCore avatorInstance() {
-           return new SimpPower(power);
         }
     }
 }

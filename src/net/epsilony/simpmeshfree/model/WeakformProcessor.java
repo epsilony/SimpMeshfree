@@ -13,6 +13,7 @@ import net.epsilony.simpmeshfree.model2d.ShapeFunctions2D;
 import net.epsilony.simpmeshfree.utils.QuadraturePoint;
 import net.epsilony.simpmeshfree.utils.QuadraturePointIterator;
 import net.epsilony.simpmeshfree.utils.QuadraturePointIterators;
+import net.epsilony.simpmeshfree.utils.SomeFactory;
 import net.epsilony.utils.geom.Coordinate;
 import net.epsilony.utils.math.EquationSolver;
 import no.uib.cipr.matrix.DenseVector;
@@ -32,7 +33,7 @@ public class WeakformProcessor {
         this.monitor = monitor;
         monitor.setProcessor(this);
     }
-    ShapeFunctionFactory shapeFunFactory;
+    SomeFactory<ShapeFunction> shapeFunFactory;
     public int arrayListSize = 100;
     WeakformAssemblier assemblier;
     WeakformProblem workProblem;
@@ -53,7 +54,7 @@ public class WeakformProcessor {
      * @param power
      * @param equationSolver
      */
-    public WeakformProcessor(ShapeFunctionFactory shapeFunFactory, WeakformAssemblier assemblier, WeakformProblem workProblem, EquationSolver equationSolver) {
+    public WeakformProcessor(SomeFactory<ShapeFunction> shapeFunFactory, WeakformAssemblier assemblier, WeakformProblem workProblem, EquationSolver equationSolver) {
         this.shapeFunFactory = shapeFunFactory;
         this.assemblier = assemblier;
         this.workProblem = workProblem;
@@ -69,7 +70,7 @@ public class WeakformProcessor {
      * @param power
      * @param equationSolver
      */
-    public WeakformProcessor(ShapeFunctionFactory shapeFunFactory, WeakformAssemblier assemblier, WeakformProblem workProblem, EquationSolver equationSolver, int dim) {
+    public WeakformProcessor(SomeFactory<ShapeFunction> shapeFunFactory,WeakformAssemblier assemblier, WeakformProblem workProblem, EquationSolver equationSolver, int dim) {
         this.shapeFunFactory = shapeFunFactory;
         this.assemblier = assemblier;
         this.workProblem = workProblem;
@@ -136,7 +137,7 @@ public class WeakformProcessor {
 
         @Override
         public void run() {
-            ShapeFunction shapeFun = shapeFunFactory.factory();
+            ShapeFunction shapeFun = shapeFunFactory.produce();
             WeakformAssemblier assemblierAvator = assemblier.avatorInstance();
             monitor.avatorInited(assemblier, shapeFun, id);
             

@@ -5,7 +5,7 @@
 package net.epsilony.simpmeshfree.model;
 
 import gnu.trove.list.array.TDoubleArrayList;
-import java.util.List;
+import net.epsilony.simpmeshfree.utils.SomeFactory;
 
 /**
  *
@@ -13,76 +13,69 @@ import java.util.List;
  */
 public class WeightFunctions {
 
-    public static WeightFunction factory(WeightFunctionCore coreFun, DistanceSquareFunction distFun) {
-        WeightFunctionImp imp = new WeightFunctionImp(coreFun, distFun);
-        return imp;
+    public static SomeFactory<WeightFunction> factory(final SomeFactory<WeightFunctionCore> coreFunFactory) {
+        return factory(coreFunFactory,2);
+        
     }
 
-    public static WeightFunction factory(WeightFunctionCore coreFun, DistanceSquareFunction distFun, int dim) {
-        WeightFunctionImp imp = new WeightFunctionImp(coreFun, distFun, dim);
-        return imp;
+    public static SomeFactory<WeightFunction> factory(final SomeFactory<WeightFunctionCore> coreFunFactory, final int dim) {
+        return new SomeFactory<WeightFunction>() {
+            @Override
+            public WeightFunction produce() {
+                WeightFunctionImp imp = new WeightFunctionImp(coreFunFactory.produce(),dim);
+                return imp;
+            }
+        };
+    }
+    
+    public static WeightFunction weightFunction(WeightFunctionCore coreFun, int dim){
+        return new WeightFunctionImp(coreFun, dim);
+    }
+    
+    public static WeightFunction weightFunction(WeightFunctionCore coreFun){
+        return new WeightFunctionImp(coreFun);
     }
 
     static class WeightFunctionImp implements WeightFunction {
 
         private int diffOrder;
         WeightFunctionCore coreFun;
-        DistanceSquareFunction distFun;
         private final int dim;
         private double[] coreVals;
 
-        private WeightFunctionImp(WeightFunctionCore coreFun, DistanceSquareFunction distFun, int dim) {
+        private WeightFunctionImp(WeightFunctionCore coreFun, int dim) {
             this.coreFun = coreFun;
-            this.distFun = distFun;
             this.dim = dim;
         }
 
-        private WeightFunctionImp(WeightFunctionCore coreFun, DistanceSquareFunction distFun) {
+        private WeightFunctionImp(WeightFunctionCore coreFun) {
             this.coreFun = coreFun;
-            this.distFun = distFun;
             this.dim = 2;
         }
 
         @Override
-        public TDoubleArrayList[] values(List<Node> nodes, double supportRad, TDoubleArrayList[] results) {
-
-            results = distFun.sqValues(nodes, results);
-            double radSq = supportRad * supportRad;
-            for (int i=0;i<nodes.size();i++) {
-                double distSq = results[0].get(i);
+        public TDoubleArrayList[] values(TDoubleArrayList[] distsSqs, TDoubleArrayList rads, TDoubleArrayList[] results) {
+            int size=distsSqs[0].size();
+            for (int i = 0; i < size; i++) {
+                double radSq = rads.getQuick(i);
+                radSq *= radSq;
+                double distSq = distsSqs[0].get(i);
                 coreFun.valuesByNormalisedDistSq(distSq / radSq, coreVals);
                 results[0].set(i, coreVals[0]);
 
                 if (diffOrder >= 1) {
-                    double distSq_x=results[1].get(i);
-                    double distSq_y=results[2].get(i);
-                    results[1].set(i,coreVals[1] * distSq_x / radSq);
-                    results[2].set(i,coreVals[1] * distSq_y / radSq);
-                    if(dim==3){
-                        double distSq_z=results[3].get(i);
-                        results[3].set(i,coreVals[1]*distSq_z/radSq);
+                    double distSq_x = distsSqs[1].get(i);
+                    double distSq_y = distsSqs[2].get(i);
+                    results[1].set(i, coreVals[1] * distSq_x / radSq);
+                    results[2].set(i, coreVals[1] * distSq_y / radSq);
+                    if (dim == 3) {
+                        double distSq_z = distsSqs[3].get(i);
+                        results[3].set(i, coreVals[1] * distSq_z / radSq);
                     }
                 }
             }
             return results;
         }
-
-//        private TDoubleArrayList[] initResultsTale(TDoubleArrayList[] results, int NdsNum) {
-//            if (results.length < diffDim) {
-//                results = Arrays.copyOf(results, diffDim);
-//                for (int i = diffOrder; i < diffDim; i++) {
-//                    results[i] = new TDoubleArrayList(NdsNum);
-//                    results[i].fill(0, NdsNum, 0);
-//                }
-//            } else {
-//                for (int i = diffOrder; i < diffDim; i++) {
-//                    TDoubleArrayList result = results[i];
-//                    result.resetQuick();
-//                    result.fill(0, NdsNum, 0);
-//                }
-//            }
-//            return results;
-//        }
 
         @Override
         public void setDiffOrder(int order) {
@@ -90,19 +83,13 @@ public class WeightFunctions {
                 throw new UnsupportedOperationException();
             }
             this.diffOrder = order;
-            distFun.setDiffOrder(order);
             coreFun.setDiffOrder(order);
-            coreVals = new double[diffOrder+1];
+            coreVals = new double[diffOrder + 1];
         }
 
         @Override
         public int getDiffOrder() {
             return diffOrder;
-        }
-
-        @Override
-        public DistanceSquareFunction getDistFun() {
-            return distFun;
         }
     }
 }

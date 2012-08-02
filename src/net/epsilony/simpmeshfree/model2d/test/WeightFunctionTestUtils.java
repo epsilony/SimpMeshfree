@@ -76,8 +76,9 @@ public class WeightFunctionTestUtils {
     public static ShapeFunction genShapeFunction(double rad, List<Node> nds, int baseOrder, WeightFunctionCore coreFun) {
         SupportDomainCritierion criterion = SupportDomainUtils.simpCriterion(rad, nds);
         BasesFunction baseFun = Complete2DPolynomialBases.complete2DPolynomialBase(baseOrder);
-        WeightFunction weightFunction = WeightFunctions.factory(coreFun, criterion.getDistanceSquareFunction());
-        return new ShapeFunctions2D.MLS(weightFunction, baseFun, criterion);
+        WeightFunction weightFunction = WeightFunctions.weightFunction(coreFun);
+        InfluenceDomainSizer infSize=new InfluenceDomainSizers.Array(nds, SupportDomainUtils.simpConstantSizer(rad, nds));
+        return new ShapeFunctions2D.MLS(weightFunction, baseFun, infSize,criterion);
     }
 
     public interface ValueFun {

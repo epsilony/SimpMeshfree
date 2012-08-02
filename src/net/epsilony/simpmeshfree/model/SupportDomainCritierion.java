@@ -4,9 +4,10 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import gnu.trove.list.array.TDoubleArrayList;
 import java.util.Collection;
 import java.util.List;
-import net.epsilony.simpmeshfree.utils.Avatarable;
+import net.epsilony.simpmeshfree.utils.PartDiffOrdered;
 import net.epsilony.utils.geom.Coordinate;
 
 /**
@@ -19,14 +20,14 @@ import net.epsilony.utils.geom.Coordinate;
  * @see ShapeFunctions2D
  * @author epsilonyuan@gmail.com
  */
-public interface SupportDomainCritierion extends Avatarable<SupportDomainCritierion> {
+public interface SupportDomainCritierion extends PartDiffOrdered{
     /**
      * @param center
      * @param centerBound 
      * @param outputNodes
      * @return supportDomainRadius 
      */
-    double setCenter(Coordinate center,Boundary centerBound,List<Node> outputNodes);
+    double getSupports(Coordinate center,Boundary centerBound,List<Node> outputNodes,TDoubleArrayList[] distSqs);
     
-    DistanceSquareFunction getDistanceSquareFunction();
+    void setInfluenceDomainSizer(InfluenceDomainSizer infSizer);
 }

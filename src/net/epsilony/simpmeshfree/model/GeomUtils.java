@@ -5,6 +5,7 @@
 package net.epsilony.simpmeshfree.model;
 
 import gnu.trove.iterator.TIntIterator;
+import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.hash.TIntHashSet;
 import java.util.*;
@@ -166,7 +167,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
         avator.boundarySearcher = boundarySearcher;
         avator.defaultMaxNodeNumInSupportDomain = defaultMaxNodeNumInSupportDomain;
         avator.dim = dim;
-        
+
         avator.indexingSetting = indexingSetting;
         //intCache1,intCache2 will initiated by themselves
 
@@ -180,7 +181,6 @@ public class GeomUtils implements Avatarable<GeomUtils> {
 
         return avator;
     }
-
 
     public static class LayeredRangeTreeNodeSearcher implements CenterDistanceSearcher<Coordinate, Node> {
 
@@ -327,9 +327,10 @@ public class GeomUtils implements Avatarable<GeomUtils> {
     }
 
     /**
-     * Given a set of boundaries (bnds), divide the set into sub sets (output)
-     * by neighborhoods that means: the Union of output is bnds, for any j
-     * output.get(j).get(neighbor)(any) is not in output.get(any but not j).
+     * Given a ndsSet of boundaries (bnds), divide the ndsSet into sub sets
+     * (output) by neighborhoods that means: the Union of output is bnds, for
+     * any j output.get(j).get(neighbor)(any) is not in output.get(any but not
+     * j).
      *
      * @param bnds input bnds
      * @param output
@@ -396,7 +397,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
             }
         }
 
-        //the output is not compact, with some null in it, remove the null items and reset the bnd set ids.
+        //the output is not compact, with some null in it, remove the null items and reset the bnd ndsSet ids.
         int realId = 0;
         //borrow the memory of bndToOutputIds temporarily.
         TIntArrayList oldIdToRealId = bndToOutputIds;
@@ -516,24 +517,19 @@ public class GeomUtils implements Avatarable<GeomUtils> {
      * @param center
      * @param nds should all be space nodes or should all be boundary nodes
      * @param bnds
-     * @param nodeBlockNums There is
-     * <code>nodeBlockNums.get(i)</code> boundaries blocked betwean
-     * <code>nds.get(i)</code> and
-     * <code>center</code>. For acceleration, if the
-     * <code>nds.get(i)</code> is blocked by twice, it won't be considered
-     * later. So that the max item in this will not > 2.
-     * @param nodeBlockBndIdx The boundary which
-     * <code>getId</code> is
-     * <code>nodeBlockBndIdx</code> blocks betwean
-     * <code>center</code> and
+     * @param nodeBlockNums There is <code>nodeBlockNums.get(i)</code>
+     * boundaries blocked betwean <code>nds.get(i)</code> and
+     * <code>center</code>. For acceleration, if the <code>nds.get(i)</code> is
+     * blocked by twice, it won't be considered later. So that the max item in
+     * this will not > 2.
+     * @param nodeBlockBndIdx The boundary which <code>getId</code> is
+     * <code>nodeBlockBndIdx</code> blocks betwean <code>center</code> and
      * <code>nds.get(i)</code>. </br> If there are not only one boundary blocks
-     * betwean
-     * <code>center</code> and
-     * <code>nds.get(i)</code> , that is
+     * betwean <code>center</code> and <code>nds.get(i)</code> , that is
      * <code>nodeBlockNums</code> >=2 , only one of the blocking boundary's id
      * will be randomly recorded here.
-     * @param isBoundaryNode is the
-     * <code>nds</code> are all boundary nodes or are all not
+     * @param isBoundaryNode is the <code>nds</code> are all boundary nodes or
+     * are all not
      */
     public void visibleStatus(Coordinate center, List<Node> nds, boolean isBoundaryNode, List<Boundary> bnds, TIntArrayList nodeBlockNums, TIntArrayList nodeBlockBndIdx) {
         Coordinate t = new Coordinate();
@@ -605,30 +601,30 @@ public class GeomUtils implements Avatarable<GeomUtils> {
      * @param result can be null
      * @return nodesTree without duplication
      */
-    public List<Node> getBndsNodes(Collection<Boundary> bnds, List<Node> result,TIntHashSet setCache) {
+    public List<Node> getBndsNodes(Collection<Boundary> bnds, List<Node> result, TIntHashSet setCache) {
         if (result == null) {
             result = new LinkedList<>();
         } else {
             result.clear();
         }
-        if(null==setCache){
-            setCache=new TIntHashSet();
-        }else{
+        if (null == setCache) {
+            setCache = new TIntHashSet();
+        } else {
             setCache.clear();
         }
-        for(Boundary bnd:bnds){
-            for(int i=0;i<bnd.num();i++){
+        for (Boundary bnd : bnds) {
+            for (int i = 0; i < bnd.num(); i++) {
                 setCache.add(bnd.getNode(i).id);
             }
         }
         TIntIterator iterator = setCache.iterator();
-        while(iterator.hasNext()){
+        while (iterator.hasNext()) {
             result.add(allNodes.get(iterator.next()));
         }
         return result;
     }
-    
-    public List<Node> getBndsNodes(Collection<Boundary> bnds, List<Node> result){
+
+    public List<Node> getBndsNodes(Collection<Boundary> bnds, List<Node> result) {
         return getBndsNodes(bnds, result, null);
     }
 
@@ -660,23 +656,18 @@ public class GeomUtils implements Avatarable<GeomUtils> {
 
     public class VisibleCritieron implements SupportDomainCritierion {
 
-        NearestKVisibleDomainSizer domainSizer;
-        public int nodeNumMin, nodeNumMax;
-        public double radiusEnlargeFactor = 1.2,
-                radiusSafeFactor = 1.1,
-                centerTranserDistanceRatio = 0.01;    //Center at Boundary Needs to transfer against boundary normal temprorily to ensure visibleFilter algorithm's robust
+        public double centerTranserDistanceRatio = 0.01;    //Center at Boundary Needs to transfer against boundary normal temprorily to ensure visibleFilter algorithm's robust
+        VisibleDomainSizer domainSizer = new VisibleDomainSizer();
 
-        public VisibleCritieron(int nodeNumMin, int nodeNumMax) {
-            this.nodeNumMin = nodeNumMin;
-            this.nodeNumMax = nodeNumMax;
-            initSearchRadius = Math.sqrt(nodeNumMin / 3.0) * 1.5 * maxBndRad;
-            domainSizer = new NearestKVisibleDomainSizer(nodeNumMin, initSearchRadius);
+        public VisibleCritieron(InfluenceDomainSizer infSizer) {
+            domainSizer.setInfluenceDomainSizer(infSizer);
+            domainSizer.setSearchRadiu(infSizer.getMaxSize());
         }
         DistanceSquareFunction distFun = new DistanceSquareFunctions.Common();
 
         @Override
-        public double setCenter(Coordinate center, Boundary centerBnd, List<Node> outputNodes) {
-            distFun.setCenter(center);
+        public double getSupports(Coordinate center, Boundary centerBnd, List<Node> outputNodes, TDoubleArrayList[] distSqs) {
+
             Coordinate actCenter;
             if (centerBnd != null) {
                 actCenter = new Coordinate();
@@ -685,21 +676,111 @@ public class GeomUtils implements Avatarable<GeomUtils> {
                 actCenter = center;
             }
 
-            return domainSizer.domain(actCenter, outputNodes);
+            double rad = domainSizer.domain(actCenter, outputNodes);
+            distFun.setCenter(center);
+            distFun.sqValues(outputNodes, distSqs);
+            return rad;
         }
 
         @Override
-        public DistanceSquareFunction getDistanceSquareFunction() {
-            return distFun;
+        public void setInfluenceDomainSizer(InfluenceDomainSizer infSizer) {
+            domainSizer.setInfluenceDomainSizer(infSizer);
+            domainSizer.setSearchRadiu(infSizer.getMaxSize());
         }
 
         @Override
-        public SupportDomainCritierion avatorInstance() {
-            return new VisibleCritieron(nodeNumMin, nodeNumMax);
+        public void setDiffOrder(int order) {
+            distFun.setDiffOrder(order);
+        }
+
+        @Override
+        public int getDiffOrder() {
+            return distFun.getDiffOrder();
         }
     }
 
-    public class NearestKVisibleDomainSizer implements SupportDomainSizer {
+    public class VisibleDomainSizer implements DomainSizer {
+
+        LinkedList<Boundary> bnds = new LinkedList<>();
+        LinkedList<Node> nds = new LinkedList<>();
+        TIntArrayList blockedNum = new TIntArrayList(defaultMaxNodeNumInSupportDomain);
+        TIntArrayList blockedBndId = new TIntArrayList(defaultMaxNodeNumInSupportDomain);
+        LinkedList<Node> bndNds = new LinkedList<>();
+        private double rSearch;
+        TIntHashSet ndsSet = new TIntHashSet(bndNodeNum);
+        boolean returnFurthesDistance = true;
+        private InfluenceDomainSizer infSizer;
+
+        public void setReturnFurthesDistance(boolean returnFurthesDistance) {
+            this.returnFurthesDistance = returnFurthesDistance;
+        }
+
+        public VisibleDomainSizer(double rSearch) {
+            this.rSearch = rSearch;
+        }
+
+        public VisibleDomainSizer() {
+        }
+
+        public void setSearchRadiu(double rSearch) {
+            this.rSearch = rSearch;
+        }
+
+        @Override
+        public double domain(Coordinate center, List<Node> outputs) {
+            List<Node> res = inRadVisibleNodes(center, outputs);
+            if (returnFurthesDistance) {
+                double maxR = 0;
+                for (Node nd : res) {
+                    double t = GeometryMath.distance(center, nd);
+                    if (t > maxR) {
+                        maxR = t;
+                    }
+                }
+                return maxR;
+            } else {
+                return rSearch;
+            }
+        }
+
+        public List<Node> inRadVisibleNodes(Coordinate center, List<Node> outputs) {
+            if (outputs == null) {
+                outputs = new LinkedList<>();
+            }
+            searchSpaceNodes(center, rSearch, nds);
+            searchBoundary(center, rSearch, bnds);
+            visibleStatus(center, nds, false, bnds, blockedNum, blockedBndId);
+            outputs.clear();
+            int idx = 0;
+            for (Node nd : nds) {
+                if (blockedNum.getQuick(idx) < 1) {
+                    if (infSizer == null || infSizer.getSize(nd) > GeometryMath.distance(center, nd)) {
+                        outputs.add(nd);
+                    }
+                }
+                idx++;
+            }
+            getBndsNodes(bnds, bndNds, ndsSet);
+            visibleStatus(center, bndNds, true, bnds, blockedNum, blockedBndId);
+            idx = 0;
+            for (Node nd : bndNds) {
+                if (blockedNum.getQuick(idx) < 1) {
+                    if (infSizer == null || infSizer.getSize(nd) > GeometryMath.distance(center, nd)) {
+                        outputs.add(nd);
+                    }
+                }
+                idx++;
+            }
+            return outputs;
+        }
+
+        @Override
+        public void setInfluenceDomainSizer(InfluenceDomainSizer infSizer) {
+            this.infSizer = infSizer;
+        }
+    }
+
+    public class NearestKVisibleDomainSizer extends VisibleDomainSizer {
 
         int k;
         double rInit;
@@ -707,12 +788,6 @@ public class GeomUtils implements Avatarable<GeomUtils> {
         int maxIter = 4;
         CenterDistanceComparator<Coordinate> comp = Coordinates.inverseCenterDistanceComparator();
         PriorityQueue<Node> pq = new PriorityQueue<>(defaultMaxNodeNumInSupportDomain, comp);
-        LinkedList<Boundary> bnds = new LinkedList<>();
-        LinkedList<Node> nds = new LinkedList<>();
-        LinkedList<Node> bndNds = new LinkedList<>();
-        TIntArrayList blockedNum = new TIntArrayList(defaultMaxNodeNumInSupportDomain);
-        TIntArrayList blockedBndId = new TIntArrayList(defaultMaxNodeNumInSupportDomain);
-        TIntHashSet set=new TIntHashSet(bndNodeNum);
 
         public NearestKVisibleDomainSizer(int k, double rInit) {
             this.k = k;
@@ -722,38 +797,23 @@ public class GeomUtils implements Avatarable<GeomUtils> {
         @Override
         public double domain(Coordinate center, List<Node> outputs) {
             double rSearch = rInit;
+            setSearchRadiu(rSearch);
+            boolean needNdsOutput = true;
             int iter = 1;
             if (null == outputs) {
                 outputs = new LinkedList<>();
+                needNdsOutput = false;
             }
             do {
-                searchSpaceNodes(center, rSearch, nds);
-                searchBoundary(center, rSearch, bnds);
-                visibleStatus(center, nds, false, bnds, blockedNum, blockedBndId);
-                outputs.clear();
-                int idx = 0;
-                for (Node nd : nds) {
-                    if (blockedNum.getQuick(idx) < 1) {
-                        outputs.add(nd);
-                    }
-                    idx++;
-                }
-                getBndsNodes(bnds, bndNds,set);
-                visibleStatus(center, bndNds, true, bnds, blockedNum, blockedBndId);
-                idx = 0;
-                for (Node nd : bndNds) {
-                    if (blockedNum.getQuick(idx) < 1) {
-                        outputs.add(nd);
-                    }
-                    idx++;
-                }
+                inRadVisibleNodes(center, outputs);
                 rSearch *= enlargeRatio;
                 iter++;
+                setSearchRadiu(rSearch);
             } while (outputs.size() < k && iter <= maxIter);
 
             if (outputs.size() < k) {
-                Logger logger=Logger.getLogger(this.getClass());
-                logger.info("bad domain search, only "+outputs.size()+" nodes searched at"+center);
+                Logger logger = Logger.getLogger(this.getClass());
+                logger.info("bad domain search, only " + outputs.size() + " nodes searched at" + center);
                 throw new IllegalStateException();
             }
 
@@ -768,8 +828,10 @@ public class GeomUtils implements Avatarable<GeomUtils> {
 
             Node nd = pq.peek();
             double radius = distance(center, nd);
-            outputs.clear();
-            outputs.addAll(pq);
+            if (needNdsOutput) {
+                outputs.clear();
+                outputs.addAll(pq);
+            }
             return radius;
         }
     }

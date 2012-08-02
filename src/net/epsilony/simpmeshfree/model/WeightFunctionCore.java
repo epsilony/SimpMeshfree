@@ -11,6 +11,6 @@ import net.epsilony.simpmeshfree.utils.PartDiffOrdered;
  *
  * @author epsilon
  */
-public interface WeightFunctionCore extends PartDiffOrdered, Avatarable<WeightFunctionCore> {
+public interface WeightFunctionCore extends PartDiffOrdered{
     double[] valuesByNormalisedDistSq(double distSq,double[] results);
 }

@@ -4,10 +4,15 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import gnu.trove.list.array.TDoubleArrayList;
+import java.util.List;
+
 /**
  *
  * @author epsilon
  */
-public interface ShapeFunctionFactory {
-    public ShapeFunction factory();
+public interface InfluenceDomainSizer {
+    double getSize(Node nd);
+    
+    double getMaxSize();
 }

@@ -15,6 +15,16 @@ import net.epsilony.utils.geom.Coordinate;
  * @author epsilonyuan@gmail.com
  */
 public class Complete2DPolynomialBases implements BasesFunction {
+    
+    public static SomeFactory<BasesFunction> basesFunctionFactory(final int baseOrder){
+        return new SomeFactory<BasesFunction>() {
+
+            @Override
+            public BasesFunction produce() {
+                return complete2DPolynomialBase(baseOrder);
+            }
+        };
+    }
 
     public static BasesFunction complete2DPolynomialBase(int baseOrder) {
         return new Complete2DPolynomialBases(baseOrder);
