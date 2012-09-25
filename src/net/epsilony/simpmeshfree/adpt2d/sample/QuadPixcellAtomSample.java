@@ -13,7 +13,7 @@ import net.epsilony.simpmeshfree.model.Node;
  *
  * @author epsilon
  */
-public class QuadPixcellSample {
+public class QuadPixcellAtomSample {
     /**
      * Generate a QuadPixcell which has a No.3 node at (ox,oy) 
      * and No.2 node is at (ox+scale,oy*scale)

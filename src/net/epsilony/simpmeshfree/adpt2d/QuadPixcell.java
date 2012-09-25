@@ -116,7 +116,7 @@ public class QuadPixcell implements WithId {
     Node[] edgeMidNodes4Refine() {
         Node[] result = new Node[4];
         for (int i = 0; i < 4; i++) {
-            if (neighbours[i] != null || neighbours[i].level <= level) {
+            if (neighbours[i] == null || neighbours[i].level <= level) {
                 Node st = nodes[i];
                 Node ed = nodes[(i + 1) % 4];
                 Node nd = new Node((st.x + ed.x) * 0.5, (st.y + ed.y) * 0.5);
@@ -175,13 +175,18 @@ public class QuadPixcell implements WithId {
         return slibings;
     }
     
-    public QuadPixcell[][] slibingsNeighbours4Merge(){
+    public QuadPixcell[] slibings(){
         QuadPixcell[] slibings=new QuadPixcell[4];
         slibings[0]=this;
         slibings[1]=this.neighbours[1];
         slibings[2]=this.neighbours[1].neighbours[2];
         slibings[3]=this.neighbours[2];
-        QuadPixcell[][] result=new QuadPixcell[4][4];
+        return slibings;
+    }
+    
+    public QuadPixcell[][] slibingsNeighbours4Merge(){
+        QuadPixcell[] slibings=slibings();
+        QuadPixcell[][] result=new QuadPixcell[2][4];
         QuadPixcell[] oriNeighbours=new QuadPixcell[4];
         for(int i=0;i<slibings.length;i++){
             oriNeighbours[i]=slibings[i].neighbours[i];
