@@ -108,16 +108,14 @@ public class QuadPixcellTools {
                     break;
                 }
                 QuadPixcell slibNb = slibings[i].neighbours[i];
-                if (slibNb != null) {
-                    if (slibNb.level > px.level) {
-                        canMerge = false;
-                        break;
-                    }
-                    QuadPixcell slibNb_left=slibNb.neighbours[(i+1)%4];
-                    if(slibNb_left!=null&&slibNb_left.level>px.level){
-                        canMerge =false;
-                        break;
-                    }
+                if (slibNb != null && slibNb.level > px.level) {
+                    canMerge = false;
+                    break;
+                }
+                slibNb = slibings[i].neighbours[(i + 3) % 4];
+                if (slibNb != null && slibNb.level > px.level) {
+                    canMerge = false;
+                    break;
                 }
             }
             if (!canMerge) {
