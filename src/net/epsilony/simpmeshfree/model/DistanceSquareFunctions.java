@@ -11,16 +11,16 @@ import net.epsilony.utils.geom.Coordinate;
 import net.epsilony.utils.geom.GeometryMath;
 
 /**
- * 
+ *
  * @author epsilon
  */
 public class DistanceSquareFunctions {
-    
-    public static DistanceSquareFunction common(int dim){
+
+    public static DistanceSquareFunction common(int dim) {
         return new Common(dim);
     }
-    
-    public static DistanceSquareFunction common(){
+
+    public static DistanceSquareFunction common() {
         return new Common();
     }
 
@@ -44,17 +44,17 @@ public class DistanceSquareFunctions {
 
         @Override
         public TDoubleArrayList[] sqValues(List<? extends Coordinate> pts, TDoubleArrayList[] results) {
-            results=init(results, pts.size());
+            results = init(results, pts.size());
             for (Coordinate pt : pts) {
-                double distSq=GeometryMath.distanceSquare(center, pt);
+                double distSq = GeometryMath.distanceSquare(center, pt);
                 results[0].add(distSq);
                 if (order >= 1) {
-                    
-  
-                    results[1].add(2*(center.x - pt.x));
-                    results[2].add(2*(center.y - pt.y));
+
+
+                    results[1].add(2 * (center.x - pt.x));
+                    results[2].add(2 * (center.y - pt.y));
                     if (dim == 3) {
-                        results[3].add(2*(center.z - pt.z));
+                        results[3].add(2 * (center.z - pt.z));
                     }
                 }
             }
@@ -94,5 +94,22 @@ public class DistanceSquareFunctions {
         public int getDiffOrder() {
             return order;
         }
+    }
+
+    public static TDoubleArrayList[] initDistSqsContainer(int dim, int diffOrder, int capacityGuess) {
+        int lenBase = CommonUtils.lenBase(dim, diffOrder);
+        TDoubleArrayList[] result = new TDoubleArrayList[lenBase];
+        for (int i = 0; i < result.length; i++) {
+            if (capacityGuess > 0) {
+                result[i] = new TDoubleArrayList(capacityGuess);
+            } else {
+                result[i] = new TDoubleArrayList();
+            }
+        }
+        return result;
+    }
+    
+    public static TDoubleArrayList[] initDistSqsContainer(int dim,int diffOrder){
+        return initDistSqsContainer(dim, diffOrder, -1);
     }
 }

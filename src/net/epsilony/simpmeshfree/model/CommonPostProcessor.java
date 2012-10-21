@@ -20,13 +20,13 @@ import org.ejml.ops.CommonOps;
  */
 public class CommonPostProcessor {
 
-    private ShapeFunction shapeFunction;
+    private ShapeFunctionPacker shapeFunctionPacker;
     int dim;
     public int defaultNodesSize = 50;
     DenseVector nodesVals;
 
-    public CommonPostProcessor(ShapeFunction shapeFunction, DenseVector nodesVals, int dim) {
-        this.shapeFunction = shapeFunction;
+    public CommonPostProcessor(ShapeFunctionPacker shapeFunctionPacker, DenseVector nodesVals, int dim) {
+        this.shapeFunctionPacker = shapeFunctionPacker;
         this.dim = dim;
         this.nodesVals = nodesVals;
         //TODO 3Dissue
@@ -35,8 +35,8 @@ public class CommonPostProcessor {
         }
     }
 
-    public CommonPostProcessor(ShapeFunction shapeFunction, DenseVector nodesVals) {
-        this.shapeFunction = shapeFunction;
+    public CommonPostProcessor(ShapeFunctionPacker shapeFunctionPacker, DenseVector nodesVals) {
+        this.shapeFunctionPacker = shapeFunctionPacker;
         this.dim = 2;
         this.nodesVals = nodesVals;
     }
@@ -55,10 +55,10 @@ public class CommonPostProcessor {
             throw new UnsupportedOperationException();
         }
 
-        shapeFunction.setDiffOrder(partDiffOrder);
+        shapeFunctionPacker.setDiffOrder(partDiffOrder);
         results = initResults(results, partDiffOrder, coords.size());
         ArrayList<Node> shapeFunNodes = new ArrayList<>(defaultNodesSize);
-        TDoubleArrayList[] shapeFunVals = initShapeFunVals(partDiffOrder);//
+        
         TDoubleArrayList us = results.get(0);
         TDoubleArrayList vs = results.get(1);
         TDoubleArrayList u_xs = null, u_ys = null, v_xs = null, v_ys = null;
@@ -72,9 +72,7 @@ public class CommonPostProcessor {
 
         for (Coordinate coord : coords) {
             Boundary bnd = (bndIter != null ? bndIter.next() : null);
-            shapeFunction.values(coord, bnd, shapeFunVals, shapeFunNodes);
-
-            
+            TDoubleArrayList[] shapeFunVals =shapeFunctionPacker.values(coord, bnd, shapeFunNodes);         
             double u = 0, v = 0;
             double u_x = 0, u_y = 0, v_x = 0, v_y = 0;
             TDoubleArrayList shapeFunVals_0 = shapeFunVals[0];
@@ -112,15 +110,6 @@ public class CommonPostProcessor {
             }
         }
         return results;
-    }
-
-    public TDoubleArrayList[] initShapeFunVals(int partDiffOrder) {
-        if (dim == 2) {
-            return ShapeFunctions2D.initOutputResult(partDiffOrder);
-        } else {
-            //TODO 3Dissue
-            throw new UnsupportedOperationException();
-        }
     }
 
     private List<TDoubleArrayList> initResults(List<TDoubleArrayList> results, int partDiffOrder, int size) {

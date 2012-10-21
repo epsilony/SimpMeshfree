@@ -4,6 +4,7 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import gnu.trove.list.array.TDoubleArrayList;
 import java.util.List;
 import net.epsilony.utils.geom.Coordinate;
 
@@ -11,10 +12,8 @@ import net.epsilony.utils.geom.Coordinate;
  *
  * @author epsilon
  */
-public interface DomainSizer {
+public interface SupportDomainSizer {
     //outputs can be null
     double domain(Coordinate center, List<Node> outputs);
     
-    //infSizer can be null
-    void setInfluenceDomainSizer(InfluenceDomainSizer infSizer);
 }

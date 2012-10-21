@@ -26,13 +26,13 @@ import org.ejml.ops.CommonOps;
  */
 public class ShapeFunctions2D {
 
-    public static int MAX_NODES_SIZE_ESTIMATION = 50;
+    public static int MAX_NODES_SIZE_GUESS = 50;
 
-    public static TDoubleArrayList[] initOutputResult(int partDiffOrder) {
-        return initOutputResult(null, partDiffOrder, MAX_NODES_SIZE_ESTIMATION);
+    public static TDoubleArrayList[] init4Output(int partDiffOrder) {
+        return init4Output(null, partDiffOrder, MAX_NODES_SIZE_GUESS);
     }
 
-    public static TDoubleArrayList[] initOutputResult(TDoubleArrayList[] result, int partDiffOrder, int ndsNum) {
+    public static TDoubleArrayList[] init4Output(TDoubleArrayList[] result, int partDiffOrder, int ndsNum) {
         int partDim;
         switch (partDiffOrder) {
             case 0:
@@ -70,35 +70,41 @@ public class ShapeFunctions2D {
             aim.setQuick(i, t);
         }
     }
-
-    public static MLSFactory createMLSFactory(final GeomUtils gu, int minNodesNumOfInfluenceDomain, double influenceDomainInitSearchRadiu) {
-        final InfluenceDomainSizer infSizer = new InfluenceDomainSizers.Array(gu.allNodes, gu.new NearestKVisibleDomainSizer(minNodesNumOfInfluenceDomain, influenceDomainInitSearchRadiu));
-        SomeFactory<SupportDomainCritierion> critierionFactory = new SomeFactory<SupportDomainCritierion>() {
-            @Override
-            public SupportDomainCritierion produce() {
-                return gu.new VisibleCritieron(infSizer);
-            }
-        };
-        return new MLSFactory(infSizer, critierionFactory);
+    
+    public static SomeFactory<ShapeFunction> genMLSFactory(SomeFactory<WeightFunctionCore> weightFunctionCoreFactory,int baseOrder){
+        SomeFactory<BasesFunction> basesFunctionFactory = Complete2DPolynomialBases.basesFunctionFactory(baseOrder);
+        return genMLSFactory(weightFunctionCoreFactory,basesFunctionFactory);
     }
-
+    
+    public static SomeFactory<ShapeFunction> genMLSFactory(SomeFactory<WeightFunctionCore> weightFunctionCoreFactory,SomeFactory<BasesFunction> basesFunctionFactory){
+            return new MLSFactory(weightFunctionCoreFactory, basesFunctionFactory);
+    }
+    
+    public static SomeFactory<ShapeFunction> genMLSFactory(int baseOrder){
+        SomeFactory<WeightFunctionCore> weightFunctionCoreFactory = WeightFunctionCores.triSplineFactory();
+        SomeFactory<BasesFunction> basesFunctionFactory = Complete2DPolynomialBases.basesFunctionFactory(baseOrder);
+        return genMLSFactory(weightFunctionCoreFactory, basesFunctionFactory);
+    }
+    
+    public static SomeFactory<ShapeFunction> genMLSFactory(){
+        final int DEFAULT_BASE_ORDER = 2;
+        SomeFactory<WeightFunctionCore> weightFunctionCoreFactory = WeightFunctionCores.triSplineFactory();
+        SomeFactory<BasesFunction> basesFunctionFactory = Complete2DPolynomialBases.basesFunctionFactory(DEFAULT_BASE_ORDER);
+        return genMLSFactory(weightFunctionCoreFactory, basesFunctionFactory);
+    }
+    
     public static class MLSFactory implements SomeFactory<ShapeFunction> {
 
         SomeFactory<WeightFunctionCore> weightFunctionCoreFactory;
         SomeFactory<WeightFunction> weightFunctionFactory;
         SomeFactory<BasesFunction> basesFunctionFactory;
-        InfluenceDomainSizer influenceDomainSizer;
-        SomeFactory<SupportDomainCritierion> supportDomainCritierionFactory;
-        public static final int DEFAULT_BASE_ORDER = 2;
+        
 
-        public MLSFactory(InfluenceDomainSizer influenceDomainSizer, SomeFactory<SupportDomainCritierion> supportDomainCritierionFactory) {
-
-            weightFunctionCoreFactory = WeightFunctionCores.triSplineFactory();
+        public MLSFactory(SomeFactory<WeightFunctionCore> weightFunctionCoreFactory,SomeFactory<BasesFunction> basesFunctionFactory) {
+            this.weightFunctionCoreFactory=weightFunctionCoreFactory;
+            this.basesFunctionFactory=basesFunctionFactory;        
             weightFunctionFactory = WeightFunctions.factory(weightFunctionCoreFactory);
-            basesFunctionFactory = Complete2DPolynomialBases.basesFunctionFactory(DEFAULT_BASE_ORDER);
-            this.influenceDomainSizer = influenceDomainSizer;
-            this.supportDomainCritierionFactory = supportDomainCritierionFactory;
-
+            
         }
 
         public void setWeightFunctionCoreFactory(SomeFactory<WeightFunctionCore> weightFunctionCoreFactory) {
@@ -110,17 +116,9 @@ public class ShapeFunctions2D {
             basesFunctionFactory = Complete2DPolynomialBases.basesFunctionFactory(baseOrder);
         }
 
-        public void setInfluenceDomainSizer(InfluenceDomainSizer influenceDomainSizer) {
-            this.influenceDomainSizer = influenceDomainSizer;
-        }
-
-        public void setSupportDomainCritierionFactory(SomeFactory<SupportDomainCritierion> supportDomainCritierionFactory) {
-            this.supportDomainCritierionFactory = supportDomainCritierionFactory;
-        }
-
         @Override
         public MLS produce() {
-            return new MLS(weightFunctionFactory.produce(), basesFunctionFactory.produce(), influenceDomainSizer, supportDomainCritierionFactory.produce());
+            return new MLS(weightFunctionFactory.produce(), basesFunctionFactory.produce());
         }
     }
 
@@ -131,17 +129,15 @@ public class ShapeFunctions2D {
 
         private DenseMatrix64F A_bak;
         private LinearSolverLu luSolver;
-        private InfluenceDomainSizer infSizer;
-        private TDoubleArrayList infRads;
 
-        public MLS(WeightFunction weightFunction, BasesFunction basesFunction, InfluenceDomainSizer infSizer, SupportDomainCritierion criterion) {
-            init(weightFunction, basesFunction, infSizer, criterion);
+        public MLS(WeightFunction weightFunction, BasesFunction basesFunction) {
+            init(weightFunction, basesFunction);
         }
         private int diffOrder;
         WeightFunction weightFunction;
         BasesFunction basesFunction;
-        SupportDomainCritierion criterion;
-        TDoubleArrayList[] nodesWeights = new TDoubleArrayList[3];
+        TDoubleArrayList[] nodesWeights;
+        TDoubleArrayList[] distSquares;
         DenseMatrix64F A, A_x, A_y;
         ArrayList<TDoubleArrayList> B, B_x, B_y;
         DenseMatrix64F p, p_x, p_y, gamma, gamma_x, gamma_y;
@@ -150,20 +146,85 @@ public class ShapeFunctions2D {
         double[][] ps_arr;
         private DenseMatrix64F tv;
         public boolean areBasesRelative = true;  // Commonly, for complete nth order polynomial,
+        DistanceSquareFunction euclideanDistSqFun = DistanceSquareFunctions.common(2);
         //just a mark variable to mark that relative base coordinate are using.
 
         @Override
-        public TDoubleArrayList[] values(Coordinate center, Boundary centerBnd, TDoubleArrayList[] shapeFunVals, ArrayList<Node> resNodes) {
+        public void setDiffOrder(int partDiffOrder) {
+            if (partDiffOrder < 0 || partDiffOrder >= 2) {
+                throw new UnsupportedOperationException();
+            }
+            this.diffOrder = partDiffOrder;
+            weightFunction.setDiffOrder(partDiffOrder);
+            basesFunction.setDiffOrder(partDiffOrder);
+            euclideanDistSqFun.setDiffOrder(partDiffOrder);
+            nodesWeights = new TDoubleArrayList[len2DBase(partDiffOrder)];
+            distSquares = new TDoubleArrayList[nodesWeights.length];
+            for (int i = 0; i < nodesWeights.length; i++) {
+                nodesWeights[i] = new TDoubleArrayList(MAX_NODES_SIZE_GUESS);
+                distSquares[i] = new TDoubleArrayList(MAX_NODES_SIZE_GUESS);
+            }
+        }
 
-            TDoubleArrayList[] distSqs = nodesWeights;
-            criterion.getSupports(center, centerBnd, resNodes, distSqs);
-            int ndsNum = resNodes.size();
-            TDoubleArrayList[] results = initOutputResult(shapeFunVals, diffOrder, ndsNum);
+        @Override
+        public int getDiffOrder() {
+            return diffOrder;
+        }
+
+        private void init(WeightFunction weightFunction, BasesFunction baseFunction) {
+            this.weightFunction = weightFunction;
+            this.basesFunction = baseFunction;
+            final int baseDim = baseFunction.getDim();
+            A = new DenseMatrix64F(baseDim, baseDim);
+            A_x = new DenseMatrix64F(baseDim, baseDim);
+            A_y = new DenseMatrix64F(baseDim, baseDim);
+            As = new DenseMatrix64F[]{A, A_x, A_y};
+
+            B = new ArrayList<>(baseDim);
+            B_x = new ArrayList<>(baseDim);
+            B_y = new ArrayList<>(baseDim);
+            Bs = Arrays.asList(B, B_x, B_y);
+
+            for (ArrayList<TDoubleArrayList> tB : Bs) {
+                for (int i = 0; i < baseDim; i++) {
+                    tB.add(new TDoubleArrayList(MAX_NODES_SIZE_GUESS));
+                }
+            }
+
+            gamma = new DenseMatrix64F(baseDim, 1);
+            gamma_x = new DenseMatrix64F(baseDim, 1);
+            gamma_y = new DenseMatrix64F(baseDim, 1);
+
+            ps_arr = new double[3][baseDim];
+
+            p = DenseMatrix64F.wrap(ps_arr[0].length, 1, ps_arr[0]);
+            p_x = DenseMatrix64F.wrap(ps_arr[1].length, 1, ps_arr[1]);
+            p_y = DenseMatrix64F.wrap(ps_arr[2].length, 1, ps_arr[2]);
+
+            tv = new DenseMatrix64F(baseDim, 1);
+            luSolver = new LinearSolverLu(new LUDecompositionAlt());
+            A_bak = new DenseMatrix64F(baseDim, baseDim);
+        }
+
+        @Override
+        public TDoubleArrayList[] values(Coordinate center, List<Node> nodes, TDoubleArrayList[] distSquares, TDoubleArrayList infRads, TDoubleArrayList[] results) {
+
+
+            if (null == distSquares) {
+                distSquares = this.distSquares;
+                euclideanDistSqFun.setCenter(center);
+                euclideanDistSqFun.sqValues(nodes, distSquares);
+            }
+            int ndsNum = nodes.size();
+            
+            weightFunction.values(distSquares, infRads, nodesWeights);
+
+
+            results = init4Output(results, diffOrder, ndsNum);
             int diffDim = len2DBase(diffOrder);
             int baseDim = basesFunction.getDim();
 
-            InfluenceDomainSizers.getInfRadius(resNodes, infSizer, infRads);
-            weightFunction.values(distSqs, infRads, nodesWeights);
+
             Coordinate zero = new Coordinate(0, 0, 0);
             Coordinate radCoord = new Coordinate(0, 0, 0);
 
@@ -185,7 +246,7 @@ public class ShapeFunctions2D {
                 ArrayList<TDoubleArrayList> B_d = Bs.get(diffDimIdx);
                 double[] tp = ps_arr[0];
                 int ndIdx = 0;
-                for (Node nd : resNodes) {
+                for (Coordinate nd : nodes) {
                     if (areBasesRelative) {
                         GeometryMath.minus(nd, center, radCoord);
                         basesFunction.values(radCoord, ps_arr);
@@ -244,64 +305,6 @@ public class ShapeFunctions2D {
             multAddTo(gamma, B_y, results[2]);
 
             return results;
-        }
-
-        @Override
-        public void setDiffOrder(int partDiffOrder) {
-            if (partDiffOrder < 0 || partDiffOrder >= 2) {
-                throw new UnsupportedOperationException();
-            }
-            this.diffOrder = partDiffOrder;
-            weightFunction.setDiffOrder(partDiffOrder);
-            basesFunction.setDiffOrder(partDiffOrder);
-            criterion.setDiffOrder(partDiffOrder);
-            nodesWeights = new TDoubleArrayList[len2DBase(partDiffOrder)];
-            for (int i = 0; i < nodesWeights.length; i++) {
-                nodesWeights[i] = new TDoubleArrayList(MAX_NODES_SIZE_ESTIMATION);
-            }
-        }
-
-        @Override
-        public int getDiffOrder() {
-            return diffOrder;
-        }
-
-        private void init(WeightFunction weightFunction, BasesFunction baseFunction, InfluenceDomainSizer infSizer, SupportDomainCritierion criterion) {
-            this.weightFunction = weightFunction;
-            this.criterion = criterion;
-            this.basesFunction = baseFunction;
-            this.infSizer = infSizer;
-            infRads = new TDoubleArrayList(MAX_NODES_SIZE_ESTIMATION);
-            final int baseDim = baseFunction.getDim();
-            A = new DenseMatrix64F(baseDim, baseDim);
-            A_x = new DenseMatrix64F(baseDim, baseDim);
-            A_y = new DenseMatrix64F(baseDim, baseDim);
-            As = new DenseMatrix64F[]{A, A_x, A_y};
-
-            B = new ArrayList<>(baseDim);
-            B_x = new ArrayList<>(baseDim);
-            B_y = new ArrayList<>(baseDim);
-            Bs = Arrays.asList(B, B_x, B_y);
-
-            for (ArrayList<TDoubleArrayList> tB : Bs) {
-                for (int i = 0; i < baseDim; i++) {
-                    tB.add(new TDoubleArrayList(MAX_NODES_SIZE_ESTIMATION));
-                }
-            }
-
-            gamma = new DenseMatrix64F(baseDim, 1);
-            gamma_x = new DenseMatrix64F(baseDim, 1);
-            gamma_y = new DenseMatrix64F(baseDim, 1);
-
-            ps_arr = new double[3][baseDim];
-
-            p = DenseMatrix64F.wrap(ps_arr[0].length, 1, ps_arr[0]);
-            p_x = DenseMatrix64F.wrap(ps_arr[1].length, 1, ps_arr[1]);
-            p_y = DenseMatrix64F.wrap(ps_arr[2].length, 1, ps_arr[2]);
-
-            tv = new DenseMatrix64F(baseDim, 1);
-            luSolver = new LinearSolverLu(new LUDecompositionAlt());
-            A_bak = new DenseMatrix64F(baseDim, baseDim);
         }
     }
 }

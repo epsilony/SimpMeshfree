@@ -23,6 +23,7 @@ import no.uib.cipr.matrix.DenseVector;
  * @author epsilonyuan@gmail.com
  */
 public class WeakformProcessor {
+
     WeakformProcessorMonitor monitor;
 
     public WeakformProcessorMonitor getMonitor() {
@@ -34,17 +35,18 @@ public class WeakformProcessor {
         monitor.setProcessor(this);
     }
     SomeFactory<ShapeFunction> shapeFunFactory;
-    public int arrayListSize = 100;
+    SomeFactory<SupportDomainCritierion> critierionFactory;
+    SomeFactory<InfluenceDomainSizer> infDomainFactory;
     WeakformAssemblier assemblier;
     WeakformProblem workProblem;
     public EquationSolver equationSolver;
     DenseVector equationResultVector;
-    
     public int processThreadsNum = Integer.MAX_VALUE;
     private int dim;
     QuadraturePointIterator balanceIterator;
     QuadraturePointIterator dirichletIterator;
     QuadraturePointIterator neumannIterator;
+    public static final int MAX_SUPPORT_NODES_GUESS = 50;
 
     /**
      *
@@ -54,7 +56,9 @@ public class WeakformProcessor {
      * @param power
      * @param equationSolver
      */
-    public WeakformProcessor(SomeFactory<ShapeFunction> shapeFunFactory, WeakformAssemblier assemblier, WeakformProblem workProblem, EquationSolver equationSolver) {
+    public WeakformProcessor(SomeFactory<SupportDomainCritierion> critierionFactory, SomeFactory<InfluenceDomainSizer> infDomainFactory, SomeFactory<ShapeFunction> shapeFunFactory, WeakformAssemblier assemblier, WeakformProblem workProblem, EquationSolver equationSolver) {
+        this.critierionFactory = critierionFactory;
+        this.infDomainFactory = infDomainFactory;
         this.shapeFunFactory = shapeFunFactory;
         this.assemblier = assemblier;
         this.workProblem = workProblem;
@@ -70,7 +74,7 @@ public class WeakformProcessor {
      * @param power
      * @param equationSolver
      */
-    public WeakformProcessor(SomeFactory<ShapeFunction> shapeFunFactory,WeakformAssemblier assemblier, WeakformProblem workProblem, EquationSolver equationSolver, int dim) {
+    public WeakformProcessor(SomeFactory<ShapeFunction> shapeFunFactory, WeakformAssemblier assemblier, WeakformProblem workProblem, EquationSolver equationSolver, int dim) {
         this.shapeFunFactory = shapeFunFactory;
         this.assemblier = assemblier;
         this.workProblem = workProblem;
@@ -84,8 +88,8 @@ public class WeakformProcessor {
     }
 
     public void process(int coreNum) {
-        if (null==monitor){
-            monitor=new WeakformProcessorMonitors.SimpLogger();
+        if (null == monitor) {
+            monitor = new WeakformProcessorMonitors.SimpLogger();
             monitor.setProcessor(this);
         }
 
@@ -100,29 +104,38 @@ public class WeakformProcessor {
         dirichletIterator = (qpIter == null ? null : QuadraturePointIterators.synchronizedWrapper(qpIter));
 
         ExecutorService executor = Executors.newFixedThreadPool(coreNum);
-        
+
         monitor.beforeProcess(executor, coreNum);
         for (int i = 0; i < coreNum; i++) {
             executor.execute(new ProcessCore(i));
         }
         executor.shutdown();
-        
+
         monitor.processStarted(executor);
-        
-        while(!executor.isTerminated()){
+
+        while (!executor.isTerminated()) {
             try {
                 executor.awaitTermination(100, TimeUnit.MICROSECONDS);
             } catch (InterruptedException ex) {
                 break;
             }
         }
-        
+
         assemblier.uniteAvators();
-        
+
         monitor.avatorUnited(assemblier);
     }
+    
+    public ShapeFunctionPacker genShapeFunctionPacker() {
+            ShapeFunction shapeFun = shapeFunFactory.produce();
 
-    class ProcessCore implements Runnable,WithId {
+            InfluenceDomainSizer infDomainSizer = infDomainFactory.produce();
+            SupportDomainCritierion critierion = critierionFactory.produce();
+
+            return new ShapeFunctionPacker(shapeFun, critierion, infDomainSizer, dim, MAX_SUPPORT_NODES_GUESS);
+    }
+    
+    class ProcessCore implements Runnable, WithId {
 
         int id;
 
@@ -135,20 +148,26 @@ public class WeakformProcessor {
             this.id = id;
         }
 
+        
+
         @Override
         public void run() {
-            ShapeFunction shapeFun = shapeFunFactory.produce();
-            WeakformAssemblier assemblierAvator = assemblier.avatorInstance();
+            ShapeFunctionPacker shapeFunPacker = genShapeFunctionPacker();
+            ShapeFunction shapeFun=shapeFunPacker.shapeFun;
             monitor.avatorInited(assemblier, shapeFun, id);
+            WeakformAssemblier assemblierAvator = assemblier.avatorInstance();
             
-            assemblyBalanceEquation(shapeFun, assemblierAvator,id);
+
+            monitor.avatorInited(assemblier, shapeFun, id);
+
+            assemblyBalanceEquation(shapeFunPacker, assemblierAvator, id);
 
             if (null != neumannIterator) {
-                assemblyNeumann(shapeFun, assemblierAvator,id);
+                assemblyNeumann(shapeFunPacker, assemblierAvator, id);
             }
 
             if (null != dirichletIterator) {
-                assemblyDirichlet(shapeFun, assemblierAvator,id);
+                assemblyDirichlet(shapeFunPacker, assemblierAvator, id);
             }
         }
 
@@ -158,47 +177,53 @@ public class WeakformProcessor {
         }
     }
 
-    void assemblyBalanceEquation(ShapeFunction shapeFun, WeakformAssemblier assemblierAvator,int id) {
+    void assemblyBalanceEquation(ShapeFunctionPacker shapeFunPacker, WeakformAssemblier assemblierAvator, int id) {
 
-        ArrayList<Node> shapeFunNodes = new ArrayList<>(arrayListSize);
+
         VolumeCondition volumnBoundaryCondition = workProblem.volumeCondition();
-        shapeFun.setDiffOrder(1);
+        final int diffOrder = 1;
+        shapeFunPacker.setDiffOrder(diffOrder);
         QuadraturePoint qp = new QuadraturePoint();
-        Coordinate qPoint = qp.coordinate;
-        TDoubleArrayList[] shapeFunVals = initShapeFunVals(1);
+
+        ArrayList<Node> shapeFunNodes = new ArrayList<>(MAX_SUPPORT_NODES_GUESS);
         while (balanceIterator.next(qp)) {
-            shapeFun.values(qPoint, null, shapeFunVals, shapeFunNodes);
+            Coordinate qPoint = qp.coordinate;
+            TDoubleArrayList[] shapeFunVals = shapeFunPacker.values(qPoint, null, shapeFunNodes);
             assemblierAvator.asmBalance(qp, shapeFunNodes, shapeFunVals, volumnBoundaryCondition);
             monitor.balanceAsmed(qp, shapeFunNodes, shapeFunVals, volumnBoundaryCondition, id);
         }
     }
 
-    void assemblyNeumann(ShapeFunction shapeFun, WeakformAssemblier assemblierAvator,int id) {
-        shapeFun.setDiffOrder(0);
+    void assemblyNeumann(ShapeFunctionPacker shapeFunPacker, WeakformAssemblier assemblierAvator, int id) {
+        final int diffOrder = 0;
+        shapeFunPacker.setDiffOrder(diffOrder);
         QuadraturePoint qp = new QuadraturePoint();
-        ArrayList<Node> shapeFunNds = new ArrayList<>(arrayListSize);
-        TDoubleArrayList[] shapeFunVals = initShapeFunVals(0);
+
+        ArrayList<Node> shapeFunNodes = new ArrayList<>(MAX_SUPPORT_NODES_GUESS);
         while (neumannIterator.next(qp)) {
             Coordinate qPoint = qp.coordinate;
             Boundary bound = qp.boundary;
-            shapeFun.values(qPoint, bound, shapeFunVals, shapeFunNds);
-            assemblierAvator.asmNeumann(qp, shapeFunNds, shapeFunVals);
-            monitor.neumannAsmed(qp, shapeFunNds, shapeFunVals, id);
+            TDoubleArrayList[] shapeFunVals = shapeFunPacker.values(qPoint, bound, shapeFunNodes);
+            assemblierAvator.asmNeumann(qp, shapeFunNodes, shapeFunVals);
+            monitor.neumannAsmed(qp, shapeFunNodes, shapeFunVals, id);
         }
     }
 
-    void assemblyDirichlet(ShapeFunction shapeFun, WeakformAssemblier assemblierAvator,int id) {
+    void assemblyDirichlet(ShapeFunctionPacker shapeFunPacker, WeakformAssemblier assemblierAvator, int id) {
 
-        ArrayList<Node> shapeFunNds = new ArrayList<>(arrayListSize);
-        shapeFun.setDiffOrder(0);
+
+        final int diffOrder = 0;
+        shapeFunPacker.setDiffOrder(diffOrder);
         QuadraturePoint qp = new QuadraturePoint();
-        TDoubleArrayList[] shapeFunVals = initShapeFunVals(0);
+
+
+        ArrayList<Node> shapeFunNodes = new ArrayList<>(MAX_SUPPORT_NODES_GUESS);
         while (dirichletIterator.next(qp)) {
             Coordinate qPoint = qp.coordinate;
             Boundary bound = qp.boundary;
-            shapeFun.values(qPoint, bound, shapeFunVals, shapeFunNds);
-            assemblierAvator.asmDirichlet(qp, shapeFunNds, shapeFunVals);
-            monitor.dirichletAsmed(qp, shapeFunNds, shapeFunVals, id);
+            TDoubleArrayList[] shapeFunVals = shapeFunPacker.values(qPoint, bound, shapeFunNodes);
+            assemblierAvator.asmDirichlet(qp, shapeFunNodes, shapeFunVals);
+            monitor.dirichletAsmed(qp, shapeFunNodes, shapeFunVals, id);
         }
     }
 
@@ -211,7 +236,7 @@ public class WeakformProcessor {
 
     private TDoubleArrayList[] initShapeFunVals(int diffOrder) {
         if (dim == 2) {
-            return ShapeFunctions2D.initOutputResult(diffOrder);
+            return ShapeFunctions2D.init4Output(diffOrder);
         } else {
             //TODO 3Dissue
             throw new UnsupportedOperationException();

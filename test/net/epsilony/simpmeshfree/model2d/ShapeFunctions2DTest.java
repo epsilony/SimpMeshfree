@@ -6,11 +6,15 @@ package net.epsilony.simpmeshfree.model2d;
 
 import gnu.trove.list.array.TDoubleArrayList;
 import java.util.*;
+import net.epsilony.simpmeshfree.model.DistanceSquareFunctions;
 import net.epsilony.simpmeshfree.model.Node;
 import net.epsilony.simpmeshfree.model.ShapeFunction;
+import net.epsilony.simpmeshfree.model.SupportDomainCritierion;
+import net.epsilony.simpmeshfree.model.SupportDomainUtils;
 import net.epsilony.simpmeshfree.model.WeightFunctionCore;
 import net.epsilony.simpmeshfree.model.WeightFunctionCores;
 import static net.epsilony.simpmeshfree.model2d.test.WeightFunctionTestUtils.*;
+import net.epsilony.simpmeshfree.model2d.test.WeightFunctionTestUtils.ValueFun;
 import net.epsilony.utils.geom.Coordinate;
 import static org.junit.Assert.assertArrayEquals;
 import org.junit.Test;
@@ -37,11 +41,11 @@ public class ShapeFunctions2DTest {
             for (int j = 0; j < coreFuns.length; j++) {
                 WeightFunctionCore coreFun = coreFuns[j];
                 System.out.println("core J=" + j);
-                ShapeFunction shapeFun = genShapeFunction(rad, nds, baseOrder, coreFun);
+                ShapeFunction shapeFun = genShapeFunction(baseOrder, coreFun);
                 shapeFun.setDiffOrder(1);
                 ValueFun expFun = genExpFun("c");
                 LinkedList<double[]> actResults = new LinkedList<>();
-                evalCase(shapeFun, expFun, nds, centers, actResults);
+                evalCase(rad,shapeFun, expFun, nds, centers, actResults);
                 assertResults(centers, actResults, expFun, 1);
             }
         }
@@ -78,15 +82,20 @@ public class ShapeFunctions2DTest {
         WeightFunctionCore[] coreFuns = new WeightFunctionCore[]{new WeightFunctionCores.TriSpline(), new WeightFunctionCores.SimpPower(1), new WeightFunctionCores.SimpPower(2)};
         ArrayList<Node> resNodes = new ArrayList<>(nodesNum);
         double maxErr = 0;
-
+        SupportDomainCritierion simpCriterion = SupportDomainUtils.simpCriterion(rad, nds);
+        TDoubleArrayList rads=new TDoubleArrayList();
+        rads.add(rad);
+        TDoubleArrayList[] distSqs=DistanceSquareFunctions.initDistSqsContainer(2, 1);
         for (int i = 0; i < baseOrders.length; i++) {
             int baseOrder = baseOrders[i];
             for (int j = 0; j < coreFuns.length; j++) {
                 WeightFunctionCore coreFun = coreFuns[j];
-                ShapeFunction shapeFun = genShapeFunction(rad, nds, baseOrder, coreFun);
+                ShapeFunction shapeFun = genShapeFunction(baseOrder, coreFun);
                 shapeFun.setDiffOrder(1);
+                simpCriterion.setDiffOrder(1);
                 for (Coordinate center : centers) {
-                    TDoubleArrayList[] funVals = shapeFun.values(center, null, null, resNodes);
+                    simpCriterion.getSupports(center, null, resNodes, distSqs);
+                    TDoubleArrayList[] funVals = shapeFun.values(center,resNodes, distSqs,rads,null);
                     double[] funValsSum = new double[3];
                     for (int k = 0; k < 3; k++) {
                         funValsSum[k] = funVals[k].sum();
