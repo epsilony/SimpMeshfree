@@ -15,7 +15,7 @@ import net.epsilony.utils.geom.GeometryMath;
  */
 public class SupportDomainUtils {
 
-    public static class SimpConstantSizer implements DomainSizer {
+    public static class SimpConstantSizer implements SupportDomainSizer {
 
         double rad;
         List<Node> nodes;
@@ -41,18 +41,13 @@ public class SupportDomainUtils {
             }
             return rad;
         }
-
-        @Override
-        public void setInfluenceDomainSizer(InfluenceDomainSizer infSizer) {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
     }
 
     public static class SimpCriterion implements SupportDomainCritierion {
 
         DistanceSquareFunctions.Common distanceFun;
         int dim;
-        private final DomainSizer domainSizer;
+        private final SupportDomainSizer domainSizer;
 
         @Override
         public double getSupports(Coordinate center, Boundary centerBound, List<Node> outputNodes, TDoubleArrayList[] distSqs) {
@@ -63,21 +58,16 @@ public class SupportDomainUtils {
             return rad;
         }
 
-        public SimpCriterion(int dim, DomainSizer domainSizer) {
+        public SimpCriterion(int dim, SupportDomainSizer domainSizer) {
             this.dim = dim;
             distanceFun = new DistanceSquareFunctions.Common(dim);
             this.domainSizer = domainSizer;
         }
 
-        public SimpCriterion(DomainSizer domainSizer) {
+        public SimpCriterion(SupportDomainSizer domainSizer) {
             this.dim = 2;
             distanceFun = new DistanceSquareFunctions.Common(dim);
             this.domainSizer = domainSizer;
-        }
-
-        @Override
-        public void setInfluenceDomainSizer(InfluenceDomainSizer infSizer) {
-            domainSizer.setInfluenceDomainSizer(infSizer);
         }
 
         @Override
@@ -91,15 +81,15 @@ public class SupportDomainUtils {
         }
     }
 
-    public static DomainSizer simpConstantSizer(double rad, List<Node> nds) {
+    public static SupportDomainSizer simpConstantSizer(double rad, List<Node> nds) {
         return new SimpConstantSizer(rad, nds);
     }
 
-    public static SupportDomainCritierion simpCriterion(int dim, DomainSizer domainSizer) {
+    public static SupportDomainCritierion simpCriterion(int dim, SupportDomainSizer domainSizer) {
         return new SimpCriterion(dim, domainSizer);
     }
 
-    public static SupportDomainCritierion simpCriterion(DomainSizer domainSizer) {
+    public static SupportDomainCritierion simpCriterion(SupportDomainSizer domainSizer) {
         return simpCriterion(2, domainSizer);
     }
 

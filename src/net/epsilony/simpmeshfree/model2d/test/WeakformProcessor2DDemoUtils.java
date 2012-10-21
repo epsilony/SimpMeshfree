@@ -6,8 +6,9 @@ package net.epsilony.simpmeshfree.model2d.test;
 
 import java.util.ArrayList;
 import net.epsilony.simpmeshfree.model.*;
+import net.epsilony.simpmeshfree.model.GeomUtils.NearestKVisibleDomainSizer;
 import net.epsilony.simpmeshfree.model2d.*;
-import net.epsilony.simpmeshfree.model2d.ShapeFunctions2D.MLSFactory;
+import net.epsilony.simpmeshfree.utils.SomeFactory;
 import net.epsilony.utils.math.EquationSolver;
 import net.epsilony.utils.math.EquationSolvers;
 import net.epsilony.utils.math.MatrixUtils;
@@ -19,10 +20,9 @@ import no.uib.cipr.matrix.DenseMatrix;
  */
 public class WeakformProcessor2DDemoUtils {
 
+    public static WeakformProcessor weakformProcessor(final GeomUtils geomUtils, int baseOrder, final int minNdNum, final double initRad, DenseMatrix constitutiveLaw, double penalty, WeakformProblem workProblem, boolean iterativeServer, boolean isSimpAsm) {
+        SomeFactory<ShapeFunction> mlsFactory = ShapeFunctions2D.genMLSFactory(baseOrder);
 
-    public static WeakformProcessor weakformProcessor(GeomUtils geomUtils,int baseOrder, int minNdNum,double initRad, DenseMatrix constitutiveLaw, double penalty, WeakformProblem workProblem, boolean iterativeServer, boolean isSimpAsm) {
-        MLSFactory mlsFactory = ShapeFunctions2D.createMLSFactory(geomUtils, minNdNum, initRad);
-        mlsFactory.setComplete2DPolynomialBasesFactory(baseOrder);
         int ndsSize = geomUtils.allNodes.size();
         WeakformAssemblier assemblier;
         if (isSimpAsm) {
@@ -36,38 +36,55 @@ public class WeakformProcessor2DDemoUtils {
         } else {
             eqSolver = new EquationSolvers.FlexCompRowBand(MatrixUtils.UNSYMMETRICAL_BUT_MIRROR_FROM_UP_HALF);
         }
-        return new WeakformProcessor(mlsFactory, assemblier, workProblem, eqSolver);
+       
+
+        final SomeFactory<InfluenceDomainSizer> infSizerFactory = new SomeFactory<InfluenceDomainSizer>() {
+            @Override
+            public InfluenceDomainSizer produce() {
+                return InfluenceDomainSizers.bySupportDomainSizer(geomUtils.allNodes, geomUtils.new NearestKVisibleDomainSizer(minNdNum, initRad));
+            }
+        };
+        
+        SomeFactory<SupportDomainCritierion> critierionFactory = new SomeFactory<SupportDomainCritierion>() {
+            @Override
+            public SupportDomainCritierion produce() {
+                return geomUtils.new VisibleCritieron(infSizerFactory.produce());
+            }
+        };
+
+        
+        return new WeakformProcessor(critierionFactory, infSizerFactory, mlsFactory, assemblier, workProblem, eqSolver);
     }
 
     public static WeakformProcessor timoshenkoBeam(double width, double height, double P, double E, double v, double lineSize, double spaceNdsDis, double penalty, Pipe pipe) {
-        return timoshenkoBeam(width, height, P, E, v, lineSize, spaceNdsDis, penalty, pipe, false,false);
+        return timoshenkoBeam(width, height, P, E, v, lineSize, spaceNdsDis, penalty, pipe, false, false);
     }
 
-    public static WeakformProcessor timoshenkoBeam(double width, double height, double P, double E, double v, double lineSize, double spaceNdsDis, double penalty, Pipe pipe, boolean iterativeSolver,boolean isSimpAsm) {
+    public static WeakformProcessor timoshenkoBeam(double width, double height, double P, double E, double v, double lineSize, double spaceNdsDis, double penalty, Pipe pipe, boolean iterativeSolver, boolean isSimpAsm) {
         int power = 4;
         int baseOrder = 2;
         int minNdNum = 15;
-        double initRad=(Math.sqrt(minNdNum)-1)*lineSize;
+        double initRad = (Math.sqrt(minNdNum) - 1) * lineSize;
         DenseMatrix conLaw = ConstitutiveLaws2D.getPlaneStress(E, v);
         WeightFunctionCore coreFun = new WeightFunctionCores.TriSpline();
         RectangleModel rectModel = new RectangleModel(width, height, lineSize, spaceNdsDis);
         ArrayList<LineBoundary> bnds = rectModel.boundaries();
         GeomUtils geomUtils = new GeomUtils(bnds, rectModel.spaceNodes(), 2);
 //        WeakformProblem workProblem = new WeakformProblems2D.TimoshenkoExactBeamProblem(width, height, E, v, P, bnds, null, rectModel.quadrangles(), power);
-        WeakformProblem workProblem = new WeakformProblems2D.TimoshenkoExactBeamProblem(width, height, E, v, P, bnds, rectModel.triangles(),null, power);
+        WeakformProblem workProblem = new WeakformProblems2D.TimoshenkoExactBeamProblem(width, height, E, v, P, bnds, rectModel.triangles(), null, power);
 
         if (null != pipe) {
             pipe.set(conLaw, coreFun, rectModel, geomUtils, workProblem);
         }
-        return weakformProcessor(geomUtils, baseOrder, minNdNum, initRad, conLaw, penalty, workProblem,iterativeSolver,isSimpAsm);
+        return weakformProcessor(geomUtils, baseOrder, minNdNum, initRad, conLaw, penalty, workProblem, iterativeSolver, isSimpAsm);
     }
 
-    public static WeakformProcessor timoshenkoBeam(Pipe pipe, boolean iterativeSolver,boolean isSimpAsm) {
-        return timoshenkoBeam(48, 12, -1000, 3e7, 0.3, 2, 2, 3e7 * 1e7, pipe, iterativeSolver,isSimpAsm);
+    public static WeakformProcessor timoshenkoBeam(Pipe pipe, boolean iterativeSolver, boolean isSimpAsm) {
+        return timoshenkoBeam(48, 12, -1000, 3e7, 0.3, 2, 2, 3e7 * 1e7, pipe, iterativeSolver, isSimpAsm);
     }
 
     public static WeakformProcessor timoshenkoBeam(Pipe pipe) {
-        return timoshenkoBeam(pipe, false,false);
+        return timoshenkoBeam(pipe, false, false);
     }
 
     public static class Pipe {

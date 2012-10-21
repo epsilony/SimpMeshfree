@@ -21,14 +21,18 @@ public class InfluenceDomainSizers {
         private double[] nodesInfRads;
         double maxSize=0;
 
-        public Array(List<Node> nodes, DomainSizer sizer) {
+        public Array(List<Node> nodes, double[] rads) {
             nodesInfRads = new double[nodes.size()];
+            int i=0;
             for (Node nd : nodes) {
-                double size= sizer.domain(nd, null);
+                double size= rads[i];
+                
                 nodesInfRads[nd.id]=size;
                 if(size>maxSize){
                     maxSize=size;
                 }
+                
+                i++;
             }
         }
 
@@ -41,6 +45,20 @@ public class InfluenceDomainSizers {
         public double getMaxSize() {
             return maxSize;
         }
+    }
+    
+    public static InfluenceDomainSizer byGivenRads(List<Node> nds,double[] rads){
+        return new Array(nds,rads);
+    }
+    
+    public static InfluenceDomainSizer bySupportDomainSizer(List<Node> nds,SupportDomainSizer sizer){
+        double[] rads=new double[nds.size()];
+        int i=0;
+        for(Node nd:nds){
+            rads[i]=sizer.domain(nd, null);
+            i++;
+        }
+        return byGivenRads(nds, rads);
     }
     
     public static TDoubleArrayList getInfRadius(List<Node> nodes, InfluenceDomainSizer infSizer, TDoubleArrayList results){

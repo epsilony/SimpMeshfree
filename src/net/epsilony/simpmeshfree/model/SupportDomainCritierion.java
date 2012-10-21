@@ -28,6 +28,4 @@ public interface SupportDomainCritierion extends PartDiffOrdered{
      * @return supportDomainRadius 
      */
     double getSupports(Coordinate center,Boundary centerBound,List<Node> outputNodes,TDoubleArrayList[] distSqs);
-    
-    void setInfluenceDomainSizer(InfluenceDomainSizer infSizer);
 }

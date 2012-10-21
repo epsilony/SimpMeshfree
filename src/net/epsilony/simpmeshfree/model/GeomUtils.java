@@ -682,11 +682,11 @@ public class GeomUtils implements Avatarable<GeomUtils> {
             return rad;
         }
 
-        @Override
-        public void setInfluenceDomainSizer(InfluenceDomainSizer infSizer) {
-            domainSizer.setInfluenceDomainSizer(infSizer);
-            domainSizer.setSearchRadiu(infSizer.getMaxSize());
-        }
+
+//        public void setInfluenceDomainSizer(InfluenceDomainSizer infSizer) {
+//            domainSizer.setInfluenceDomainSizer(infSizer);
+//            domainSizer.setSearchRadiu(infSizer.getMaxSize());
+//        }
 
         @Override
         public void setDiffOrder(int order) {
@@ -699,7 +699,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
         }
     }
 
-    public class VisibleDomainSizer implements DomainSizer {
+    public class VisibleDomainSizer implements SupportDomainSizer {
 
         LinkedList<Boundary> bnds = new LinkedList<>();
         LinkedList<Node> nds = new LinkedList<>();
@@ -774,7 +774,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
             return outputs;
         }
 
-        @Override
+
         public void setInfluenceDomainSizer(InfluenceDomainSizer infSizer) {
             this.infSizer = infSizer;
         }

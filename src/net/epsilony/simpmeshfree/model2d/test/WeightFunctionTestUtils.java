@@ -5,6 +5,7 @@
 package net.epsilony.simpmeshfree.model2d.test;
 
 import gnu.trove.list.array.TDoubleArrayList;
+import gnu.trove.list.array.TIntArrayList;
 import static java.lang.Math.PI;
 import static java.lang.Math.ceil;
 import java.util.ArrayList;
@@ -73,12 +74,10 @@ public class WeightFunctionTestUtils {
 
     }
 
-    public static ShapeFunction genShapeFunction(double rad, List<Node> nds, int baseOrder, WeightFunctionCore coreFun) {
-        SupportDomainCritierion criterion = SupportDomainUtils.simpCriterion(rad, nds);
+    public static ShapeFunction genShapeFunction(int baseOrder, WeightFunctionCore coreFun) {
         BasesFunction baseFun = Complete2DPolynomialBases.complete2DPolynomialBase(baseOrder);
         WeightFunction weightFunction = WeightFunctions.weightFunction(coreFun);
-        InfluenceDomainSizer infSize=new InfluenceDomainSizers.Array(nds, SupportDomainUtils.simpConstantSizer(rad, nds));
-        return new ShapeFunctions2D.MLS(weightFunction, baseFun, infSize,criterion);
+        return new ShapeFunctions2D.MLS(weightFunction, baseFun);
     }
 
     public interface ValueFun {
@@ -99,12 +98,17 @@ public class WeightFunctionTestUtils {
         return result;
     }
 
-    public static void evalCase(ShapeFunction shapeFun, ValueFun expFun, List<Node> nds, List<? extends Coordinate> centers, List<double[]> actResults) {
+    public static void evalCase(Double rad,ShapeFunction shapeFun, ValueFun expFun, List<Node> nds, List<? extends Coordinate> centers, List<double[]> actResults) {
         shapeFun.setDiffOrder(1);
-        ArrayList<Node> resNodes = new ArrayList<>(2000);
+        ArrayList<Node> resNodes = new ArrayList<>(50);
+        TDoubleArrayList rads=new TDoubleArrayList(1);
+        rads.add(rad);
         actResults.clear();
+        SupportDomainCritierion simpCriterion = SupportDomainUtils.simpCriterion(rad, nds);
+        TDoubleArrayList[] distSqs = DistanceSquareFunctions.initDistSqsContainer(2, 1);
         for (Coordinate center : centers) {
-            TDoubleArrayList[] shapeFunVals = shapeFun.values(center, null, null, resNodes);
+            simpCriterion.getSupports(center, null, resNodes, distSqs);
+            TDoubleArrayList[] shapeFunVals = shapeFun.values(center, resNodes,null,rads,null);
             double[] actResult=value(shapeFunVals,resNodes,expFun);
             actResults.add(actResult);
         }

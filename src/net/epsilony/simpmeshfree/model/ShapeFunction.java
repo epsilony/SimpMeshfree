@@ -23,5 +23,13 @@ import net.epsilony.utils.geom.Coordinate;
  * @author epsilonyuan@gmail.com
  */
 public interface ShapeFunction extends PartDiffOrdered{   
-    TDoubleArrayList[] values(Coordinate center,Boundary centerBnd,TDoubleArrayList[] result, ArrayList<Node> resNodes);
+    /**
+     * @param center
+     * @param nodes
+     * @param ndDistSqs Wheather not null, must be fit for differential order and be as long as {@code nodes}. If null, the implementation should take the Euclidean distance as default
+     * @param ndInfRads if {@code ndInfRads.size()} is 1, all the nodes share the same influence radiu that is {@ndInfRads.get(0)}
+     * @param result
+     * @return
+     */
+    TDoubleArrayList[] values(Coordinate center,List<Node> nodes,TDoubleArrayList[] ndDistSqs,TDoubleArrayList ndInfRads, TDoubleArrayList[] result);
 }

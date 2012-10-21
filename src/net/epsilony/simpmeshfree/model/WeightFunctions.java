@@ -14,25 +14,25 @@ import net.epsilony.simpmeshfree.utils.SomeFactory;
 public class WeightFunctions {
 
     public static SomeFactory<WeightFunction> factory(final SomeFactory<WeightFunctionCore> coreFunFactory) {
-        return factory(coreFunFactory,2);
-        
+        return factory(coreFunFactory, 2);
+
     }
 
     public static SomeFactory<WeightFunction> factory(final SomeFactory<WeightFunctionCore> coreFunFactory, final int dim) {
         return new SomeFactory<WeightFunction>() {
             @Override
             public WeightFunction produce() {
-                WeightFunctionImp imp = new WeightFunctionImp(coreFunFactory.produce(),dim);
+                WeightFunctionImp imp = new WeightFunctionImp(coreFunFactory.produce(), dim);
                 return imp;
             }
         };
     }
-    
-    public static WeightFunction weightFunction(WeightFunctionCore coreFun, int dim){
+
+    public static WeightFunction weightFunction(WeightFunctionCore coreFun, int dim) {
         return new WeightFunctionImp(coreFun, dim);
     }
-    
-    public static WeightFunction weightFunction(WeightFunctionCore coreFun){
+
+    public static WeightFunction weightFunction(WeightFunctionCore coreFun) {
         return new WeightFunctionImp(coreFun);
     }
 
@@ -53,24 +53,73 @@ public class WeightFunctions {
             this.dim = 2;
         }
 
+        private  TDoubleArrayList[] initResults(int ndsSize, TDoubleArrayList[] ori) {
+
+            int len = 0;
+            switch (diffOrder) {
+                case 0:
+                    len = 1;
+                    break;
+                case 1:
+                    switch (dim) {
+                        case 1:
+                            len = 2;
+                            break;
+                        case 2:
+                            len = 3;
+                            break;
+                        case 3:
+                            len = 4;
+                            break;
+                        default:
+                            throw new UnsupportedOperationException();
+                    }
+                    break;
+                default:
+                    throw new UnsupportedOperationException();
+            }
+
+            if (ori == null) {
+                ori = new TDoubleArrayList[len];
+                for (int i = 0; i < ori.length; i++) {
+                    ori[i] = new TDoubleArrayList();
+                }
+            } else {
+                for (int i = 0; i < len; i++) {
+                    ori[i].resetQuick();
+                }
+            }
+            
+            return ori;
+        }
+
         @Override
         public TDoubleArrayList[] values(TDoubleArrayList[] distsSqs, TDoubleArrayList rads, TDoubleArrayList[] results) {
-            int size=distsSqs[0].size();
-            for (int i = 0; i < size; i++) {
-                double radSq = rads.getQuick(i);
+            int size = distsSqs[0].size();
+            boolean uniqRads = false;
+            double radSq = 0;
+            if (rads.size() == 1) {
+                uniqRads = true;
+                radSq = rads.getQuick(0);
                 radSq *= radSq;
+            }
+            for (int i = 0; i < size; i++) {
+                if (!uniqRads) {
+                    radSq = rads.getQuick(i);
+                    radSq *= radSq;
+                }
                 double distSq = distsSqs[0].get(i);
                 coreFun.valuesByNormalisedDistSq(distSq / radSq, coreVals);
-                results[0].set(i, coreVals[0]);
+                results[0].add(coreVals[0]);
 
                 if (diffOrder >= 1) {
                     double distSq_x = distsSqs[1].get(i);
                     double distSq_y = distsSqs[2].get(i);
-                    results[1].set(i, coreVals[1] * distSq_x / radSq);
-                    results[2].set(i, coreVals[1] * distSq_y / radSq);
+                    results[1].add(coreVals[1] * distSq_x / radSq);
+                    results[2].add(coreVals[1] * distSq_y / radSq);
                     if (dim == 3) {
                         double distSq_z = distsSqs[3].get(i);
-                        results[3].set(i, coreVals[1] * distSq_z / radSq);
+                        results[3].add(coreVals[1] * distSq_z / radSq);
                     }
                 }
             }
