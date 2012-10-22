@@ -11,11 +11,11 @@ import java.util.List;
 import net.epsilony.simpmeshfree.model.DistanceSquareFunction;
 import net.epsilony.simpmeshfree.model.DistanceSquareFunctions;
 import net.epsilony.simpmeshfree.model.Node;
+import net.epsilony.simpmeshfree.model.sfun.ShapeFunction;
 import net.epsilony.simpmeshfree.model.sfun.WeightFunction;
 import net.epsilony.simpmeshfree.model.sfun.WeightFunctionCore;
-import net.epsilony.simpmeshfree.model.sfun.WeightFunctionCores;
 import net.epsilony.simpmeshfree.model.sfun.WeightFunctions;
-import net.epsilony.simpmeshfree.model.sfun.ShapeFunction;
+import net.epsilony.simpmeshfree.model.sfun.wcores.TriSpline;
 import net.epsilony.simpmeshfree.utils.BasesFunction;
 import net.epsilony.simpmeshfree.utils.CommonUtils;
 import net.epsilony.simpmeshfree.utils.Complete2DPolynomialBases;
@@ -207,14 +207,14 @@ public class MLS implements ShapeFunction {
     }
 
     public static SomeFactory<ShapeFunction> genFactory(int baseOrder) {
-        SomeFactory<WeightFunctionCore> weightFunctionCoreFactory = WeightFunctionCores.triSplineFactory();
+        SomeFactory<WeightFunctionCore> weightFunctionCoreFactory = TriSpline.genFactory();
         SomeFactory<BasesFunction> basesFunctionFactory = Complete2DPolynomialBases.basesFunctionFactory(baseOrder);
         return genFactory(weightFunctionCoreFactory, basesFunctionFactory);
     }
 
     public static SomeFactory<ShapeFunction> genFactory() {
         final int DEFAULT_BASE_ORDER = 2;
-        SomeFactory<WeightFunctionCore> weightFunctionCoreFactory = WeightFunctionCores.triSplineFactory();
+        SomeFactory<WeightFunctionCore> weightFunctionCoreFactory = TriSpline.genFactory();
         SomeFactory<BasesFunction> basesFunctionFactory = Complete2DPolynomialBases.basesFunctionFactory(DEFAULT_BASE_ORDER);
         return genFactory(weightFunctionCoreFactory, basesFunctionFactory);
     }

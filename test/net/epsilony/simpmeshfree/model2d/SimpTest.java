@@ -9,13 +9,12 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import net.epsilony.simpmeshfree.model.DistanceSquareFunctions;
-import net.epsilony.simpmeshfree.model.SupportDomainSizer;
 import net.epsilony.simpmeshfree.model.Node;
-import net.epsilony.simpmeshfree.model.sfun.ShapeFunction;
 import net.epsilony.simpmeshfree.model.SupportDomainCritierion;
 import net.epsilony.simpmeshfree.model.SupportDomainUtils;
 import net.epsilony.simpmeshfree.model.WeakformAssemblier;
-import net.epsilony.simpmeshfree.model.sfun.WeightFunctionCores;
+import net.epsilony.simpmeshfree.model.sfun.ShapeFunction;
+import net.epsilony.simpmeshfree.model.sfun.wcores.TriSpline;
 import net.epsilony.simpmeshfree.model2d.test.WeightFunctionTestUtils;
 import net.epsilony.simpmeshfree.utils.QuadraturePoint;
 import no.uib.cipr.matrix.DenseMatrix;
@@ -23,10 +22,7 @@ import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
-import org.junit.After;
-import org.junit.AfterClass;
 import static org.junit.Assert.assertEquals;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -51,7 +47,7 @@ public class SimpTest {
         double supRad = 14;
         List<Node> nds = sampleNodes();
 
-        ShapeFunction shapeFun = WeightFunctionTestUtils.genShapeFunction(3, new WeightFunctionCores.TriSpline());
+        ShapeFunction shapeFun = WeightFunctionTestUtils.genShapeFunction(3, new TriSpline());
         shapeFun.setDiffOrder(1);
 
         ArrayList<Node> resNds = new ArrayList<>();
@@ -144,7 +140,7 @@ public class SimpTest {
         double supRad = 14;
         List<Node> nds = sampleNodes();
 
-        ShapeFunction shapeFun = WeightFunctionTestUtils.genShapeFunction(3, new WeightFunctionCores.TriSpline());
+        ShapeFunction shapeFun = WeightFunctionTestUtils.genShapeFunction(3, new TriSpline());
         shapeFun.setDiffOrder(0);
         SupportDomainCritierion simpCriterion = SupportDomainUtils.simpCriterion(supRad, nds);
         simpCriterion.setDiffOrder(0);
@@ -200,7 +196,7 @@ public class SimpTest {
         List<Node> nds = sampleNodes();
         SupportDomainCritierion simpCriterion = SupportDomainUtils.simpCriterion(supRad, nds);
         simpCriterion.setDiffOrder(0);
-        ShapeFunction shapeFun = WeightFunctionTestUtils.genShapeFunction(3, new WeightFunctionCores.TriSpline());
+        ShapeFunction shapeFun = WeightFunctionTestUtils.genShapeFunction(3, new TriSpline());
         shapeFun.setDiffOrder(0);
 
         ArrayList<Node> resNds = new ArrayList<>();

@@ -9,7 +9,7 @@ import net.epsilony.simpmeshfree.model.*;
 import net.epsilony.simpmeshfree.model.GeomUtils.NearestKVisibleDomainSizer;
 import net.epsilony.simpmeshfree.model.sfun.ShapeFunction;
 import net.epsilony.simpmeshfree.model.sfun.WeightFunctionCore;
-import net.epsilony.simpmeshfree.model.sfun.WeightFunctionCores;
+import net.epsilony.simpmeshfree.model.sfun.wcores.TriSpline;
 import net.epsilony.simpmeshfree.model.sfun2d.MLS;
 import net.epsilony.simpmeshfree.model2d.*;
 import net.epsilony.simpmeshfree.utils.SomeFactory;
@@ -70,7 +70,7 @@ public class WeakformProcessor2DDemoUtils {
         int minNdNum = 15;
         double initRad = (Math.sqrt(minNdNum) - 1) * lineSize;
         DenseMatrix conLaw = ConstitutiveLaws2D.getPlaneStress(E, v);
-        WeightFunctionCore coreFun = new WeightFunctionCores.TriSpline();
+        WeightFunctionCore coreFun = new TriSpline();
         RectangleModel rectModel = new RectangleModel(width, height, lineSize, spaceNdsDis);
         ArrayList<LineBoundary> bnds = rectModel.boundaries();
         GeomUtils geomUtils = new GeomUtils(bnds, rectModel.spaceNodes(), 2);
