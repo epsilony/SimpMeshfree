@@ -2,10 +2,15 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.epsilony.simpmeshfree.model;
+package net.epsilony.simpmeshfree.model.sfun;
 
 import gnu.trove.list.array.TDoubleArrayList;
 import java.util.List;
+import net.epsilony.simpmeshfree.model.Boundary;
+import net.epsilony.simpmeshfree.model.InfluenceDomainSizer;
+import net.epsilony.simpmeshfree.model.InfluenceDomainSizers;
+import net.epsilony.simpmeshfree.model.Node;
+import net.epsilony.simpmeshfree.model.SupportDomainCritierion;
 import net.epsilony.simpmeshfree.utils.CommonUtils;
 import net.epsilony.simpmeshfree.utils.PartDiffOrdered;
 import net.epsilony.utils.geom.Coordinate;
@@ -15,12 +20,12 @@ import net.epsilony.utils.geom.Coordinate;
  * @author epsilon
  */
 public class ShapeFunctionPacker implements PartDiffOrdered{
-    ShapeFunction shapeFun;
-    SupportDomainCritierion critierion;
-    InfluenceDomainSizer infSizer;
+    public ShapeFunction shapeFun;
+    public SupportDomainCritierion critierion;
+    public InfluenceDomainSizer infSizer;
     TDoubleArrayList infRads;
     TDoubleArrayList[] distSqs,shapeFunVals;
-    private final int dim;
+    public final int dim;
     private final int maxSupportNodesGuess;
     private int diffOrder;
 
@@ -45,10 +50,10 @@ public class ShapeFunctionPacker implements PartDiffOrdered{
     }
     
     
-    TDoubleArrayList[] values(Coordinate point,Boundary bnd,List<Node> nodes){
-            critierion.getSupports(point, bnd, nodes, distSqs);
-            InfluenceDomainSizers.getInfRadius(nodes, infSizer, infRads);
-            shapeFun.values(point, nodes, distSqs, infRads, shapeFunVals);
+    public TDoubleArrayList[] values(Coordinate point,Boundary bnd,List<Node> nodesOutput){
+            critierion.getSupports(point, bnd, nodesOutput, distSqs);
+            InfluenceDomainSizers.getInfRadius(nodesOutput, infSizer, infRads);
+            shapeFun.values(point, nodesOutput, distSqs, infRads, shapeFunVals);
             return shapeFunVals;
     }
 

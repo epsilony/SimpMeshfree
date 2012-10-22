@@ -7,6 +7,7 @@ package net.epsilony.simpmeshfree.model;
 import gnu.trove.list.array.TDoubleArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
+import net.epsilony.simpmeshfree.model.sfun.ShapeFunction;
 import net.epsilony.simpmeshfree.utils.QuadraturePoint;
 
 /**

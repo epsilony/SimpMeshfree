@@ -7,6 +7,10 @@ package net.epsilony.simpmeshfree.model2d.test;
 import java.util.ArrayList;
 import net.epsilony.simpmeshfree.model.*;
 import net.epsilony.simpmeshfree.model.GeomUtils.NearestKVisibleDomainSizer;
+import net.epsilony.simpmeshfree.model.sfun.ShapeFunction;
+import net.epsilony.simpmeshfree.model.sfun.WeightFunctionCore;
+import net.epsilony.simpmeshfree.model.sfun.WeightFunctionCores;
+import net.epsilony.simpmeshfree.model.sfun2d.MLS;
 import net.epsilony.simpmeshfree.model2d.*;
 import net.epsilony.simpmeshfree.utils.SomeFactory;
 import net.epsilony.utils.math.EquationSolver;
@@ -21,7 +25,7 @@ import no.uib.cipr.matrix.DenseMatrix;
 public class WeakformProcessor2DDemoUtils {
 
     public static WeakformProcessor weakformProcessor(final GeomUtils geomUtils, int baseOrder, final int minNdNum, final double initRad, DenseMatrix constitutiveLaw, double penalty, WeakformProblem workProblem, boolean iterativeServer, boolean isSimpAsm) {
-        SomeFactory<ShapeFunction> mlsFactory = ShapeFunctions2D.genMLSFactory(baseOrder);
+        SomeFactory<ShapeFunction> mlsFactory = MLS.genFactory(baseOrder);
 
         int ndsSize = geomUtils.allNodes.size();
         WeakformAssemblier assemblier;

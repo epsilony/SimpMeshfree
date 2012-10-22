@@ -4,8 +4,8 @@
  */
 package net.epsilony.simpmeshfree.utils;
 
-import net.epsilony.simpmeshfree.model.ShapeFunction;
-import net.epsilony.simpmeshfree.model.WeightFunction;
+import net.epsilony.simpmeshfree.model.sfun.ShapeFunction;
+import net.epsilony.simpmeshfree.model.sfun.WeightFunction;
 
 /**
  * 用来设置将来将要计算返回的类型的接口。</br>

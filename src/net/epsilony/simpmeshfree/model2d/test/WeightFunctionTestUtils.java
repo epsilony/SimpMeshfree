@@ -5,14 +5,17 @@
 package net.epsilony.simpmeshfree.model2d.test;
 
 import gnu.trove.list.array.TDoubleArrayList;
-import gnu.trove.list.array.TIntArrayList;
 import static java.lang.Math.PI;
 import static java.lang.Math.ceil;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import net.epsilony.simpmeshfree.model.*;
-import net.epsilony.simpmeshfree.model2d.ShapeFunctions2D;
+import net.epsilony.simpmeshfree.model.sfun.ShapeFunction;
+import net.epsilony.simpmeshfree.model.sfun.WeightFunction;
+import net.epsilony.simpmeshfree.model.sfun.WeightFunctionCore;
+import net.epsilony.simpmeshfree.model.sfun.WeightFunctions;
+import net.epsilony.simpmeshfree.model.sfun2d.MLS;
 import net.epsilony.simpmeshfree.utils.BasesFunction;
 import net.epsilony.simpmeshfree.utils.Complete2DPolynomialBases;
 import net.epsilony.utils.geom.Coordinate;
@@ -77,7 +80,7 @@ public class WeightFunctionTestUtils {
     public static ShapeFunction genShapeFunction(int baseOrder, WeightFunctionCore coreFun) {
         BasesFunction baseFun = Complete2DPolynomialBases.complete2DPolynomialBase(baseOrder);
         WeightFunction weightFunction = WeightFunctions.weightFunction(coreFun);
-        return new ShapeFunctions2D.MLS(weightFunction, baseFun);
+        return new MLS(weightFunction, baseFun);
     }
 
     public interface ValueFun {
