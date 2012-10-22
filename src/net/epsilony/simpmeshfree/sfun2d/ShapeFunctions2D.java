@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.epsilony.simpmeshfree.model.sfun2d;
+package net.epsilony.simpmeshfree.sfun2d;
 
 import gnu.trove.list.array.TDoubleArrayList;
 import java.util.ArrayList;

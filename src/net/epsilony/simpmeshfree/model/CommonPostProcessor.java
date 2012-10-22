@@ -8,7 +8,7 @@ import gnu.trove.list.array.TDoubleArrayList;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import net.epsilony.simpmeshfree.model.sfun.ShapeFunctionPacker;
+import net.epsilony.simpmeshfree.sfun.ShapeFunctionPacker;
 import net.epsilony.utils.geom.Coordinate;
 import no.uib.cipr.matrix.DenseVector;
 import org.ejml.data.DenseMatrix64F;

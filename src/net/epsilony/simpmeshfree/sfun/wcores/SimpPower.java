@@ -2,10 +2,10 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.epsilony.simpmeshfree.model.sfun.wcores;
+package net.epsilony.simpmeshfree.sfun.wcores;
 
 import java.util.Arrays;
-import net.epsilony.simpmeshfree.model.sfun.WeightFunctionCore;
+import net.epsilony.simpmeshfree.sfun.WeightFunctionCore;
 import net.epsilony.simpmeshfree.utils.SomeFactory;
 
 /**

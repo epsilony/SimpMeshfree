@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.epsilony.simpmeshfree.model.sfun2d;
+package net.epsilony.simpmeshfree.sfun2d;
 
 import gnu.trove.list.array.TDoubleArrayList;
 import java.util.ArrayList;
@@ -11,11 +11,11 @@ import java.util.List;
 import net.epsilony.simpmeshfree.model.DistanceSquareFunction;
 import net.epsilony.simpmeshfree.model.DistanceSquareFunctions;
 import net.epsilony.simpmeshfree.model.Node;
-import net.epsilony.simpmeshfree.model.sfun.ShapeFunction;
-import net.epsilony.simpmeshfree.model.sfun.WeightFunction;
-import net.epsilony.simpmeshfree.model.sfun.WeightFunctionCore;
-import net.epsilony.simpmeshfree.model.sfun.WeightFunctions;
-import net.epsilony.simpmeshfree.model.sfun.wcores.TriSpline;
+import net.epsilony.simpmeshfree.sfun.ShapeFunction;
+import net.epsilony.simpmeshfree.sfun.WeightFunction;
+import net.epsilony.simpmeshfree.sfun.WeightFunctionCore;
+import net.epsilony.simpmeshfree.sfun.WeightFunctions;
+import net.epsilony.simpmeshfree.sfun.wcores.TriSpline;
 import net.epsilony.simpmeshfree.utils.BasesFunction;
 import net.epsilony.simpmeshfree.utils.CommonUtils;
 import net.epsilony.simpmeshfree.utils.Complete2DPolynomialBases;
