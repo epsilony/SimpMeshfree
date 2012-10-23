@@ -4,6 +4,7 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import net.epsilony.simpmeshfree.sfun.DistanceSquareFunctions;
 import gnu.trove.list.array.TDoubleArrayList;
 import java.util.List;
 import net.epsilony.utils.geom.Coordinate;

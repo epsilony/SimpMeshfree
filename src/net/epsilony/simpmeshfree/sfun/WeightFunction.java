@@ -22,4 +22,6 @@ public interface WeightFunction extends PartDiffOrdered{
      */
     TDoubleArrayList[] values(TDoubleArrayList[] DistsSqs,TDoubleArrayList rads, TDoubleArrayList[] results);
     
+    double[] value(double[] distSq,double rad,double[] result);
+    
 }

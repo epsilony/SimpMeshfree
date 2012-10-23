@@ -6,7 +6,7 @@ package net.epsilony.simpmeshfree.model2d;
 
 import gnu.trove.list.array.TDoubleArrayList;
 import java.util.*;
-import net.epsilony.simpmeshfree.model.DistanceSquareFunctions;
+import net.epsilony.simpmeshfree.sfun.DistanceSquareFunctions;
 import net.epsilony.simpmeshfree.model.Node;
 import net.epsilony.simpmeshfree.model.SupportDomainCritierion;
 import net.epsilony.simpmeshfree.model.SupportDomainUtils;

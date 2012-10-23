@@ -4,6 +4,7 @@
  */
 package net.epsilony.simpmeshfree.model2d.test;
 
+import net.epsilony.simpmeshfree.sfun.DistanceSquareFunctions;
 import gnu.trove.list.array.TDoubleArrayList;
 import static java.lang.Math.PI;
 import static java.lang.Math.ceil;
