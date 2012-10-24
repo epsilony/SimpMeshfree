@@ -124,6 +124,7 @@ public class UniformTensionInfinitePlate {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void genQuadratureDomains() {
         quads = new ArrayList((n_c - 1) * (n_t - 1));
         double[] points = new double[8];
