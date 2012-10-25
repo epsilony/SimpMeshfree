@@ -158,13 +158,14 @@ public class WeightFunctions {
         @Override
         public double[] value(double[] distSq, double rad, double[] result) {
             result=initValueResult(result);
-            coreFun.valuesByNormalisedDistSq(distSq[0]/rad, result);
+            double radSq = rad*rad;
+            coreFun.valuesByNormalisedDistSq(distSq[0]/radSq, result);
             if(diffOrder<1){
                 return result;
             }
             double dw_dwDistSq=result[1];
-            result[1]=dw_dwDistSq*distSq[1];
-            result[2]=dw_dwDistSq*distSq[2];
+            result[1]=dw_dwDistSq*distSq[1]/radSq;
+            result[2]=dw_dwDistSq*distSq[2]/radSq;
             return result;       
         }
     }
