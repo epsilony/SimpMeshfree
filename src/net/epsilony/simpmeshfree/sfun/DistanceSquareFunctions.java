@@ -28,11 +28,13 @@ public class DistanceSquareFunctions {
 
         private Coordinate center;
         private int order;
-        private int partDim;
+        private int baseLen;
         private int dim;
+        DistanceSquareFunctionCore coreFun;
 
         public Common() {
             dim = 2;
+            coreFun=DistanceSquareFunctionCores.common(dim);
         }
 
         public Common(int dim) {
@@ -40,22 +42,17 @@ public class DistanceSquareFunctions {
                 throw new UnsupportedOperationException("dimension must be 2 or 3");
             }
             this.dim = dim;
+            coreFun=DistanceSquareFunctionCores.common(dim);
         }
 
         @Override
         public TDoubleArrayList[] sqValues(List<? extends Coordinate> pts, TDoubleArrayList[] results) {
             results = init(results, pts.size());
+            double[] distSqs=new double[baseLen];
             for (Coordinate pt : pts) {
-                double distSq = GeometryMath.distanceSquare(center, pt);
-                results[0].add(distSq);
-                if (order >= 1) {
-
-
-                    results[1].add(2 * (center.x - pt.x));
-                    results[2].add(2 * (center.y - pt.y));
-                    if (dim == 3) {
-                        results[3].add(2 * (center.z - pt.z));
-                    }
+                coreFun.value(center, pt, distSqs);
+                for(int i=0;i<baseLen;i++){
+                    results[i].add(distSqs[i]);
                 }
             }
             return results;
@@ -63,12 +60,12 @@ public class DistanceSquareFunctions {
 
         public TDoubleArrayList[] init(TDoubleArrayList[] results, int numPts) {
             if (null == results) {
-                results = new TDoubleArrayList[partDim];
+                results = new TDoubleArrayList[baseLen];
                 for (int i = 0; i < results.length; i++) {
                     results[i] = new TDoubleArrayList(numPts);
                 }
             } else {
-                for (int i = 0; i < partDim; i++) {
+                for (int i = 0; i < baseLen; i++) {
                     results[i].resetQuick();
                     results[i].ensureCapacity(numPts);
                 }
@@ -87,7 +84,8 @@ public class DistanceSquareFunctions {
                 throw new IllegalArgumentException();
             }
             this.order = order;
-            partDim = CommonUtils.lenBase(dim, order);
+            baseLen = CommonUtils.lenBase(dim, order);
+            coreFun.setDiffOrder(order);
         }
 
         @Override
