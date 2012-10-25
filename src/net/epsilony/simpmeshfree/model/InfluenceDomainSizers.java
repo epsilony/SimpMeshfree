@@ -47,6 +47,21 @@ public class InfluenceDomainSizers {
         }
     }
     
+    public static InfluenceDomainSizer constantSizer(final double rad){
+    return new InfluenceDomainSizer() {
+
+            @Override
+            public double getSize(Node nd) {
+                return rad;
+            }
+
+            @Override
+            public double getMaxSize() {
+                return rad;
+            }
+        };
+}
+    
     public static InfluenceDomainSizer byGivenRads(List<Node> nds,double[] rads){
         return new Array(nds,rads);
     }

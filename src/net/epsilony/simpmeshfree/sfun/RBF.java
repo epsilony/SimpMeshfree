@@ -20,7 +20,7 @@ import no.uib.cipr.matrix.DenseVector;
  *
  * @author epsilon
  */
-public class RBF implements PartDiffOrdered{
+public class RBF implements PartDiffOrdered {
 
     ArrayList<Node> nodes;
     InfluenceDomainSizer infSizer;
@@ -36,16 +36,20 @@ public class RBF implements PartDiffOrdered{
     double[] radialBaseCache;
     private int baseLen;
     DistanceSquareFunctionCore commonDistSqFunCore;
-    
-    
+
     @Override
     public void setDiffOrder(int order) {
-        this.diffOrder=order;
+        setDiffOrder_private(order);
+    }
+
+    private void setDiffOrder_private(int order) {
+        this.diffOrder = order;
         radialBase.setDiffOrder(order);
-        baseLen=CommonUtils.lenBase(dim, order);
+        baseLen = CommonUtils.lenBase(dim, order);
+        initPhis();
         commonDistSqFunCore.setDiffOrder(order);
-        distSqsCache=new double[baseLen];
-        radialBaseCache=new double[baseLen];
+        distSqsCache = new double[baseLen];
+        radialBaseCache = new double[baseLen];
     }
 
     @Override
@@ -63,19 +67,25 @@ public class RBF implements PartDiffOrdered{
 //        bandedALU.factor(bandedMatA, true);
     }
 
-    public void RBF(int dim, List<Node> nodes,InfluenceDomainSizer infSizer,WeightFunctionCore radialBaseCore) {
-        this.dim=dim;
-        this.infSizer=infSizer;
-        commonDistSqFunCore=DistanceSquareFunctionCores.common(dim);
-        this.nodes=new ArrayList<>(nodes);
+    private void initPhis() {
+        phis = new DenseVector[baseLen];
+        for (int i = 0; i < phis.length; i++) {
+            phis[i] = new DenseVector(nodes.size());
+        }
+    }
+
+    public RBF(int dim, List<Node> nodes, DenseVector u, InfluenceDomainSizer infSizer, WeightFunctionCore radialBaseCore) {
+        this.dim = dim;
+        this.infSizer = infSizer;
+        commonDistSqFunCore = DistanceSquareFunctionCores.common(dim);
+        this.nodes = new ArrayList<>(nodes);
+        this.u = u;
         
-        radialBase=WeightFunctions.weightFunction(radialBaseCore, dim);
+
+        radialBase = WeightFunctions.weightFunction(radialBaseCore, dim);
         A = new DenseMatrix(nodes.size(), nodes.size());
 
-        int sz=1;
-        radialBase.setDiffOrder(0);
-        distSqsCache=new double[sz];
-        double[] radialBaseResult = new double[sz];
+        setDiffOrder_private(0);
 
         for (int i = 0; i < nodes.size(); i++) {
             Node pt = nodes.get(i);
@@ -83,35 +93,34 @@ public class RBF implements PartDiffOrdered{
                 Node nd = nodes.get(j);
                 double infRad = infSizer.getSize(nd);
                 distSqsCache[0] = GeometryMath.distanceSquare(nd, pt);
-                radialBase.value(distSqsCache, infRad, radialBaseResult);                
-                    A.set(i, j, radialBaseResult[0]);
+                radialBase.value(distSqsCache, infRad, radialBaseCache);
+                A.set(i, j, radialBaseCache[0]);
             }
         }
-        a=(DenseVector) A.solve(u, new DenseVector(nodes.size()));
+        a = (DenseVector) A.solve(u, new DenseVector(nodes.size()));
     }
-    
-    double[] initOutput(double[] ori){
-        if(null==ori){
+
+    double[] initOutput(double[] ori) {
+        if (null == ori) {
             return new double[baseLen];
         }
         return ori;
     }
-    
-    
-    double[] values(Coordinate pt,double[] output){
-        output=initOutput(output);
-        for(int i=0;i<nodes.size();i++){
-            Node nd=nodes.get(i);
-            commonDistSqFunCore.value(pt, nd, distSqsCache);
-            double infRad=infSizer.getSize(nd);
+
+    double[] values(Coordinate pt, double[] output) {
+        output = initOutput(output);
+        for (int i = 0; i < nodes.size(); i++) {
+            Node nd = nodes.get(i);
+            commonDistSqFunCore.value(nd,pt, distSqsCache);
+            double infRad = infSizer.getSize(nd);
             radialBase.value(distSqsCache, infRad, radialBaseCache);
-            for(int bs=0;bs<baseLen;bs++){
-                phis[bs].set(bs,radialBaseCache[bs]);
+            for (int bs = 0; bs < baseLen; bs++) {
+                phis[bs].set(i, radialBaseCache[bs]);
             }
         }
-        
-        for(int bs=0;bs<baseLen;bs++){
-            output[bs]=phis[bs].dot(a);
+
+        for (int bs = 0; bs < baseLen; bs++) {
+            output[bs] = phis[bs].dot(a);
         }
         return output;
     }

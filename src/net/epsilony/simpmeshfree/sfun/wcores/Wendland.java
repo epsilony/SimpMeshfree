@@ -63,7 +63,7 @@ public class Wendland extends WeightFunctionCoreImp{
         }
 
         double r = Math.sqrt(squareR);
-        for (int i = 0; i < diffOrder; i++) {
+        for (int i = 0; i < diffOrder+1; i++) {
             switch (i) {
                 case 0:
                     output[0] = c4_by_r.value(r);
@@ -98,7 +98,7 @@ public class Wendland extends WeightFunctionCoreImp{
         }
 
         double r = Math.sqrt(squareR);
-        for (int i = 0; i < diffOrder; i++) {
+        for (int i = 0; i < diffOrder+1; i++) {
             switch (i) {
                 case 0:
                     output[0] = c6_by_r.value(r);
@@ -123,6 +123,7 @@ public class Wendland extends WeightFunctionCoreImp{
             case C4:
             case C6:
                 this.type=type;
+                break;
             default:
                 throw new UnsupportedOperationException("Wrong type!");
         }

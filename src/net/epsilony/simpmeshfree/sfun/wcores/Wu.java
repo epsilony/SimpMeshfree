@@ -17,7 +17,7 @@ public class Wu extends WeightFunctionCoreImp {
     public static final int C2 = 2, C4 = 4, C6 = 6;
     private int type = C2;
     static final PolynomialFunction c2_by_r = new PolynomialFunction(new double[]{8, 0, -72, 105, 0, -63, 0, 27, 0, -5});
-    static final PolynomialFunction c2P_1_by_r = new PolynomialFunction(new double[]{-72, 0, 315 / 2.0, 0, -315 / 2.0, 0, 189 / 2.0, 0, -45 / 2.0});
+    static final PolynomialFunction c2P_1_by_r = new PolynomialFunction(new double[]{-72, 315 / 2.0, 0, -315 / 2.0, 0, 189 / 2.0, 0, -45 / 2.0});
     static final PolynomialFunction c2P_2_by_r_not_complete = new PolynomialFunction(new double[]{0, -945 / 4.0, 0, 945 / 4.0, 0, -315 / 4.0});
 
     public static void c2(double squareR, int diffOrder, double[] output) {
@@ -66,7 +66,7 @@ public class Wu extends WeightFunctionCoreImp {
         }
 
         double r = Math.sqrt(squareR);
-        for (int i = 0; i < diffOrder; i++) {
+        for (int i = 0; i < diffOrder+1; i++) {
             switch (i) {
                 case 0:
                     output[0] = c4_by_r.value(r);
@@ -121,6 +121,7 @@ public class Wu extends WeightFunctionCoreImp {
             case C4:
             case C6:
                 this.type = type;
+                break;
             default:
                 throw new UnsupportedOperationException("Wrong type!");
         }
