@@ -256,7 +256,7 @@ public class QuadraturePointIterators {
                         return false;
                     } else {
                         Quadrangle quad = quadrangles.next();
-                        quadMapper.setVertices(quad.x1, quad.y1, quad.x2, quad.y2, quad.x3, quad.y3, quad.x4, quad.y4);
+                        quadMapper.setVertes(quad);
                         vIdx = 0;
                     }
                 }
@@ -340,16 +340,16 @@ public class QuadraturePointIterators {
 
     public static class DomainsBased implements QuadraturePointIterator {
 
-        Collection<QuadratureDomain> domains;
+        Collection<? extends QuadratureDomain> domains;
         int power;
         private int sum;
-        private Iterator<QuadratureDomain> iter;
+        private Iterator<? extends QuadratureDomain> iter;
         int domainSize = -1;
         int domainIndex = -1;
         QuadratureDomain currentDomain = null;
         int dispatched=0;
 
-        private void init(Collection<QuadratureDomain> domains, int power) {
+        private void init(Collection<? extends QuadratureDomain> domains, int power) {
             this.power = power;
             this.domains = domains;
             int sumPts = 0;
@@ -361,7 +361,7 @@ public class QuadraturePointIterators {
             iter = domains.iterator();
         }
 
-        public DomainsBased(Collection<QuadratureDomain> domains, int power) {
+        public DomainsBased(Collection<? extends QuadratureDomain> domains, int power) {
             init(domains,power);
         }
 
@@ -453,7 +453,7 @@ public class QuadraturePointIterators {
         }
     }
     
-    public static QuadraturePointIterator fromDomains(Collection<QuadratureDomain>domains,int power){
+    public static QuadraturePointIterator fromDomains(Collection<? extends QuadratureDomain>domains,int power){
         return new DomainsBased(domains,power);
     }
 

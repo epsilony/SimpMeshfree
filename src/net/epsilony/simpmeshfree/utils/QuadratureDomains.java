@@ -99,6 +99,10 @@ public class QuadratureDomains {
         private int numPtPerDim;
         Quadrangle quad;
 
+        public Quadrangle getQuadrangle() {
+            return quad;
+        }
+
         public Quad(Quadrangle quad) {
             this.quad = quad;
         }
@@ -122,7 +126,7 @@ public class QuadratureDomains {
             int indexV = index % numPtPerDim;
             double iu = GaussLegendreQuadratureUtils.getPosition(numPtPerDim, indexU);
             double iv = GaussLegendreQuadratureUtils.getPosition(numPtPerDim, indexV);
-            double jacobi = QuadrangleMapper.iuv2xy(quad, iu, iv, output);
+            double jacobi = QuadrangleMapper.iuv2xyC(quad, iu, iv, output);
             double xWeight = GaussLegendreQuadratureUtils.getWeight(numPtPerDim, indexU);
             double yWeight = GaussLegendreQuadratureUtils.getWeight(numPtPerDim, indexV);
             return xWeight * yWeight * jacobi;
