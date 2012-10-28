@@ -25,7 +25,7 @@ import net.epsilony.utils.geom.Quadrangle;
  *
  * @author epsilon
  */
-public class UniformTensionInfinitePlate {
+public class UniformTensionInfinitePlate{
 
     double a, d, S, E, mu;
     int n_c, n_t;
@@ -34,7 +34,7 @@ public class UniformTensionInfinitePlate {
     private ArrayList<Node> p_Cs, p_Bs;
     int n_phi;
     ArrayList<ArrayList<Node>> nds_ij;
-    ArrayList<QuadratureDomain> quads;
+    ArrayList<QuadratureDomains.Quad> quads;
     ArrayList<LineBoundary> bnds;
     ArrayList<ArrayList<LineBoundary>> d_r_u_l_c_bnds;
     public static final int DOWN_LINE_INDEX = 0, RIGHT_LINE_INDEX = 1, UP_LINE_INDEX = 2, LEFT_LINE_INDEX = 3, CIRCLE_INDEX = 4;
@@ -51,6 +51,26 @@ public class UniformTensionInfinitePlate {
         init();
     }
 
+    public Node[] getVertes() {
+        return vertes;
+    }
+
+    public ArrayList<QuadratureDomain> getQuadratureDomains() {
+        return new ArrayList<QuadratureDomain>(quads);
+    }
+    
+    public ArrayList<Quadrangle> getQuadrangles(){
+        ArrayList<Quadrangle> results=new ArrayList<>(quads.size());
+        for( QuadratureDomains.Quad qd:quads){
+            results.add(qd.getQuadrangle());
+        }
+        return results;
+    }
+
+    public ArrayList<LineBoundary> getBoundaries() {
+        return bnds;
+    }
+
     private void init() {
         if (n_c < 3) {
             n_c = 3;
@@ -62,23 +82,23 @@ public class UniformTensionInfinitePlate {
 
         n_phi = (n_c + 1) / 2;
         genVertesNodes();
-        genNodesOnCurveLeftAndTop();
+        genNodesOnCurveRightAndTop();
         genBoundries();
     }
 
     private void genVertesNodes() {
-        double[] xys = new double[]{0, a, d, 0, d, d, 0, d, 0, a};
+        double[] xys = new double[]{a, 0, d, 0, d, d, 0, d, 0, a};
         for (int i = 0; i < 5; i++) {
             vertes[i] = new Node(xys[i * 2], xys[i * 2 + 1]);
         }
     }
 
-    private void genNodesOnCurveLeftAndTop() {
+    private void genNodesOnCurveRightAndTop() {
         p_Cs = new ArrayList<>(n_c);
         p_Cs.add(vertes[0]);
         double r = a;
         for (int i = 1; i < n_c - 1; i++) {
-            double theta = Math.PI / (n_c - 1) * i;
+            double theta = Math.PI /2/ (n_c - 1) * i;
             double x = r * Math.cos(theta);
             double y = r * Math.sin(theta);
             p_Cs.add(new Node(x, y));
@@ -88,12 +108,15 @@ public class UniformTensionInfinitePlate {
         p_Bs = new ArrayList<>(n_c);
         p_Bs.add(vertes[1]);
         for (int i = 1; i < n_phi - 1; i++) {
-            p_Bs.add(new Node(d, (d / (n_phi - 1)) * i));
+            double theta=Math.PI/2/(n_c-1)*i;
+            p_Bs.add(new Node(d, d*Math.tan(theta)));
         }
         p_Bs.add(vertes[2]);
         for (int i = n_phi; i < n_c - 1; i++) {
-            p_Bs.add(new Node(d - (d / (n_phi - 1)) * (i - n_phi), d));
+            double theta=Math.PI/2/(n_c-1)*i;
+            p_Bs.add(new Node(d/Math.tan(theta), d));
         }
+        p_Bs.add(vertes[3]);
         genNds_ij();
         genBoundries();
         genQuadratureDomains();
@@ -111,17 +134,39 @@ public class UniformTensionInfinitePlate {
             ArrayList<Node> nds_j = new ArrayList<>(n_t);
             nds_ij.add(nds_j);
             nds_j.add(p_Cs.get(i));
-            double theta = (Math.PI / (n_c - 1)) * i;
+            double theta = (Math.PI /2/ (n_c - 1)) * i;
             double l_ = getInitLength(p_Cs.get(i), p_Bs.get(i));
+            double r=a;
             for (int j = 1; j < n_t - 1; j++) {
-                double r = a + l_;
+                r+=l_;
                 l_ *= q;
                 double x = r * Math.cos(theta);
                 double y = r * Math.sin(theta);
+                if(i==n_c-1){
+                    x=0;
+                }
                 nds_j.add(new Node(x, y));
             }
             nds_j.add(p_Bs.get(i));
         }
+    }
+    
+    public ArrayList<Node> getSpaceNodes(){
+        ArrayList<Node> result=new ArrayList<>((n_c-2)*(n_t-2));
+        for(int i=1;i<n_c-1;i++){
+            for(int j=1;j<n_t-1;j++){
+                result.add(nds_ij.get(i).get(j));
+            }
+        }
+        return result;
+    }
+
+    public double getE() {
+        return E;
+    }
+
+    public double getMu() {
+        return mu;
     }
 
     @SuppressWarnings("unchecked")
@@ -190,7 +235,7 @@ public class UniformTensionInfinitePlate {
         for (int j = n_t - 1; j > 0; j--) {
             LineBoundary t = new LineBoundary(nds_ij.get(n_c - 1).get(j), nds_ij.get(n_c - 1).get(j - 1));
             bnds.add(t);
-            d_r_u_l_c_bnds.get(UP_LINE_INDEX).add(t);
+            d_r_u_l_c_bnds.get(LEFT_LINE_INDEX).add(t);
         }
         //circle_curve:
         d_r_u_l_c_bnds.add(new ArrayList<LineBoundary>(n_c - 1));
@@ -212,7 +257,7 @@ public class UniformTensionInfinitePlate {
                 } else if (bnd.getNode(0).x == d && bnd.getNode(1).x == d) {
                     right = true;
                 } else {
-                    throw new IllegalArgumentException("The input boundary must be at right side of up side of this model");
+                    throw new IllegalArgumentException("The input boundary must be at right side or up side of this model");
                 }
                 return true;
             }
@@ -243,7 +288,7 @@ public class UniformTensionInfinitePlate {
                 } else if (bnd.getNode(0).x == 0 && bnd.getNode(1).x == 0) {
                     left = true;
                 } else {
-                    throw new IllegalArgumentException("The input boundary must be at right side of up side of this model");
+                    throw new IllegalArgumentException("The input boundary must be at down side or left side of this model");
                 }
                 return true;
             }
@@ -288,7 +333,15 @@ public class UniformTensionInfinitePlate {
 
             @Override
             public List<Node> dirichletNodes() {
-                throw new UnsupportedOperationException("Not supported yet.");
+                ArrayList<Node> result=new ArrayList<>(n_t*2);
+                int[] indes=new int[]{0,n_c-1};
+                for(int i=0;i<indes.length;i++){
+                    int i_index=indes[i];
+                    for(int j=0;j<n_t;j++){
+                        result.add(nds_ij.get(i_index).get(j));
+                    }
+                }
+                return result;
             }
 
             @Override
