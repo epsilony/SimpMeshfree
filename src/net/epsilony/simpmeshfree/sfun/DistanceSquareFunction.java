@@ -39,7 +39,7 @@ import net.epsilony.utils.geom.Coordinate;
  * @author epsilon
  */
 public interface DistanceSquareFunction extends PartDiffOrdered{
-    TDoubleArrayList[] sqValues(List<? extends Coordinate> pts,TDoubleArrayList[] results);
+    TDoubleArrayList[] sqValues(List<? extends Coordinate> centers,TDoubleArrayList[] results);
     
-    void setCenter(Coordinate center);
+    void setPosition(Coordinate pos);
 }

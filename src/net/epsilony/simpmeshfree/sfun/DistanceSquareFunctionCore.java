@@ -12,5 +12,5 @@ import net.epsilony.utils.geom.Coordinate;
  * @author epsilon
  */
 public interface DistanceSquareFunctionCore extends PartDiffOrdered{
-    double[] value(Coordinate center,Coordinate pt,double[] results);
+    double[] value(Coordinate pt,Coordinate center,double[] results);
 }

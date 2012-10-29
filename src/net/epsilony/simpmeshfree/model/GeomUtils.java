@@ -679,7 +679,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
             }
 
             double rad = domainSizer.domain(actCenter, outputNodes);
-            distFun.setCenter(center);
+            distFun.setPosition(center);
             distFun.sqValues(outputNodes, distSqs);
             return rad;
         }
