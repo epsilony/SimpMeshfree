@@ -26,7 +26,7 @@ public class DistanceSquareFunctions {
 
     public static class Common implements DistanceSquareFunction {
 
-        private Coordinate center;
+        private Coordinate pos;
         private int order;
         private int baseLen;
         private int dim;
@@ -46,11 +46,11 @@ public class DistanceSquareFunctions {
         }
 
         @Override
-        public TDoubleArrayList[] sqValues(List<? extends Coordinate> pts, TDoubleArrayList[] results) {
-            results = init(results, pts.size());
+        public TDoubleArrayList[] sqValues(List<? extends Coordinate> centers, TDoubleArrayList[] results) {
+            results = init(results, centers.size());
             double[] distSqs=new double[baseLen];
-            for (Coordinate pt : pts) {
-                coreFun.value(center, pt, distSqs);
+            for (Coordinate center:  centers) {
+                coreFun.value(pos, center, distSqs);
                 for(int i=0;i<baseLen;i++){
                     results[i].add(distSqs[i]);
                 }
@@ -74,8 +74,8 @@ public class DistanceSquareFunctions {
         }
 
         @Override
-        public void setCenter(Coordinate center) {
-            this.center = center;
+        public void setPosition(Coordinate pos) {
+            this.pos = pos;
         }
 
         @Override

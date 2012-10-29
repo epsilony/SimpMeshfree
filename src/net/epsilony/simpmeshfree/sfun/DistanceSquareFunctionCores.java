@@ -30,7 +30,7 @@ public class DistanceSquareFunctionCores {
         }
 
         @Override
-        public double[] value(Coordinate center, Coordinate pt, double[] results) {
+        public double[] value(Coordinate pt, Coordinate center, double[] results) {
             if(dim!=2&&dim!=3){
                 throw new UnsupportedOperationException();
             }

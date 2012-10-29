@@ -116,10 +116,10 @@ public class MLS implements ShapeFunction {
     }
 
     @Override
-    public TDoubleArrayList[] values(Coordinate center, List<Node> nodes, TDoubleArrayList[] distSquares, TDoubleArrayList infRads, TDoubleArrayList[] results) {
+    public TDoubleArrayList[] values(Coordinate pos, List<Node> nodes, TDoubleArrayList[] distSquares, TDoubleArrayList infRads, TDoubleArrayList[] results) {
         if (null == distSquares) {
             distSquares = this.distSquaresCache;
-            euclideanDistSqFun.setCenter(center);
+            euclideanDistSqFun.setPosition(pos);
             euclideanDistSqFun.sqValues(nodes, distSquares);
         }
         int ndsNum = nodes.size();
@@ -148,7 +148,7 @@ public class MLS implements ShapeFunction {
             int ndIdx = 0;
             for (Coordinate nd : nodes) {
                 if (areBasesRelative) {
-                    GeometryMath.minus(nd, center, radCoord);
+                    GeometryMath.minus(nd, pos, radCoord);
                     basesFunction.values(radCoord, ps_arr);
                 } else {
                     basesFunction.values(nd, ps_arr);
@@ -169,7 +169,7 @@ public class MLS implements ShapeFunction {
         if (areBasesRelative) {
             basesFunction.values(zero, ps_arr);
         } else {
-            basesFunction.values(center, ps_arr);
+            basesFunction.values(pos, ps_arr);
         }
         A_bak.set(A);
         luSolver.setA(A_bak);

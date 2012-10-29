@@ -54,7 +54,7 @@ public class SupportDomainUtils {
         public double getSupports(Coordinate center, Boundary centerBound, List<Node> outputNodes, TDoubleArrayList[] distSqs) {
             
             double rad=domainSizer.domain(center, outputNodes);
-            distanceFun.setCenter(center);
+            distanceFun.setPosition(center);
             distanceFun.sqValues(outputNodes, distSqs);
             return rad;
         }
