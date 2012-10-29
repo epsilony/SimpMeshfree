@@ -10,8 +10,9 @@ import net.epsilony.utils.geom.Coordinate;
  *
  * @author epsilon
  */
-public interface BasesFunction extends PartDiffOrdered, Avatarable<BasesFunction> {
-    double[][] values(Coordinate coord,double[][] results);
-    
+public interface BasesFunction extends PartDiffOrdered, SomeFactory<BasesFunction> {
+
+    double[][] values(Coordinate coord, double[][] results);
+
     int getDim();
 }

@@ -11,7 +11,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import net.epsilony.simpmeshfree.sfun.ShapeFunction;
 import net.epsilony.simpmeshfree.sfun.ShapeFunctionPacker;
-import net.epsilony.simpmeshfree.sfun2d.ShapeFunctions2D;
 import net.epsilony.simpmeshfree.utils.QuadraturePoint;
 import net.epsilony.simpmeshfree.utils.QuadraturePointIterator;
 import net.epsilony.simpmeshfree.utils.QuadraturePointIterators;
@@ -49,11 +48,12 @@ public class WeakformProcessor {
     QuadraturePointIterator dirichletIterator;
     QuadraturePointIterator neumannIterator;
     public static final int MAX_SUPPORT_NODES_GUESS = 50;
+    ArrayList<ProcessCore> processCores = new ArrayList<>(Runtime.getRuntime().availableProcessors());
 
     /**
      *
      * @param shapeFun
-     * @param assemblier
+     * @param assemblierAvator
      * @param workProblem
      * @param power
      * @param equationSolver
@@ -71,7 +71,7 @@ public class WeakformProcessor {
     /**
      *
      * @param shapeFun
-     * @param assemblier
+     * @param assemblierAvator
      * @param workProblem
      * @param power
      * @param equationSolver
@@ -108,8 +108,13 @@ public class WeakformProcessor {
         ExecutorService executor = Executors.newFixedThreadPool(coreNum);
 
         monitor.beforeProcess(executor, coreNum);
+        processCores.clear();
         for (int i = 0; i < coreNum; i++) {
-            executor.execute(new ProcessCore(i));
+            processCores.add(new ProcessCore(i));
+           
+        }
+        for (ProcessCore pc:processCores){
+            executor.execute(pc);
         }
         executor.shutdown();
 
@@ -123,23 +128,32 @@ public class WeakformProcessor {
             }
         }
 
-        assemblier.uniteAvators();
-
+        for (ProcessCore processCore : processCores) {
+            assemblier.uniteIn(processCore.getAssemblierAvator());
+        }
         monitor.avatorUnited(assemblier);
     }
-    
-    public ShapeFunctionPacker genShapeFunctionPacker() {
-            ShapeFunction shapeFun = shapeFunFactory.produce();
 
-            InfluenceDomainSizer infDomainSizer = infDomainFactory.produce();
-            SupportDomainCritierion critierion = critierionFactory.produce();
-
-            return new ShapeFunctionPacker(shapeFun, critierion, infDomainSizer, dim, MAX_SUPPORT_NODES_GUESS);
+    public ArrayList<ProcessCore> getProcessCores() {
+        return processCores;
     }
     
-    class ProcessCore implements Runnable, WithId {
+    
+
+    public ShapeFunctionPacker genShapeFunctionPacker() {
+        ShapeFunction shapeFun = shapeFunFactory.produce();
+
+        InfluenceDomainSizer infDomainSizer = infDomainFactory.produce();
+        SupportDomainCritierion critierion = critierionFactory.produce();
+
+        return new ShapeFunctionPacker(shapeFun, critierion, infDomainSizer, dim, MAX_SUPPORT_NODES_GUESS);
+    }
+
+    public class ProcessCore implements Runnable, WithId {
 
         int id;
+        WeakformAssemblier assemblierAvator;
+        ShapeFunctionPacker shapeFunPacker;
 
         @Override
         public int getId() {
@@ -150,17 +164,23 @@ public class WeakformProcessor {
             this.id = id;
         }
 
-        
+        public WeakformAssemblier getAssemblierAvator() {
+            return assemblierAvator;
+        }
+
+        public ShapeFunctionPacker getShapeFunPacker() {
+            return shapeFunPacker;
+        }
 
         @Override
         public void run() {
-            ShapeFunctionPacker shapeFunPacker = genShapeFunctionPacker();
-            ShapeFunction shapeFun=shapeFunPacker.shapeFun;
-            monitor.avatorInited(assemblier, shapeFun, id);
-            WeakformAssemblier assemblierAvator = assemblier.avatorInstance();
-            
+            shapeFunPacker = genShapeFunctionPacker();
+            ShapeFunction shapeFun = shapeFunPacker.shapeFun;
 
-            monitor.avatorInited(assemblier, shapeFun, id);
+            assemblierAvator = assemblier.produce();
+            monitor.avatorInited(assemblierAvator, shapeFun, id);
+
+            monitor.avatorInited(assemblierAvator, shapeFun, id);
 
             assemblyBalanceEquation(shapeFunPacker, assemblierAvator, id);
 
@@ -234,15 +254,6 @@ public class WeakformProcessor {
             throw new IllegalArgumentException("The problem dimension should be 2D or 3D only, illegal dim: " + dim);
         }
         this.dim = dim;
-    }
-
-    private TDoubleArrayList[] initShapeFunVals(int diffOrder) {
-        if (dim == 2) {
-            return ShapeFunctions2D.init4Output(diffOrder);
-        } else {
-            //TODO 3Dissue
-            throw new UnsupportedOperationException();
-        }
     }
 
     public void solveEquation() {

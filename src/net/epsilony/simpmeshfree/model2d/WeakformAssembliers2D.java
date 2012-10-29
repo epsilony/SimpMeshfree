@@ -6,7 +6,6 @@ package net.epsilony.simpmeshfree.model2d;
 
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.map.hash.TIntIntHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import net.epsilony.simpmeshfree.model.LineBoundary;
 import net.epsilony.simpmeshfree.model.Node;
@@ -35,6 +34,7 @@ public class WeakformAssembliers2D {
         DenseVector mainVector;
         int[] nodesIds;
         double neumannPenalty;
+        protected int modelNdsSize;
 
         public Simp(DenseMatrix64F constitutiveLaw, double neumannPenalty, int nodesSize) {
             init(constitutiveLaw, neumannPenalty, nodesSize);
@@ -50,11 +50,10 @@ public class WeakformAssembliers2D {
             v = shapeFunVals[0];
             vx = shapeFunVals[1];
             vy = shapeFunVals[2];
-
+            int sfNdsSz=nodes.size();
             double weight = qp.weight;
-            int nodesSize = nodes.size();
-            if (nodesIds == null || nodesIds.length < nodesSize) {
-                nodesIds = new int[nodesSize];
+            if (nodesIds == null || nodesIds.length < sfNdsSz) {
+                nodesIds = new int[sfNdsSz];
             }
             int[] nIds = nodesIds;
             int i = 0;
@@ -83,7 +82,7 @@ public class WeakformAssembliers2D {
 
             DenseVector vec = mainVector;
 
-            for (i = 0; i < nodesSize; i++) {
+            for (i = 0; i < sfNdsSz; i++) {
                 int matIndexI = nIds[i] * 2;
 
 
@@ -106,7 +105,7 @@ public class WeakformAssembliers2D {
                 mat.add(matIndexI + 1, matIndexI + 1, d11 * yy + d12 * xyyx + d22 * xx);
 
 
-                for (int j = i + 1; j < nodesSize; j++) {
+                for (int j = i + 1; j < sfNdsSz; j++) {
                     int matIndexJ = nIds[j] * 2;
                     double jx = vx.getQuick(j), jy = vy.getQuick(j);
                     xx = ix * jx;
@@ -219,22 +218,18 @@ public class WeakformAssembliers2D {
         public DenseVector getEquationVector() {
             return mainVector;
         }
-        protected LinkedList<Simp> avators = new LinkedList<>();
 
         @Override
-        synchronized public WeakformAssemblier avatorInstance() {
-            Simp avator = new Simp(constitutiveLaw, neumannPenalty, mainVector.size() / 2);
-            avators.add(avator);
+        synchronized public WeakformAssemblier produce() {
+            Simp avator = new Simp(constitutiveLaw, neumannPenalty, modelNdsSize);
             return avator;
         }
 
         @Override
-        public void uniteAvators() {
-            for (Simp avator : avators) {
-                mainMatrix.add(avator.mainMatrix);
-                mainVector.add(avator.mainVector);
-            }
-            avators.clear();
+        public void uniteIn(WeakformAssemblier w) {
+            Simp avator = (Simp) w;
+            mainMatrix.add(avator.mainMatrix);
+            mainVector.add(avator.mainVector);
         }
 
         private void init(DenseMatrix64F constitutiveLaw, double neumannPenalty, int nodesSize) {
@@ -242,6 +237,7 @@ public class WeakformAssembliers2D {
             this.neumannPenalty = neumannPenalty;
             mainMatrix = new FlexCompRowMatrix(nodesSize * 2, nodesSize * 2);
             mainVector = new DenseVector(nodesSize * 2);
+            this.modelNdsSize=nodesSize;
         }
     }
 
@@ -270,10 +266,25 @@ public class WeakformAssembliers2D {
         }
 
         @Override
-        public synchronized WeakformAssemblier avatorInstance() {
-            Lagrange res = new Lagrange(constitutiveLaw, mainVector.size() / 2, dirichletNdsSize);
-            avators.add(res);
+        public synchronized WeakformAssemblier produce() {
+            Lagrange res = new Lagrange(constitutiveLaw, modelNdsSize, dirichletNdsSize);
             return res;
+        }
+
+        @Override
+        public Matrix getEquationMatrix() {
+            if(mainMatrix.numRows()==modelNdsSize*2){
+                asmKGQ();
+            }
+            return mainMatrix;
+        }
+
+        @Override
+        public DenseVector getEquationVector() {
+            if(mainMatrix.numRows()==modelNdsSize*2){
+                asmKGQ();
+            }
+            return mainVector;
         }
 
         @Override
@@ -332,14 +343,11 @@ public class WeakformAssembliers2D {
         }
 
         @Override
-        public void uniteAvators() {
-            for (WeakformAssemblier avator : avators) {
-                Lagrange l = (Lagrange) avator;
-                g.add(l.g);
-                q.add(l.q);
-            }
-            super.uniteAvators();
-            asmKGQ();
+        public void uniteIn(WeakformAssemblier w) {
+            Lagrange l = (Lagrange) w;
+            g.add(l.g);
+            q.add(l.q);
+            super.uniteIn(w);
         }
 
         private void asmKGQ() {

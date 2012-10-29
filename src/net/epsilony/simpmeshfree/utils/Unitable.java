@@ -8,10 +8,10 @@ package net.epsilony.simpmeshfree.utils;
  *
  * @author epsilon
  */
-public interface UniAvatarable<A> extends Avatarable<A> {
+public interface Unitable<A>{
 
     /**
      * 合并所有曾经产生的分身到本实例
      */
-    void uniteAvators();
+    void uniteIn(A a);
 }

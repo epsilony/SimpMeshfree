@@ -4,14 +4,14 @@
  */
 package net.epsilony.simpmeshfree.model;
 
-import net.epsilony.simpmeshfree.sfun.DistanceSquareFunction;
-import net.epsilony.simpmeshfree.sfun.DistanceSquareFunctions;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.hash.TIntHashSet;
 import java.util.*;
-import net.epsilony.simpmeshfree.utils.Avatarable;
+import net.epsilony.simpmeshfree.sfun.DistanceSquareFunction;
+import net.epsilony.simpmeshfree.sfun.DistanceSquareFunctions;
+import net.epsilony.simpmeshfree.utils.SomeFactory;
 import net.epsilony.utils.CenterDistanceSearcher;
 import net.epsilony.utils.LayeredRangeTree;
 import net.epsilony.utils.geom.CenterDistanceComparator;
@@ -25,7 +25,7 @@ import org.apache.log4j.Logger;
  *
  * @author epsilon
  */
-public class GeomUtils implements Avatarable<GeomUtils> {
+public class GeomUtils implements SomeFactory<GeomUtils> {
 
     ArrayList<Boundary> boundaries;
     public ArrayList<Node> allNodes;
@@ -154,7 +154,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
     }
 
     @Override
-    public GeomUtils avatorInstance() {
+    public GeomUtils produce() {
         GeomUtils avator = new GeomUtils();
 
         avator.bndNodeNum = bndNodeNum;

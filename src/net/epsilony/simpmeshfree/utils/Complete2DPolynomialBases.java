@@ -469,7 +469,7 @@ public class Complete2DPolynomialBases implements BasesFunction {
     }
 
     @Override
-    public BasesFunction avatorInstance() {
+    public BasesFunction produce() {
         BasesFunction res=complete2DPolynomialBase(baseOrder);
         res.setDiffOrder(partDiffOrder);
         return res;
