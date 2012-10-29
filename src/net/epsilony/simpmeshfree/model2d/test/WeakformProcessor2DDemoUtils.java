@@ -8,6 +8,10 @@ import java.util.ArrayList;
 import net.epsilony.simpmeshfree.model.*;
 import net.epsilony.simpmeshfree.model.GeomUtils.NearestKVisibleDomainSizer;
 import net.epsilony.simpmeshfree.model2d.*;
+import net.epsilony.simpmeshfree.sfun.ShapeFunction;
+import net.epsilony.simpmeshfree.sfun.WeightFunctionCore;
+import net.epsilony.simpmeshfree.sfun.wcores.TriSpline;
+import net.epsilony.simpmeshfree.sfun2d.MLS;
 import net.epsilony.simpmeshfree.utils.SomeFactory;
 import net.epsilony.utils.math.EquationSolver;
 import net.epsilony.utils.math.EquationSolvers;
@@ -21,7 +25,7 @@ import no.uib.cipr.matrix.DenseMatrix;
 public class WeakformProcessor2DDemoUtils {
 
     public static WeakformProcessor weakformProcessor(final GeomUtils geomUtils, int baseOrder, final int minNdNum, final double initRad, DenseMatrix constitutiveLaw, double penalty, WeakformProblem workProblem, boolean iterativeServer, boolean isSimpAsm) {
-        SomeFactory<ShapeFunction> mlsFactory = ShapeFunctions2D.genMLSFactory(baseOrder);
+        SomeFactory<ShapeFunction> mlsFactory = MLS.genFactory(baseOrder);
 
         int ndsSize = geomUtils.allNodes.size();
         WeakformAssemblier assemblier;
@@ -66,7 +70,7 @@ public class WeakformProcessor2DDemoUtils {
         int minNdNum = 15;
         double initRad = (Math.sqrt(minNdNum) - 1) * lineSize;
         DenseMatrix conLaw = ConstitutiveLaws2D.getPlaneStress(E, v);
-        WeightFunctionCore coreFun = new WeightFunctionCores.TriSpline();
+        WeightFunctionCore coreFun = new TriSpline();
         RectangleModel rectModel = new RectangleModel(width, height, lineSize, spaceNdsDis);
         ArrayList<LineBoundary> bnds = rectModel.boundaries();
         GeomUtils geomUtils = new GeomUtils(bnds, rectModel.spaceNodes(), 2);

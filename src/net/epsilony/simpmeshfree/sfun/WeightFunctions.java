@@ -2,9 +2,10 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.epsilony.simpmeshfree.model;
+package net.epsilony.simpmeshfree.sfun;
 
 import gnu.trove.list.array.TDoubleArrayList;
+import net.epsilony.simpmeshfree.utils.CommonUtils;
 import net.epsilony.simpmeshfree.utils.SomeFactory;
 
 /**
@@ -53,7 +54,7 @@ public class WeightFunctions {
             this.dim = 2;
         }
 
-        private  TDoubleArrayList[] initResults(int ndsSize, TDoubleArrayList[] ori) {
+        private TDoubleArrayList[] initResults(TDoubleArrayList[] ori) {
 
             int len = 0;
             switch (diffOrder) {
@@ -89,7 +90,7 @@ public class WeightFunctions {
                     ori[i].resetQuick();
                 }
             }
-            
+
             return ori;
         }
 
@@ -103,6 +104,7 @@ public class WeightFunctions {
                 radSq = rads.getQuick(0);
                 radSq *= radSq;
             }
+            results = initResults(results);
             for (int i = 0; i < size; i++) {
                 if (!uniqRads) {
                     radSq = rads.getQuick(i);
@@ -111,17 +113,20 @@ public class WeightFunctions {
                 double distSq = distsSqs[0].get(i);
                 coreFun.valuesByNormalisedDistSq(distSq / radSq, coreVals);
                 results[0].add(coreVals[0]);
-
-                if (diffOrder >= 1) {
-                    double distSq_x = distsSqs[1].get(i);
-                    double distSq_y = distsSqs[2].get(i);
-                    results[1].add(coreVals[1] * distSq_x / radSq);
-                    results[2].add(coreVals[1] * distSq_y / radSq);
-                    if (dim == 3) {
-                        double distSq_z = distsSqs[3].get(i);
-                        results[3].add(coreVals[1] * distSq_z / radSq);
-                    }
+                
+                if (diffOrder < 1) {
+                    continue;
                 }
+
+                double distSq_x = distsSqs[1].get(i);
+                double distSq_y = distsSqs[2].get(i);
+                results[1].add(coreVals[1] * distSq_x / radSq);
+                results[2].add(coreVals[1] * distSq_y / radSq);
+                if (dim == 3) {
+                    double distSq_z = distsSqs[3].get(i);
+                    results[3].add(coreVals[1] * distSq_z / radSq);
+                }
+                
             }
             return results;
         }
@@ -139,6 +144,29 @@ public class WeightFunctions {
         @Override
         public int getDiffOrder() {
             return diffOrder;
+        }
+        
+        private double[] initValueResult(double[] ori){
+            if(null==ori){
+                return new double[CommonUtils.lenBase(dim, diffOrder)];
+            }else{
+                return ori;
+            }
+        }
+        
+
+        @Override
+        public double[] value(double[] distSq, double rad, double[] result) {
+            result=initValueResult(result);
+            double radSq = rad*rad;
+            coreFun.valuesByNormalisedDistSq(distSq[0]/radSq, result);
+            if(diffOrder<1){
+                return result;
+            }
+            double dw_dwDistSq=result[1];
+            result[1]=dw_dwDistSq*distSq[1]/radSq;
+            result[2]=dw_dwDistSq*distSq[2]/radSq;
+            return result;       
         }
     }
 }

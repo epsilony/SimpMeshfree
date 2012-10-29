@@ -49,6 +49,7 @@ public class BoundaryUtilsTestUtils {
         return new Object[]{expResults,lines,center,rad};
     }
     
+    @SuppressWarnings("unchecked")
     public static Object[] genLineIntersection3DTestSample(){
         Vector3D axis=new Vector3D(new Random().nextDouble(), new Random().nextDouble(), new Random().nextDouble());
         double angle=new Random().nextDouble()*Math.PI*2;

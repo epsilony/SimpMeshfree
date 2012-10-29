@@ -2,12 +2,12 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.epsilony.simpmeshfree.model;
+package net.epsilony.simpmeshfree.sfun;
 
 import gnu.trove.list.array.TDoubleArrayList;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import net.epsilony.simpmeshfree.model.Node;
 import net.epsilony.simpmeshfree.utils.PartDiffOrdered;
 import net.epsilony.utils.geom.Coordinate;
 
@@ -24,12 +24,12 @@ import net.epsilony.utils.geom.Coordinate;
  */
 public interface ShapeFunction extends PartDiffOrdered{   
     /**
-     * @param center
+     * @param pos
      * @param nodes
      * @param ndDistSqs Wheather not null, must be fit for differential order and be as long as {@code nodes}. If null, the implementation should take the Euclidean distance as default
      * @param ndInfRads if {@code ndInfRads.size()} is 1, all the nodes share the same influence radiu that is {@ndInfRads.get(0)}
      * @param result
      * @return
      */
-    TDoubleArrayList[] values(Coordinate center,List<Node> nodes,TDoubleArrayList[] ndDistSqs,TDoubleArrayList ndInfRads, TDoubleArrayList[] result);
+    TDoubleArrayList[] values(Coordinate pos,List<Node> nodes,TDoubleArrayList[] ndDistSqs,TDoubleArrayList ndInfRads, TDoubleArrayList[] result);
 }

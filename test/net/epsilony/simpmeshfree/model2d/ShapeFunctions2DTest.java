@@ -6,15 +6,16 @@ package net.epsilony.simpmeshfree.model2d;
 
 import gnu.trove.list.array.TDoubleArrayList;
 import java.util.*;
-import net.epsilony.simpmeshfree.model.DistanceSquareFunctions;
+import net.epsilony.simpmeshfree.sfun.DistanceSquareFunctions;
 import net.epsilony.simpmeshfree.model.Node;
-import net.epsilony.simpmeshfree.model.ShapeFunction;
 import net.epsilony.simpmeshfree.model.SupportDomainCritierion;
 import net.epsilony.simpmeshfree.model.SupportDomainUtils;
-import net.epsilony.simpmeshfree.model.WeightFunctionCore;
-import net.epsilony.simpmeshfree.model.WeightFunctionCores;
 import static net.epsilony.simpmeshfree.model2d.test.WeightFunctionTestUtils.*;
 import net.epsilony.simpmeshfree.model2d.test.WeightFunctionTestUtils.ValueFun;
+import net.epsilony.simpmeshfree.sfun.ShapeFunction;
+import net.epsilony.simpmeshfree.sfun.WeightFunctionCore;
+import net.epsilony.simpmeshfree.sfun.wcores.SimpPower;
+import net.epsilony.simpmeshfree.sfun.wcores.TriSpline;
 import net.epsilony.utils.geom.Coordinate;
 import static org.junit.Assert.assertArrayEquals;
 import org.junit.Test;
@@ -34,7 +35,7 @@ public class ShapeFunctions2DTest {
         List<Node> nds = genNodes(0, 0, xMax, yMax, nodesNum, false);
         List<? extends Coordinate> centers = genNodes(0 + 0.1, 0 + 0.1, xMax - 0.1, yMax - 0.1, testNum, false);
         int[] baseOrders = new int[]{3, 4};
-        WeightFunctionCore[] coreFuns = new WeightFunctionCore[]{new WeightFunctionCores.TriSpline(), new WeightFunctionCores.SimpPower(1), new WeightFunctionCores.SimpPower(2)};
+        WeightFunctionCore[] coreFuns = new WeightFunctionCore[]{new TriSpline(), new SimpPower(1), new SimpPower(2)};
         for (int i = 0; i < baseOrders.length; i++) {
             int baseOrder = baseOrders[i];
             System.out.println("baseOrder=" + baseOrder);
@@ -79,7 +80,7 @@ public class ShapeFunctions2DTest {
         List<Node> nds = genNodes(0, 0, xMax, yMax, Math.sqrt(nodesNum * 1.0), false);
         List<? extends Coordinate> centers = genNodes(0, 0, xMax, yMax, Math.sqrt(testNum * 1.0), false);
         int[] baseOrders = new int[]{1, 2, 3};
-        WeightFunctionCore[] coreFuns = new WeightFunctionCore[]{new WeightFunctionCores.TriSpline(), new WeightFunctionCores.SimpPower(1), new WeightFunctionCores.SimpPower(2)};
+        WeightFunctionCore[] coreFuns = new WeightFunctionCore[]{new TriSpline(), new SimpPower(1), new SimpPower(2)};
         ArrayList<Node> resNodes = new ArrayList<>(nodesNum);
         double maxErr = 0;
         SupportDomainCritierion simpCriterion = SupportDomainUtils.simpCriterion(rad, nds);

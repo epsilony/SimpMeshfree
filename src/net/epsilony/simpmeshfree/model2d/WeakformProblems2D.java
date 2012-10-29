@@ -59,7 +59,7 @@ public class WeakformProblems2D {
 
         @Override
         public QuadraturePointIterator volumeIterator() {
-            ArrayList<QuadratureDomain> domains = new ArrayList();
+            ArrayList<QuadratureDomain> domains = new ArrayList<>();
             if (null != triQuads) {
                 domains.addAll(QuadratureDomains.fromTriangles(triQuads));
             }

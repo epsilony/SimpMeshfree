@@ -2,12 +2,10 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.epsilony.simpmeshfree.model;
+package net.epsilony.simpmeshfree.sfun;
 
 import gnu.trove.list.array.TDoubleArrayList;
-import java.util.List;
 import net.epsilony.simpmeshfree.utils.PartDiffOrdered;
-import net.epsilony.utils.geom.Coordinate;
 
 /**
  * 
@@ -23,5 +21,7 @@ public interface WeightFunction extends PartDiffOrdered{
      * @return 如果results为null返回一个new double[]否则返回results
      */
     TDoubleArrayList[] values(TDoubleArrayList[] DistsSqs,TDoubleArrayList rads, TDoubleArrayList[] results);
+    
+    double[] value(double[] distSq,double rad,double[] result);
     
 }

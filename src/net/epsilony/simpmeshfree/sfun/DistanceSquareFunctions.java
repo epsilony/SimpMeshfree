@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.epsilony.simpmeshfree.model;
+package net.epsilony.simpmeshfree.sfun;
 
 import gnu.trove.list.array.TDoubleArrayList;
 import java.util.List;
@@ -26,13 +26,15 @@ public class DistanceSquareFunctions {
 
     public static class Common implements DistanceSquareFunction {
 
-        private Coordinate center;
+        private Coordinate pos;
         private int order;
-        private int partDim;
+        private int baseLen;
         private int dim;
+        DistanceSquareFunctionCore coreFun;
 
         public Common() {
             dim = 2;
+            coreFun=DistanceSquareFunctionCores.common(dim);
         }
 
         public Common(int dim) {
@@ -40,22 +42,17 @@ public class DistanceSquareFunctions {
                 throw new UnsupportedOperationException("dimension must be 2 or 3");
             }
             this.dim = dim;
+            coreFun=DistanceSquareFunctionCores.common(dim);
         }
 
         @Override
-        public TDoubleArrayList[] sqValues(List<? extends Coordinate> pts, TDoubleArrayList[] results) {
-            results = init(results, pts.size());
-            for (Coordinate pt : pts) {
-                double distSq = GeometryMath.distanceSquare(center, pt);
-                results[0].add(distSq);
-                if (order >= 1) {
-
-
-                    results[1].add(2 * (center.x - pt.x));
-                    results[2].add(2 * (center.y - pt.y));
-                    if (dim == 3) {
-                        results[3].add(2 * (center.z - pt.z));
-                    }
+        public TDoubleArrayList[] sqValues(List<? extends Coordinate> centers, TDoubleArrayList[] results) {
+            results = init(results, centers.size());
+            double[] distSqs=new double[baseLen];
+            for (Coordinate center:  centers) {
+                coreFun.value(pos, center, distSqs);
+                for(int i=0;i<baseLen;i++){
+                    results[i].add(distSqs[i]);
                 }
             }
             return results;
@@ -63,12 +60,12 @@ public class DistanceSquareFunctions {
 
         public TDoubleArrayList[] init(TDoubleArrayList[] results, int numPts) {
             if (null == results) {
-                results = new TDoubleArrayList[partDim];
+                results = new TDoubleArrayList[baseLen];
                 for (int i = 0; i < results.length; i++) {
                     results[i] = new TDoubleArrayList(numPts);
                 }
             } else {
-                for (int i = 0; i < partDim; i++) {
+                for (int i = 0; i < baseLen; i++) {
                     results[i].resetQuick();
                     results[i].ensureCapacity(numPts);
                 }
@@ -77,8 +74,8 @@ public class DistanceSquareFunctions {
         }
 
         @Override
-        public void setCenter(Coordinate center) {
-            this.center = center;
+        public void setPosition(Coordinate pos) {
+            this.pos = pos;
         }
 
         @Override
@@ -87,7 +84,8 @@ public class DistanceSquareFunctions {
                 throw new IllegalArgumentException();
             }
             this.order = order;
-            partDim = CommonUtils.lenBase(dim, order);
+            baseLen = CommonUtils.lenBase(dim, order);
+            coreFun.setDiffOrder(order);
         }
 
         @Override

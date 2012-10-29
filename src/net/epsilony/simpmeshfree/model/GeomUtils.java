@@ -4,6 +4,8 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import net.epsilony.simpmeshfree.sfun.DistanceSquareFunction;
+import net.epsilony.simpmeshfree.sfun.DistanceSquareFunctions;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
@@ -677,7 +679,7 @@ public class GeomUtils implements Avatarable<GeomUtils> {
             }
 
             double rad = domainSizer.domain(actCenter, outputNodes);
-            distFun.setCenter(center);
+            distFun.setPosition(center);
             distFun.sqValues(outputNodes, distSqs);
             return rad;
         }
