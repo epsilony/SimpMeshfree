@@ -39,7 +39,7 @@ public class SimpTest {
      */
     @Test
     public void testSimpAsmBalance() {
-        WeakformAssemblier assemblier = new WeakformAssembliers2D.Simp(new DenseMatrix(new double[][]{{11, 12, 13}, {00, 22, 23}, {00, 00, 33}}), 1e8, 25);
+        WeakformAssemblier assemblier = new SimpAssemblier2D(new DenseMatrix(new double[][]{{11, 12, 13}, {00, 22, 23}, {00, 00, 33}}), 1e8, 25);
         QuadraturePoint qp = new QuadraturePoint();
         qp.coordinate.x = 33;
         qp.coordinate.y = 34;
@@ -130,7 +130,7 @@ public class SimpTest {
 
     @Test
     public void testSimpAsmNeumann() {
-        WeakformAssemblier assemblier = new WeakformAssembliers2D.Simp(new DenseMatrix(new double[][]{{11, 12, 13}, {00, 22, 23}, {00, 00, 33}}), 1e8, 25);
+        WeakformAssemblier assemblier = new SimpAssemblier2D(new DenseMatrix(new double[][]{{11, 12, 13}, {00, 22, 23}, {00, 00, 33}}), 1e8, 25);
         QuadraturePoint qp = new QuadraturePoint();
         qp.coordinate.x = 33;
         qp.coordinate.y = 34;
@@ -185,7 +185,7 @@ public class SimpTest {
     @Test
     public void testSimpAssemblyDirichlet() {
         double penalty = 1e8;
-        WeakformAssemblier assemblier = new WeakformAssembliers2D.Simp(new DenseMatrix(new double[][]{{11, 12, 13}, {00, 22, 23}, {00, 00, 33}}), penalty, 25);
+        WeakformAssemblier assemblier = new SimpAssemblier2D(new DenseMatrix(new double[][]{{11, 12, 13}, {00, 22, 23}, {00, 00, 33}}), penalty, 25);
         QuadraturePoint qp = new QuadraturePoint();
         qp.coordinate.x = 33;
         qp.coordinate.y = 34;

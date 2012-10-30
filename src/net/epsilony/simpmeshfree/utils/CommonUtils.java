@@ -5,6 +5,7 @@
 package net.epsilony.simpmeshfree.utils;
 
 import gnu.trove.list.array.TDoubleArrayList;
+import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.MatrixEntry;
 import org.apache.commons.math.util.MathUtils;
@@ -45,6 +46,16 @@ public class CommonUtils {
             result.set(me.row(), me.column(), me.get());
         }
         return result;
+    }
+    
+    public static DenseMatrix toDenseMatrix(DenseMatrix64F mat){
+        DenseMatrix res=new DenseMatrix(mat.numRows, mat.numCols);
+        for(int i=0;i<mat.numRows;i++){
+            for(int j=0;j<mat.numCols;j++){
+                res.set(i,j,mat.get(i,j));
+            }
+        }
+        return res;
     }
 
     public static TDoubleArrayList[] copyTDoubleArrayListArray(TDoubleArrayList[] ori) {

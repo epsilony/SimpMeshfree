@@ -30,9 +30,9 @@ public class WeakformProcessor2DDemoUtils {
         int ndsSize = geomUtils.allNodes.size();
         WeakformAssemblier assemblier;
         if (isSimpAsm) {
-            assemblier = new WeakformAssembliers2D.Simp(constitutiveLaw, penalty, ndsSize);
+            assemblier = new SimpAssemblier2D(constitutiveLaw, penalty, ndsSize);
         } else {
-            assemblier = new WeakformAssembliers2D.Lagrange(constitutiveLaw, ndsSize, workProblem.dirichletNodes().size());
+            assemblier = new LagrangeAssemblier2D(constitutiveLaw, ndsSize, workProblem.dirichletNodes().size());
         }
         EquationSolver eqSolver;
         if (iterativeServer) {

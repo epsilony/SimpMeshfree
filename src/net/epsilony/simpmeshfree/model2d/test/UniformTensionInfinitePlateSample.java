@@ -12,11 +12,11 @@ import net.epsilony.simpmeshfree.model.WeakformAssemblier;
 import net.epsilony.simpmeshfree.model.WeakformProblem;
 import net.epsilony.simpmeshfree.model.WeakformProcessor;
 import net.epsilony.simpmeshfree.model2d.ConstitutiveLaws2D;
+import net.epsilony.simpmeshfree.model2d.LagrangeAssemblier2D;
+import net.epsilony.simpmeshfree.model2d.SimpAssemblier2D;
 import net.epsilony.simpmeshfree.model2d.UniformTensionInfinitePlate;
-import net.epsilony.simpmeshfree.model2d.WeakformAssembliers2D;
 import net.epsilony.simpmeshfree.sfun.ShapeFunction;
 import net.epsilony.simpmeshfree.sfun2d.MLS;
-import net.epsilony.simpmeshfree.utils.CommonUtils;
 import net.epsilony.simpmeshfree.utils.SomeFactory;
 import net.epsilony.utils.math.EquationSolver;
 import net.epsilony.utils.math.EquationSolvers;
@@ -30,16 +30,16 @@ import no.uib.cipr.matrix.DenseMatrix;
 public class UniformTensionInfinitePlateSample {
 
     public static UniformTensionInfinitePlate simpSample() {
-        return new UniformTensionInfinitePlate(30, 100, 2000, 200, 0.3, 12, 14, 1.1);
+        return new UniformTensionInfinitePlate(30, 100, 2000, 200, 0.3, 15, 10, 1.1);
     }
 
     public static WeakformProcessor genSampleProcessor() {
         boolean isSimpAsm = false;
         boolean iterativeServer = false;
         int baseOrder = 2;
-        int power = 3;
-        final int minNdNum=8;
-        final int initRad=15;
+        int power = 4;
+        final int minNdNum=15;
+        final int initRad=30;
         UniformTensionInfinitePlate utip = simpSample();
         double penalty = 1e8;
         DenseMatrix constitutiveLaw = ConstitutiveLaws2D.getPlaneStress(utip.getE(), utip.getMu());
@@ -53,9 +53,9 @@ public class UniformTensionInfinitePlateSample {
         int ndsSize = geomUtils.allNodes.size();
         WeakformAssemblier assemblier;
         if (isSimpAsm) {
-            assemblier = new WeakformAssembliers2D.Simp(constitutiveLaw, penalty, ndsSize);
+            assemblier = new SimpAssemblier2D(constitutiveLaw, penalty, ndsSize);
         } else {
-            assemblier = new WeakformAssembliers2D.Lagrange(constitutiveLaw, ndsSize, workProblem.dirichletNodes().size());
+            assemblier = new LagrangeAssemblier2D(constitutiveLaw, ndsSize, workProblem.dirichletNodes().size());
         }
         EquationSolver eqSolver;
         if (iterativeServer) {
