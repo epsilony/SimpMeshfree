@@ -10,9 +10,9 @@ import net.epsilony.utils.geom.Coordinate;
 import net.epsilony.utils.geom.GeometryMath;
 import net.epsilony.utils.geom.Quadrangle;
 import net.epsilony.utils.geom.Triangle;
-import net.epsilony.utils.math.GaussLegendreQuadratureUtils;
-import net.epsilony.utils.math.QuadrangleMapper;
-import net.epsilony.utils.math.TriangleSymmetricQuadrature;
+import net.epsilony.utils.math.quadrature.GaussLegendreQuadratureUtils;
+import net.epsilony.utils.math.quadrature.TriangleSymmetricQuadrature;
+import net.epsilony.utils.math.substitution.QuadrangleSubs;
 
 /**
  *
@@ -126,7 +126,7 @@ public class QuadratureDomains {
             int indexV = index % numPtPerDim;
             double iu = GaussLegendreQuadratureUtils.getPosition(numPtPerDim, indexU);
             double iv = GaussLegendreQuadratureUtils.getPosition(numPtPerDim, indexV);
-            double jacobi = QuadrangleMapper.iuv2xyC(quad, iu, iv, output);
+            double jacobi = QuadrangleSubs.iuv2xyC(quad, iu, iv, output);
             double xWeight = GaussLegendreQuadratureUtils.getWeight(numPtPerDim, indexU);
             double yWeight = GaussLegendreQuadratureUtils.getWeight(numPtPerDim, indexV);
             return xWeight * yWeight * jacobi;

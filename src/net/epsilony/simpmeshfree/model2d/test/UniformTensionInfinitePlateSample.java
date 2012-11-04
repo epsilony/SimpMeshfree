@@ -17,7 +17,7 @@ import net.epsilony.simpmeshfree.model2d.SimpAssemblier2D;
 import net.epsilony.simpmeshfree.model2d.UniformTensionInfinitePlate;
 import net.epsilony.simpmeshfree.sfun.ShapeFunction;
 import net.epsilony.simpmeshfree.sfun2d.MLS;
-import net.epsilony.simpmeshfree.utils.SomeFactory;
+import net.epsilony.utils.SomeFactory;
 import net.epsilony.utils.math.EquationSolver;
 import net.epsilony.utils.math.EquationSolvers;
 import net.epsilony.utils.math.MatrixUtils;

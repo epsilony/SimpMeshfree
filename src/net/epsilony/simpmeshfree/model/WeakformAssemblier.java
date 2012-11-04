@@ -7,8 +7,8 @@ package net.epsilony.simpmeshfree.model;
 import gnu.trove.list.array.TDoubleArrayList;
 import java.util.List;
 import net.epsilony.simpmeshfree.utils.QuadraturePoint;
-import net.epsilony.simpmeshfree.utils.SomeFactory;
-import net.epsilony.simpmeshfree.utils.Unitable;
+import net.epsilony.utils.SomeFactory;
+import net.epsilony.utils.Unitable;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
 

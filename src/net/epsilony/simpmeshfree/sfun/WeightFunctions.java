@@ -6,7 +6,7 @@ package net.epsilony.simpmeshfree.sfun;
 
 import gnu.trove.list.array.TDoubleArrayList;
 import net.epsilony.simpmeshfree.utils.CommonUtils;
-import net.epsilony.simpmeshfree.utils.SomeFactory;
+import net.epsilony.utils.SomeFactory;
 
 /**
  *

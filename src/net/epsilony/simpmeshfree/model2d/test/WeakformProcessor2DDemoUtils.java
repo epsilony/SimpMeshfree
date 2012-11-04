@@ -12,7 +12,7 @@ import net.epsilony.simpmeshfree.sfun.ShapeFunction;
 import net.epsilony.simpmeshfree.sfun.WeightFunctionCore;
 import net.epsilony.simpmeshfree.sfun.wcores.TriSpline;
 import net.epsilony.simpmeshfree.sfun2d.MLS;
-import net.epsilony.simpmeshfree.utils.SomeFactory;
+import net.epsilony.utils.SomeFactory;
 import net.epsilony.utils.math.EquationSolver;
 import net.epsilony.utils.math.EquationSolvers;
 import net.epsilony.utils.math.MatrixUtils;

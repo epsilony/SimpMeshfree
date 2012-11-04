@@ -5,7 +5,7 @@
 package net.epsilony.simpmeshfree.sfun.wcores;
 
 import net.epsilony.simpmeshfree.sfun.WeightFunctionCore;
-import net.epsilony.simpmeshfree.utils.SomeFactory;
+import net.epsilony.utils.SomeFactory;
 import org.apache.commons.math.analysis.polynomials.PolynomialFunction;
 
 /**

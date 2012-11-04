@@ -6,7 +6,7 @@ package net.epsilony.simpmeshfree.adpt2d;
 
 import java.util.Arrays;
 import net.epsilony.simpmeshfree.model.Node;
-import net.epsilony.simpmeshfree.model.WithId;
+import net.epsilony.utils.WithId;
 import net.epsilony.utils.geom.GeometryMath;
 
 /**

@@ -11,7 +11,7 @@ import gnu.trove.set.hash.TIntHashSet;
 import java.util.*;
 import net.epsilony.simpmeshfree.sfun.DistanceSquareFunction;
 import net.epsilony.simpmeshfree.sfun.DistanceSquareFunctions;
-import net.epsilony.simpmeshfree.utils.SomeFactory;
+import net.epsilony.utils.SomeFactory;
 import net.epsilony.utils.CenterDistanceSearcher;
 import net.epsilony.utils.LayeredRangeTree;
 import net.epsilony.utils.geom.CenterDistanceComparator;

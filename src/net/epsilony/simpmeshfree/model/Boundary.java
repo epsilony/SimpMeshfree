@@ -4,6 +4,7 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import net.epsilony.utils.WithId;
 import java.io.Serializable;
 import javax.imageio.spi.ServiceRegistry;
 import net.epsilony.utils.geom.Coordinate;

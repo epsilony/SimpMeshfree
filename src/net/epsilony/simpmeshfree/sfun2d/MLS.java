@@ -19,7 +19,7 @@ import net.epsilony.simpmeshfree.sfun.wcores.TriSpline;
 import net.epsilony.simpmeshfree.utils.BasesFunction;
 import net.epsilony.simpmeshfree.utils.CommonUtils;
 import net.epsilony.simpmeshfree.utils.Complete2DPolynomialBases;
-import net.epsilony.simpmeshfree.utils.SomeFactory;
+import net.epsilony.utils.SomeFactory;
 import net.epsilony.utils.geom.Coordinate;
 import net.epsilony.utils.geom.GeometryMath;
 import org.ejml.alg.dense.decomposition.lu.LUDecompositionAlt;

@@ -14,9 +14,9 @@ import net.epsilony.utils.geom.Coordinate;
 import net.epsilony.utils.geom.GeometryMath;
 import net.epsilony.utils.geom.Quadrangle;
 import net.epsilony.utils.geom.Triangle;
-import net.epsilony.utils.math.GaussLegendreQuadratureUtils;
-import net.epsilony.utils.math.QuadrangleMapper;
-import net.epsilony.utils.math.TriangleSymmetricQuadrature;
+import net.epsilony.utils.math.quadrature.GaussLegendreQuadratureUtils;
+import net.epsilony.utils.math.quadrature.TriangleSymmetricQuadrature;
+import net.epsilony.utils.math.substitution.QuadrangleSubs;
 
 /**
  *
@@ -238,7 +238,7 @@ public class QuadraturePointIterators {
         int quadSize;
         double[] weights;
         double[] uvs;
-        QuadrangleMapper quadMapper = new QuadrangleMapper();
+        QuadrangleSubs quadMapper = new QuadrangleSubs();
         double[] xyJacb = new double[3];
         boolean isOff = false;
 
