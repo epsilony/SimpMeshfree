@@ -1,0 +1,3 @@
+[submodule "libs/JavaUtils"]
+	path = libs/JavaUtils
+	url = git@github.com:epsilony/JavaUtils.git
