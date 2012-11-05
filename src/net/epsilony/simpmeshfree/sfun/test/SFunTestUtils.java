@@ -6,7 +6,7 @@ package net.epsilony.simpmeshfree.sfun.test;
 
 import static java.lang.Math.*;
 import java.util.ArrayList;
-import net.epsilony.simpmeshfree.model.Node;
+import net.epsilony.utils.geom.Node;
 import net.epsilony.simpmeshfree.utils.CommonUtils;
 import net.epsilony.simpmeshfree.utils.CoordinatePartDiffFunction;
 import net.epsilony.utils.geom.Coordinate;

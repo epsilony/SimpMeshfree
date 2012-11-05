@@ -4,7 +4,7 @@
  */
 package net.epsilony.simpmeshfree.sfun;
 
-import net.epsilony.simpmeshfree.utils.PartDiffOrdered;
+import net.epsilony.utils.PartDiffOrdered;
 import net.epsilony.utils.geom.Coordinate;
 
 /**

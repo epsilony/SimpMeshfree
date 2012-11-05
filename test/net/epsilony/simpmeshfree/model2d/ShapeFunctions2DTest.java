@@ -7,7 +7,7 @@ package net.epsilony.simpmeshfree.model2d;
 import gnu.trove.list.array.TDoubleArrayList;
 import java.util.*;
 import net.epsilony.simpmeshfree.sfun.DistanceSquareFunctions;
-import net.epsilony.simpmeshfree.model.Node;
+import net.epsilony.utils.geom.Node;
 import net.epsilony.simpmeshfree.model.SupportDomainCritierion;
 import net.epsilony.simpmeshfree.model.SupportDomainUtils;
 import static net.epsilony.simpmeshfree.model2d.test.WeightFunctionTestUtils.*;

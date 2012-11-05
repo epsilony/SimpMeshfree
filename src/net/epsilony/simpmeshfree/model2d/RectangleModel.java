@@ -7,7 +7,7 @@ package net.epsilony.simpmeshfree.model2d;
 import static java.lang.Math.ceil;
 import java.util.ArrayList;
 import net.epsilony.simpmeshfree.model.LineBoundary;
-import net.epsilony.simpmeshfree.model.Node;
+import net.epsilony.utils.geom.Node;
 import net.epsilony.utils.geom.Coordinate;
 import net.epsilony.utils.geom.Quadrangle;
 import net.epsilony.utils.geom.Triangle;

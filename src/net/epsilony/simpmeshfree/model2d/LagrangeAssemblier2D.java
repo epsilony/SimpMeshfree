@@ -8,7 +8,7 @@ import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.map.hash.TIntIntHashMap;
 import java.util.List;
 import net.epsilony.simpmeshfree.model.LineBoundary;
-import net.epsilony.simpmeshfree.model.Node;
+import net.epsilony.utils.geom.Node;
 import net.epsilony.simpmeshfree.model.WeakformAssemblier;
 import net.epsilony.simpmeshfree.utils.QuadraturePoint;
 import net.epsilony.utils.geom.Coordinate;

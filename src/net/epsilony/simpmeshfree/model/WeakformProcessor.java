@@ -4,6 +4,7 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import net.epsilony.utils.geom.Node;
 import net.epsilony.utils.WithId;
 import gnu.trove.list.array.TDoubleArrayList;
 import java.util.ArrayList;

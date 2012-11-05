@@ -5,7 +5,7 @@
 package net.epsilony.simpmeshfree.model2d;
 
 import java.util.List;
-import net.epsilony.simpmeshfree.model.Node;
+import net.epsilony.utils.geom.Node;
 import net.epsilony.utils.CenterSearcher;
 import net.epsilony.utils.LayeredRangeTree;
 import net.epsilony.utils.geom.Coordinate;

@@ -7,7 +7,7 @@ package net.epsilony.simpmeshfree.sfun;
 import java.util.ArrayList;
 import java.util.Arrays;
 import net.epsilony.simpmeshfree.model.InfluenceDomainSizers;
-import net.epsilony.simpmeshfree.model.Node;
+import net.epsilony.utils.geom.Node;
 import net.epsilony.simpmeshfree.sfun.test.SFunTestUtils;
 import net.epsilony.simpmeshfree.sfun.wcores.Wendland;
 import net.epsilony.simpmeshfree.utils.CoordinatePartDiffFunction;

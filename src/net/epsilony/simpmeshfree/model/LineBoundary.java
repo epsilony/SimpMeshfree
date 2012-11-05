@@ -4,6 +4,7 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import net.epsilony.utils.geom.Node;
 import java.util.Comparator;
 import net.epsilony.utils.geom.Coordinate;
 

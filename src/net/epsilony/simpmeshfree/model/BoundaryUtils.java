@@ -4,6 +4,7 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import net.epsilony.utils.geom.Node;
 import net.epsilony.utils.ArrayUtils;
 import net.epsilony.utils.geom.Coordinate;
 import net.epsilony.utils.geom.GeometryMath;

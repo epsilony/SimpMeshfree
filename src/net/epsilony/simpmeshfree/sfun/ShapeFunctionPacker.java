@@ -9,10 +9,10 @@ import java.util.List;
 import net.epsilony.simpmeshfree.model.Boundary;
 import net.epsilony.simpmeshfree.model.InfluenceDomainSizer;
 import net.epsilony.simpmeshfree.model.InfluenceDomainSizers;
-import net.epsilony.simpmeshfree.model.Node;
+import net.epsilony.utils.geom.Node;
 import net.epsilony.simpmeshfree.model.SupportDomainCritierion;
 import net.epsilony.simpmeshfree.utils.CommonUtils;
-import net.epsilony.simpmeshfree.utils.PartDiffOrdered;
+import net.epsilony.utils.PartDiffOrdered;
 import net.epsilony.utils.geom.Coordinate;
 
 /**

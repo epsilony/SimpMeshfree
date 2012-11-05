@@ -7,8 +7,8 @@ package net.epsilony.simpmeshfree.sfun;
 import gnu.trove.list.array.TDoubleArrayList;
 import java.util.Collection;
 import java.util.List;
-import net.epsilony.simpmeshfree.model.Node;
-import net.epsilony.simpmeshfree.utils.PartDiffOrdered;
+import net.epsilony.utils.geom.Node;
+import net.epsilony.utils.PartDiffOrdered;
 import net.epsilony.utils.geom.Coordinate;
 
 /**

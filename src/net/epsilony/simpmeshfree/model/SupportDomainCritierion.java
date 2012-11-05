@@ -4,10 +4,11 @@
  */
 package net.epsilony.simpmeshfree.model;
 
+import net.epsilony.utils.geom.Node;
 import gnu.trove.list.array.TDoubleArrayList;
 import java.util.Collection;
 import java.util.List;
-import net.epsilony.simpmeshfree.utils.PartDiffOrdered;
+import net.epsilony.utils.PartDiffOrdered;
 import net.epsilony.utils.geom.Coordinate;
 
 /**

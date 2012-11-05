@@ -4,6 +4,7 @@
  */
 package net.epsilony.simpmeshfree.utils;
 
+import net.epsilony.utils.PartDiffOrdered;
 import net.epsilony.utils.geom.Coordinate;
 
 /**

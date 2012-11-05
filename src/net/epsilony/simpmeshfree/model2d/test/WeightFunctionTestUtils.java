@@ -4,6 +4,7 @@
  */
 package net.epsilony.simpmeshfree.model2d.test;
 
+import net.epsilony.utils.geom.Node;
 import net.epsilony.simpmeshfree.sfun.DistanceSquareFunctions;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;

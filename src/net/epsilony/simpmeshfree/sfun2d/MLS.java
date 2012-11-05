@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import net.epsilony.simpmeshfree.sfun.DistanceSquareFunction;
 import net.epsilony.simpmeshfree.sfun.DistanceSquareFunctions;
-import net.epsilony.simpmeshfree.model.Node;
+import net.epsilony.utils.geom.Node;
 import net.epsilony.simpmeshfree.sfun.ShapeFunction;
 import net.epsilony.simpmeshfree.sfun.WeightFunction;
 import net.epsilony.simpmeshfree.sfun.WeightFunctionCore;

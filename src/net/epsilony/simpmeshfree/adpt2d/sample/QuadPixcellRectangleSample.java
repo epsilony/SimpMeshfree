@@ -7,7 +7,7 @@ package net.epsilony.simpmeshfree.adpt2d.sample;
 import java.util.ArrayList;
 import java.util.List;
 import net.epsilony.simpmeshfree.adpt2d.QuadPixcell;
-import net.epsilony.simpmeshfree.model.Node;
+import net.epsilony.utils.geom.Node;
 
 /**
  *

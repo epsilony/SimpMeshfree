@@ -7,7 +7,7 @@ package net.epsilony.simpmeshfree.adpt2d.sample;
 import java.util.LinkedList;
 import net.epsilony.simpmeshfree.adpt2d.AdaptiveFilter;
 import net.epsilony.simpmeshfree.adpt2d.QuadPixcell;
-import net.epsilony.simpmeshfree.model.Node;
+import net.epsilony.utils.geom.Node;
 import net.epsilony.utils.geom.Coordinate;
 import net.epsilony.utils.geom.GeometryMath;
 

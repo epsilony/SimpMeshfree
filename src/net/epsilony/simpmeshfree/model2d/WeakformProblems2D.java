@@ -4,6 +4,7 @@
  */
 package net.epsilony.simpmeshfree.model2d;
 
+import net.epsilony.utils.geom.Node;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;

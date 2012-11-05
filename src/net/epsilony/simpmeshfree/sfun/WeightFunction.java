@@ -5,7 +5,7 @@
 package net.epsilony.simpmeshfree.sfun;
 
 import gnu.trove.list.array.TDoubleArrayList;
-import net.epsilony.simpmeshfree.utils.PartDiffOrdered;
+import net.epsilony.utils.PartDiffOrdered;
 
 /**
  * 
