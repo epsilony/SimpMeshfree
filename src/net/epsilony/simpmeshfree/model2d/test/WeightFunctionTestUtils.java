@@ -110,6 +110,7 @@ public class WeightFunctionTestUtils {
         rads.add(rad);
         actResults.clear();
         SupportDomainCritierion simpCriterion = SupportDomainUtils.simpCriterion(rad, nds);
+        simpCriterion.setDiffOrder(shapeFun.getDiffOrder());
         TDoubleArrayList[] distSqs = DistanceSquareFunctions.initDistSqsContainer(2, 1);
         for (Coordinate center : centers) {
             simpCriterion.getSupports(center, null, resNodes, distSqs);
