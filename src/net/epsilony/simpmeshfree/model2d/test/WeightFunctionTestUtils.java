@@ -4,24 +4,23 @@
  */
 package net.epsilony.simpmeshfree.model2d.test;
 
-import net.epsilony.utils.geom.Node;
-import net.epsilony.simpmeshfree.sfun.DistanceSquareFunctions;
 import gnu.trove.list.array.TDoubleArrayList;
-import gnu.trove.list.array.TIntArrayList;
 import static java.lang.Math.PI;
 import static java.lang.Math.ceil;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import net.epsilony.simpmeshfree.model.*;
-import net.epsilony.simpmeshfree.sfun.ShapeFunction;
-import net.epsilony.simpmeshfree.sfun.WeightFunction;
-import net.epsilony.simpmeshfree.sfun.WeightFunctionCore;
-import net.epsilony.simpmeshfree.sfun.WeightFunctions;
 import net.epsilony.simpmeshfree.sfun2d.MLS;
 import net.epsilony.simpmeshfree.utils.BasesFunction;
 import net.epsilony.simpmeshfree.utils.Complete2DPolynomialBases;
 import net.epsilony.utils.geom.Coordinate;
+import net.epsilony.utils.geom.Node;
+import net.epsilony.utils.spfun.DistanceSquareFunctions;
+import net.epsilony.utils.spfun.ShapeFunction;
+import net.epsilony.utils.spfun.radialbasis.WeightFunction;
+import net.epsilony.utils.spfun.radialbasis.WeightFunctionCore;
+import net.epsilony.utils.spfun.radialbasis.WeightFunctions;
 
 /**
  *

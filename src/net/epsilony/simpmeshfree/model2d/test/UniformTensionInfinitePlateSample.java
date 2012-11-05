@@ -5,8 +5,6 @@
 package net.epsilony.simpmeshfree.model2d.test;
 
 import net.epsilony.simpmeshfree.model.GeomUtils;
-import net.epsilony.simpmeshfree.model.InfluenceDomainSizer;
-import net.epsilony.simpmeshfree.model.InfluenceDomainSizers;
 import net.epsilony.simpmeshfree.model.SupportDomainCritierion;
 import net.epsilony.simpmeshfree.model.WeakformAssemblier;
 import net.epsilony.simpmeshfree.model.WeakformProblem;
@@ -15,12 +13,14 @@ import net.epsilony.simpmeshfree.model2d.ConstitutiveLaws2D;
 import net.epsilony.simpmeshfree.model2d.LagrangeAssemblier2D;
 import net.epsilony.simpmeshfree.model2d.SimpAssemblier2D;
 import net.epsilony.simpmeshfree.model2d.UniformTensionInfinitePlate;
-import net.epsilony.simpmeshfree.sfun.ShapeFunction;
 import net.epsilony.simpmeshfree.sfun2d.MLS;
 import net.epsilony.utils.SomeFactory;
 import net.epsilony.utils.math.EquationSolver;
 import net.epsilony.utils.math.EquationSolvers;
 import net.epsilony.utils.math.MatrixUtils;
+import net.epsilony.utils.spfun.InfluenceDomainSizer;
+import net.epsilony.utils.spfun.InfluenceDomainSizers;
+import net.epsilony.utils.spfun.ShapeFunction;
 import no.uib.cipr.matrix.DenseMatrix;
 
 /**

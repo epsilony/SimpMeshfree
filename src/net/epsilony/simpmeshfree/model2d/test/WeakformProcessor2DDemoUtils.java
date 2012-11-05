@@ -8,14 +8,16 @@ import java.util.ArrayList;
 import net.epsilony.simpmeshfree.model.*;
 import net.epsilony.simpmeshfree.model.GeomUtils.NearestKVisibleDomainSizer;
 import net.epsilony.simpmeshfree.model2d.*;
-import net.epsilony.simpmeshfree.sfun.ShapeFunction;
-import net.epsilony.simpmeshfree.sfun.WeightFunctionCore;
-import net.epsilony.simpmeshfree.sfun.wcores.TriSpline;
 import net.epsilony.simpmeshfree.sfun2d.MLS;
 import net.epsilony.utils.SomeFactory;
 import net.epsilony.utils.math.EquationSolver;
 import net.epsilony.utils.math.EquationSolvers;
 import net.epsilony.utils.math.MatrixUtils;
+import net.epsilony.utils.spfun.InfluenceDomainSizer;
+import net.epsilony.utils.spfun.InfluenceDomainSizers;
+import net.epsilony.utils.spfun.ShapeFunction;
+import net.epsilony.utils.spfun.radialbasis.TriSpline;
+import net.epsilony.utils.spfun.radialbasis.WeightFunctionCore;
 import no.uib.cipr.matrix.DenseMatrix;
 
 /**

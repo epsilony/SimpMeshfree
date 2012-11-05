@@ -4,24 +4,25 @@
  */
 package net.epsilony.simpmeshfree.sfun2d;
 
+import net.epsilony.utils.spfun.ShapeFunctionUtils2D;
 import gnu.trove.list.array.TDoubleArrayList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import net.epsilony.simpmeshfree.sfun.DistanceSquareFunction;
-import net.epsilony.simpmeshfree.sfun.DistanceSquareFunctions;
-import net.epsilony.utils.geom.Node;
-import net.epsilony.simpmeshfree.sfun.ShapeFunction;
-import net.epsilony.simpmeshfree.sfun.WeightFunction;
-import net.epsilony.simpmeshfree.sfun.WeightFunctionCore;
-import net.epsilony.simpmeshfree.sfun.WeightFunctions;
-import net.epsilony.simpmeshfree.sfun.wcores.TriSpline;
 import net.epsilony.simpmeshfree.utils.BasesFunction;
-import net.epsilony.simpmeshfree.utils.CommonUtils;
 import net.epsilony.simpmeshfree.utils.Complete2DPolynomialBases;
 import net.epsilony.utils.SomeFactory;
 import net.epsilony.utils.geom.Coordinate;
 import net.epsilony.utils.geom.GeometryMath;
+import net.epsilony.utils.geom.Node;
+import net.epsilony.utils.spfun.CommonUtils;
+import net.epsilony.utils.spfun.DistanceSquareFunction;
+import net.epsilony.utils.spfun.DistanceSquareFunctions;
+import net.epsilony.utils.spfun.ShapeFunction;
+import net.epsilony.utils.spfun.radialbasis.TriSpline;
+import net.epsilony.utils.spfun.radialbasis.WeightFunction;
+import net.epsilony.utils.spfun.radialbasis.WeightFunctionCore;
+import net.epsilony.utils.spfun.radialbasis.WeightFunctions;
 import org.ejml.alg.dense.decomposition.lu.LUDecompositionAlt;
 import org.ejml.alg.dense.linsol.lu.LinearSolverLu;
 import org.ejml.data.DenseMatrix64F;
@@ -76,8 +77,8 @@ public class MLS implements ShapeFunction {
         nodesWeightsCache = new TDoubleArrayList[CommonUtils.len2DBase(partDiffOrder)];
         distSquaresCache = new TDoubleArrayList[nodesWeightsCache.length];
         for (int i = 0; i < nodesWeightsCache.length; i++) {
-            nodesWeightsCache[i] = new TDoubleArrayList(ShapeFunctions2D.MAX_NODES_SIZE_GUESS);
-            distSquaresCache[i] = new TDoubleArrayList(ShapeFunctions2D.MAX_NODES_SIZE_GUESS);
+            nodesWeightsCache[i] = new TDoubleArrayList(ShapeFunctionUtils2D.MAX_NODES_SIZE_GUESS);
+            distSquaresCache[i] = new TDoubleArrayList(ShapeFunctionUtils2D.MAX_NODES_SIZE_GUESS);
         }
     }
 
@@ -100,7 +101,7 @@ public class MLS implements ShapeFunction {
         Bs = Arrays.asList(B, B_x, B_y);
         for (ArrayList<TDoubleArrayList> tB : Bs) {
             for (int i = 0; i < baseDim; i++) {
-                tB.add(new TDoubleArrayList(ShapeFunctions2D.MAX_NODES_SIZE_GUESS));
+                tB.add(new TDoubleArrayList(ShapeFunctionUtils2D.MAX_NODES_SIZE_GUESS));
             }
         }
         gamma = new DenseMatrix64F(baseDim, 1);
@@ -124,7 +125,7 @@ public class MLS implements ShapeFunction {
         }
         int ndsNum = nodes.size();
         weightFunction.values(distSquares, infRads, nodesWeightsCache);
-        results = ShapeFunctions2D.init4Output(results, diffOrder, ndsNum);
+        results = ShapeFunctionUtils2D.init4Output(results, diffOrder, ndsNum);
         int diffDim = CommonUtils.len2DBase(diffOrder);
         int baseDim = basesFunction.getDim();
         Coordinate zero = new Coordinate(0, 0, 0);
@@ -176,7 +177,7 @@ public class MLS implements ShapeFunction {
         tv.set(p);
         luSolver.solve(tv, gamma);
         //            CommonOps.solve(A, p, gamma);
-        ShapeFunctions2D.multAddTo(gamma, B, results[0]);
+        ShapeFunctionUtils2D.multAddTo(gamma, B, results[0]);
         if (diffOrder < 1) {
             return results;
         }
@@ -190,10 +191,10 @@ public class MLS implements ShapeFunction {
         CommonOps.add(p_y, tv, tv);
         luSolver.solve(tv, gamma_y);
         //            CommonOps.solve(A, tv, gamma_y);
-        ShapeFunctions2D.multAddTo(gamma_x, B, results[1]);
-        ShapeFunctions2D.multAddTo(gamma, B_x, results[1]);
-        ShapeFunctions2D.multAddTo(gamma_y, B, results[2]);
-        ShapeFunctions2D.multAddTo(gamma, B_y, results[2]);
+        ShapeFunctionUtils2D.multAddTo(gamma_x, B, results[1]);
+        ShapeFunctionUtils2D.multAddTo(gamma, B_x, results[1]);
+        ShapeFunctionUtils2D.multAddTo(gamma_y, B, results[2]);
+        ShapeFunctionUtils2D.multAddTo(gamma, B_y, results[2]);
         return results;
     }
 

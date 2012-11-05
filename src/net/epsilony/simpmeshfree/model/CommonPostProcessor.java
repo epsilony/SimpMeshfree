@@ -4,13 +4,13 @@
  */
 package net.epsilony.simpmeshfree.model;
 
-import net.epsilony.utils.geom.Node;
 import gnu.trove.list.array.TDoubleArrayList;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import net.epsilony.simpmeshfree.sfun.ShapeFunctionPacker;
 import net.epsilony.utils.geom.Coordinate;
+import net.epsilony.utils.geom.Node;
 import no.uib.cipr.matrix.DenseVector;
 import org.ejml.data.DenseMatrix64F;
 import org.ejml.ops.CommonOps;

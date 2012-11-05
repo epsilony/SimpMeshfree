@@ -4,21 +4,22 @@
  */
 package net.epsilony.simpmeshfree.model;
 
-import net.epsilony.utils.geom.Node;
-import net.epsilony.utils.WithId;
 import gnu.trove.list.array.TDoubleArrayList;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import net.epsilony.simpmeshfree.sfun.ShapeFunction;
 import net.epsilony.simpmeshfree.sfun.ShapeFunctionPacker;
 import net.epsilony.simpmeshfree.utils.QuadraturePoint;
 import net.epsilony.simpmeshfree.utils.QuadraturePointIterator;
 import net.epsilony.simpmeshfree.utils.QuadraturePointIterators;
 import net.epsilony.utils.SomeFactory;
+import net.epsilony.utils.WithId;
 import net.epsilony.utils.geom.Coordinate;
+import net.epsilony.utils.geom.Node;
 import net.epsilony.utils.math.EquationSolver;
+import net.epsilony.utils.spfun.InfluenceDomainSizer;
+import net.epsilony.utils.spfun.ShapeFunction;
 import no.uib.cipr.matrix.DenseVector;
 
 /**

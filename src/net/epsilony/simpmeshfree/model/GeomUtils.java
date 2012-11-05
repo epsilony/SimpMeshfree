@@ -4,22 +4,24 @@
  */
 package net.epsilony.simpmeshfree.model;
 
-import net.epsilony.utils.geom.Node;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.hash.TIntHashSet;
 import java.util.*;
-import net.epsilony.simpmeshfree.sfun.DistanceSquareFunction;
-import net.epsilony.simpmeshfree.sfun.DistanceSquareFunctions;
-import net.epsilony.utils.SomeFactory;
 import net.epsilony.utils.CenterDistanceSearcher;
 import net.epsilony.utils.LayeredRangeTree;
+import net.epsilony.utils.SomeFactory;
 import net.epsilony.utils.geom.CenterDistanceComparator;
 import net.epsilony.utils.geom.Coordinate;
 import net.epsilony.utils.geom.Coordinates;
 import net.epsilony.utils.geom.GeometryMath;
 import static net.epsilony.utils.geom.GeometryMath.*;
+import net.epsilony.utils.geom.Node;
+import net.epsilony.utils.spfun.DistanceSquareFunction;
+import net.epsilony.utils.spfun.DistanceSquareFunctions;
+import net.epsilony.utils.spfun.InfluenceDomainSizer;
+import net.epsilony.utils.spfun.SupportDomainSizer;
 import org.apache.log4j.Logger;
 
 /**

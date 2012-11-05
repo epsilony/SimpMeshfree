@@ -4,12 +4,12 @@
  */
 package net.epsilony.simpmeshfree.model;
 
-import net.epsilony.utils.geom.Node;
 import gnu.trove.list.array.TDoubleArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import net.epsilony.simpmeshfree.sfun.ShapeFunction;
 import net.epsilony.simpmeshfree.utils.QuadraturePoint;
+import net.epsilony.utils.geom.Node;
+import net.epsilony.utils.spfun.ShapeFunction;
 
 /**
  *

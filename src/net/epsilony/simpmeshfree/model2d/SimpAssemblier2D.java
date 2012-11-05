@@ -9,7 +9,7 @@ import java.util.List;
 import net.epsilony.utils.geom.Node;
 import net.epsilony.simpmeshfree.model.VolumeCondition;
 import net.epsilony.simpmeshfree.model.WeakformAssemblier;
-import net.epsilony.simpmeshfree.utils.CommonUtils;
+import net.epsilony.utils.spfun.CommonUtils;
 import net.epsilony.simpmeshfree.utils.QuadraturePoint;
 import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;

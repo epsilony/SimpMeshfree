@@ -4,7 +4,6 @@
  */
 package net.epsilony.simpmeshfree.model;
 
-import net.epsilony.utils.geom.Node;
 import gnu.trove.list.array.TDoubleArrayList;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -13,10 +12,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import net.epsilony.simpmeshfree.sfun.ShapeFunction;
-import net.epsilony.simpmeshfree.utils.CommonUtils;
 import net.epsilony.simpmeshfree.utils.QuadraturePoint;
 import net.epsilony.simpmeshfree.utils.QuadraturePointIterator;
+import net.epsilony.utils.geom.Node;
+import net.epsilony.utils.spfun.CommonUtils;
+import net.epsilony.utils.spfun.ShapeFunction;
 import org.apache.log4j.Logger;
 
 /**

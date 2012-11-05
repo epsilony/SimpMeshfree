@@ -6,17 +6,17 @@ package net.epsilony.simpmeshfree.model2d;
 
 import gnu.trove.list.array.TDoubleArrayList;
 import java.util.*;
-import net.epsilony.simpmeshfree.sfun.DistanceSquareFunctions;
-import net.epsilony.utils.geom.Node;
 import net.epsilony.simpmeshfree.model.SupportDomainCritierion;
 import net.epsilony.simpmeshfree.model.SupportDomainUtils;
 import static net.epsilony.simpmeshfree.model2d.test.WeightFunctionTestUtils.*;
 import net.epsilony.simpmeshfree.model2d.test.WeightFunctionTestUtils.ValueFun;
-import net.epsilony.simpmeshfree.sfun.ShapeFunction;
-import net.epsilony.simpmeshfree.sfun.WeightFunctionCore;
-import net.epsilony.simpmeshfree.sfun.wcores.SimpPower;
-import net.epsilony.simpmeshfree.sfun.wcores.TriSpline;
+import net.epsilony.utils.spfun.radialbasis.SimpPower;
+import net.epsilony.utils.spfun.radialbasis.TriSpline;
 import net.epsilony.utils.geom.Coordinate;
+import net.epsilony.utils.geom.Node;
+import net.epsilony.utils.spfun.DistanceSquareFunctions;
+import net.epsilony.utils.spfun.ShapeFunction;
+import net.epsilony.utils.spfun.radialbasis.WeightFunctionCore;
 import static org.junit.Assert.assertArrayEquals;
 import org.junit.Test;
 

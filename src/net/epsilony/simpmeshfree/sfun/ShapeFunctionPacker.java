@@ -7,13 +7,14 @@ package net.epsilony.simpmeshfree.sfun;
 import gnu.trove.list.array.TDoubleArrayList;
 import java.util.List;
 import net.epsilony.simpmeshfree.model.Boundary;
-import net.epsilony.simpmeshfree.model.InfluenceDomainSizer;
-import net.epsilony.simpmeshfree.model.InfluenceDomainSizers;
-import net.epsilony.utils.geom.Node;
 import net.epsilony.simpmeshfree.model.SupportDomainCritierion;
-import net.epsilony.simpmeshfree.utils.CommonUtils;
 import net.epsilony.utils.PartDiffOrdered;
 import net.epsilony.utils.geom.Coordinate;
+import net.epsilony.utils.geom.Node;
+import net.epsilony.utils.spfun.CommonUtils;
+import net.epsilony.utils.spfun.InfluenceDomainSizer;
+import net.epsilony.utils.spfun.InfluenceDomainSizers;
+import net.epsilony.utils.spfun.ShapeFunction;
 
 /**
  *
