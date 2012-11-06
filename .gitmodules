@@ -1,6 +1,0 @@
-[submodule "libs/JavaUtils"]
-	path = libs/JavaUtils
-	url = git@github.com:epsilony/JavaUtils.git
-[submodule "libs/j-iso"]
-	path = libs/j-iso
-	url = git@github.com:epsilony/j-iso.git
