@@ -4,7 +4,7 @@
  */
 package net.epsilony.simpmeshfree.sfun2d;
 
-import net.epsilony.utils.spfun.ShapeFunctionUtils2D;
+import net.epsilony.spfun.ShapeFunctionUtils2D;
 import gnu.trove.list.array.TDoubleArrayList;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,14 +15,14 @@ import net.epsilony.utils.SomeFactory;
 import net.epsilony.utils.geom.Coordinate;
 import net.epsilony.utils.geom.GeometryMath;
 import net.epsilony.utils.geom.Node;
-import net.epsilony.utils.spfun.CommonUtils;
-import net.epsilony.utils.spfun.DistanceSquareFunction;
-import net.epsilony.utils.spfun.DistanceSquareFunctions;
-import net.epsilony.utils.spfun.ShapeFunction;
-import net.epsilony.utils.spfun.radialbasis.TriSpline;
-import net.epsilony.utils.spfun.radialbasis.WeightFunction;
-import net.epsilony.utils.spfun.radialbasis.WeightFunctionCore;
-import net.epsilony.utils.spfun.radialbasis.WeightFunctions;
+import net.epsilony.spfun.CommonUtils;
+import net.epsilony.spfun.DistanceSquareFunction;
+import net.epsilony.spfun.DistanceSquareFunctions;
+import net.epsilony.spfun.ShapeFunction;
+import net.epsilony.spfun.radialbasis.TriSpline;
+import net.epsilony.spfun.radialbasis.WeightFunction;
+import net.epsilony.spfun.radialbasis.WeightFunctionCore;
+import net.epsilony.spfun.radialbasis.WeightFunctions;
 import org.ejml.alg.dense.decomposition.lu.LUDecompositionAlt;
 import org.ejml.alg.dense.linsol.lu.LinearSolverLu;
 import org.ejml.data.DenseMatrix64F;

@@ -15,12 +15,12 @@ import net.epsilony.simpmeshfree.model2d.SimpAssemblier2D;
 import net.epsilony.simpmeshfree.model2d.UniformTensionInfinitePlate;
 import net.epsilony.simpmeshfree.sfun2d.MLS;
 import net.epsilony.utils.SomeFactory;
-import net.epsilony.utils.math.EquationSolver;
-import net.epsilony.utils.math.EquationSolvers;
-import net.epsilony.utils.math.MatrixUtils;
-import net.epsilony.utils.spfun.InfluenceDomainSizer;
-import net.epsilony.utils.spfun.InfluenceDomainSizers;
-import net.epsilony.utils.spfun.ShapeFunction;
+import net.epsilony.math.EquationSolver;
+import net.epsilony.math.EquationSolvers;
+import net.epsilony.math.MatrixUtils;
+import net.epsilony.spfun.InfluenceDomainSizer;
+import net.epsilony.spfun.InfluenceDomainSizers;
+import net.epsilony.spfun.ShapeFunction;
 import no.uib.cipr.matrix.DenseMatrix;
 
 /**

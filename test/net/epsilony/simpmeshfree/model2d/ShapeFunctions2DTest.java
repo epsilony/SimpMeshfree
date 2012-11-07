@@ -10,13 +10,13 @@ import net.epsilony.simpmeshfree.model.SupportDomainCritierion;
 import net.epsilony.simpmeshfree.model.SupportDomainUtils;
 import static net.epsilony.simpmeshfree.model2d.test.WeightFunctionTestUtils.*;
 import net.epsilony.simpmeshfree.model2d.test.WeightFunctionTestUtils.ValueFun;
-import net.epsilony.utils.spfun.radialbasis.SimpPower;
-import net.epsilony.utils.spfun.radialbasis.TriSpline;
+import net.epsilony.spfun.radialbasis.SimpPower;
+import net.epsilony.spfun.radialbasis.TriSpline;
 import net.epsilony.utils.geom.Coordinate;
 import net.epsilony.utils.geom.Node;
-import net.epsilony.utils.spfun.DistanceSquareFunctions;
-import net.epsilony.utils.spfun.ShapeFunction;
-import net.epsilony.utils.spfun.radialbasis.WeightFunctionCore;
+import net.epsilony.spfun.DistanceSquareFunctions;
+import net.epsilony.spfun.ShapeFunction;
+import net.epsilony.spfun.radialbasis.WeightFunctionCore;
 import static org.junit.Assert.assertArrayEquals;
 import org.junit.Test;
 

@@ -15,8 +15,8 @@ import java.util.concurrent.TimeUnit;
 import net.epsilony.simpmeshfree.utils.QuadraturePoint;
 import net.epsilony.simpmeshfree.utils.QuadraturePointIterator;
 import net.epsilony.utils.geom.Node;
-import net.epsilony.utils.spfun.CommonUtils;
-import net.epsilony.utils.spfun.ShapeFunction;
+import net.epsilony.spfun.CommonUtils;
+import net.epsilony.spfun.ShapeFunction;
 import org.apache.log4j.Logger;
 
 /**

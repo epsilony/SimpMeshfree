@@ -17,9 +17,9 @@ import net.epsilony.utils.SomeFactory;
 import net.epsilony.utils.WithId;
 import net.epsilony.utils.geom.Coordinate;
 import net.epsilony.utils.geom.Node;
-import net.epsilony.utils.math.EquationSolver;
-import net.epsilony.utils.spfun.InfluenceDomainSizer;
-import net.epsilony.utils.spfun.ShapeFunction;
+import net.epsilony.math.EquationSolver;
+import net.epsilony.spfun.InfluenceDomainSizer;
+import net.epsilony.spfun.ShapeFunction;
 import no.uib.cipr.matrix.DenseVector;
 
 /**

@@ -9,8 +9,8 @@ import java.util.Arrays;
 import net.epsilony.simpmeshfree.model.Boundary;
 import net.epsilony.utils.WithId;
 import net.epsilony.utils.geom.Coordinate;
-import net.epsilony.utils.math.quadrature.GaussLegendreQuadratureUtils;
-import net.epsilony.utils.math.quadrature.TriangleSymmetricQuadrature;
+import net.epsilony.math.quadrature.GaussLegendreQuadratureUtils;
+import net.epsilony.math.quadrature.TriangleSymmetricQuadrature;
 
 /**
  * used for quadrature a field not more complex than 3D

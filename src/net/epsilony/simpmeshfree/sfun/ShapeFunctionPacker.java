@@ -11,10 +11,10 @@ import net.epsilony.simpmeshfree.model.SupportDomainCritierion;
 import net.epsilony.utils.PartDiffOrdered;
 import net.epsilony.utils.geom.Coordinate;
 import net.epsilony.utils.geom.Node;
-import net.epsilony.utils.spfun.CommonUtils;
-import net.epsilony.utils.spfun.InfluenceDomainSizer;
-import net.epsilony.utils.spfun.InfluenceDomainSizers;
-import net.epsilony.utils.spfun.ShapeFunction;
+import net.epsilony.spfun.CommonUtils;
+import net.epsilony.spfun.InfluenceDomainSizer;
+import net.epsilony.spfun.InfluenceDomainSizers;
+import net.epsilony.spfun.ShapeFunction;
 
 /**
  *

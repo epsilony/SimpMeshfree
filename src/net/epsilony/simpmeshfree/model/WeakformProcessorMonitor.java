@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import net.epsilony.simpmeshfree.utils.QuadraturePoint;
 import net.epsilony.utils.geom.Node;
-import net.epsilony.utils.spfun.ShapeFunction;
+import net.epsilony.spfun.ShapeFunction;
 
 /**
  *

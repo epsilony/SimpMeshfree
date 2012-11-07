@@ -18,10 +18,10 @@ import net.epsilony.utils.geom.Coordinates;
 import net.epsilony.utils.geom.GeometryMath;
 import static net.epsilony.utils.geom.GeometryMath.*;
 import net.epsilony.utils.geom.Node;
-import net.epsilony.utils.spfun.DistanceSquareFunction;
-import net.epsilony.utils.spfun.DistanceSquareFunctions;
-import net.epsilony.utils.spfun.InfluenceDomainSizer;
-import net.epsilony.utils.spfun.SupportDomainSizer;
+import net.epsilony.spfun.DistanceSquareFunction;
+import net.epsilony.spfun.DistanceSquareFunctions;
+import net.epsilony.spfun.InfluenceDomainSizer;
+import net.epsilony.spfun.SupportDomainSizer;
 import org.apache.log4j.Logger;
 
 /**

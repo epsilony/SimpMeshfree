@@ -10,9 +10,9 @@ import net.epsilony.utils.geom.Coordinate;
 import net.epsilony.utils.geom.GeometryMath;
 import net.epsilony.utils.geom.Quadrangle;
 import net.epsilony.utils.geom.Triangle;
-import net.epsilony.utils.math.quadrature.GaussLegendreQuadratureUtils;
-import net.epsilony.utils.math.quadrature.TriangleSymmetricQuadrature;
-import net.epsilony.utils.math.substitution.QuadrangleSubs;
+import net.epsilony.math.quadrature.GaussLegendreQuadratureUtils;
+import net.epsilony.math.quadrature.TriangleSymmetricQuadrature;
+import net.epsilony.math.substrans.QuadrangleSubs;
 
 /**
  *

@@ -16,11 +16,11 @@ import net.epsilony.simpmeshfree.utils.BasesFunction;
 import net.epsilony.simpmeshfree.utils.Complete2DPolynomialBases;
 import net.epsilony.utils.geom.Coordinate;
 import net.epsilony.utils.geom.Node;
-import net.epsilony.utils.spfun.DistanceSquareFunctions;
-import net.epsilony.utils.spfun.ShapeFunction;
-import net.epsilony.utils.spfun.radialbasis.WeightFunction;
-import net.epsilony.utils.spfun.radialbasis.WeightFunctionCore;
-import net.epsilony.utils.spfun.radialbasis.WeightFunctions;
+import net.epsilony.spfun.DistanceSquareFunctions;
+import net.epsilony.spfun.ShapeFunction;
+import net.epsilony.spfun.radialbasis.WeightFunction;
+import net.epsilony.spfun.radialbasis.WeightFunctionCore;
+import net.epsilony.spfun.radialbasis.WeightFunctions;
 
 /**
  *
