@@ -8,13 +8,13 @@ import gnu.trove.list.array.TDoubleArrayList;
 import java.util.List;
 import net.epsilony.simpmeshfree.model.Boundary;
 import net.epsilony.simpmeshfree.model.SupportDomainCritierion;
-import net.epsilony.utils.PartDiffOrdered;
-import net.epsilony.utils.geom.Coordinate;
-import net.epsilony.utils.geom.Node;
 import net.epsilony.spfun.CommonUtils;
 import net.epsilony.spfun.InfluenceDomainSizer;
 import net.epsilony.spfun.InfluenceDomainSizers;
 import net.epsilony.spfun.ShapeFunction;
+import net.epsilony.utils.PartDiffOrdered;
+import net.epsilony.utils.geom.Coordinate;
+import net.epsilony.utils.geom.Node;
 
 /**
  *

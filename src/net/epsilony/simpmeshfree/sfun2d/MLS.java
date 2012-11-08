@@ -4,25 +4,24 @@
  */
 package net.epsilony.simpmeshfree.sfun2d;
 
-import net.epsilony.spfun.ShapeFunctionUtils2D;
 import gnu.trove.list.array.TDoubleArrayList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import net.epsilony.simpmeshfree.utils.BasesFunction;
 import net.epsilony.simpmeshfree.utils.Complete2DPolynomialBases;
-import net.epsilony.utils.SomeFactory;
-import net.epsilony.utils.geom.Coordinate;
-import net.epsilony.utils.geom.GeometryMath;
-import net.epsilony.utils.geom.Node;
 import net.epsilony.spfun.CommonUtils;
 import net.epsilony.spfun.DistanceSquareFunction;
 import net.epsilony.spfun.DistanceSquareFunctions;
 import net.epsilony.spfun.ShapeFunction;
+import net.epsilony.spfun.ShapeFunctionUtils2D;
 import net.epsilony.spfun.radialbasis.TriSpline;
 import net.epsilony.spfun.radialbasis.WeightFunction;
 import net.epsilony.spfun.radialbasis.WeightFunctionCore;
 import net.epsilony.spfun.radialbasis.WeightFunctions;
+import net.epsilony.utils.SomeFactory;
+import net.epsilony.utils.geom.Coordinate;
+import net.epsilony.utils.geom.GeometryMath;
 import org.ejml.alg.dense.decomposition.lu.LUDecompositionAlt;
 import org.ejml.alg.dense.linsol.lu.LinearSolverLu;
 import org.ejml.data.DenseMatrix64F;
@@ -117,7 +116,7 @@ public class MLS implements ShapeFunction {
     }
 
     @Override
-    public TDoubleArrayList[] values(Coordinate pos, List<Node> nodes, TDoubleArrayList[] distSquares, TDoubleArrayList infRads, TDoubleArrayList[] results) {
+    public TDoubleArrayList[] values(Coordinate pos, List<? extends Coordinate> nodes, TDoubleArrayList[] distSquares, TDoubleArrayList infRads, TDoubleArrayList[] results) {
         if (null == distSquares) {
             distSquares = this.distSquaresCache;
             euclideanDistSqFun.setPosition(pos);
